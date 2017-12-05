@@ -1,0 +1,77 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="TVTComment.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="NiconicoUserId" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="NiconicoPassword" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="NichanThreadSearchInterval" Type="System.TimeSpan" Scope="User">
+      <Value Profile="(Default)">00:00:15</Value>
+    </Setting>
+    <Setting Name="NichanResCollectInterval" Type="System.TimeSpan" Scope="User">
+      <Value Profile="(Default)">00:00:01</Value>
+    </Setting>
+    <Setting Name="ChatOpacity" Type="System.Byte" Scope="User">
+      <Value Profile="(Default)">255</Value>
+    </Setting>
+    <Setting Name="ChatModRules" Type="TVTComment.Model.Serialization.ChatModRuleEntity[]" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="NgSettingWindowPosition" Type="System.Drawing.Rectangle" Scope="User">
+      <Value Profile="(Default)">0, 0, 0, 0</Value>
+    </Setting>
+    <Setting Name="UseDefaultChatCollectService" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="LiveDefaultChatCollectServices" Type="System.Collections.Specialized.StringCollection" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="RecordDefaultChatCollectServices" Type="System.Collections.Specialized.StringCollection" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="WindowOpacity" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">0.7</Value>
+    </Setting>
+    <Setting Name="WindowTopmost" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ChatListViewColumnSettings" Type="TVTComment.ViewModels.ListViewColumnViewModel[]" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="NichanChatColor" Type="System.Drawing.Color" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="MainWindowPosition" Type="System.Drawing.RectangleF" Scope="User">
+      <Value Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;
+&lt;RectangleF xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"&gt;
+  &lt;Location&gt;
+    &lt;X&gt;NaN&lt;/X&gt;
+    &lt;Y&gt;NaN&lt;/Y&gt;
+  &lt;/Location&gt;
+  &lt;Size&gt;
+    &lt;Width&gt;330&lt;/Width&gt;
+    &lt;Height&gt;500&lt;/Height&gt;
+  &lt;/Size&gt;
+  &lt;X&gt;NaN&lt;/X&gt;
+  &lt;Y&gt;NaN&lt;/Y&gt;
+  &lt;Width&gt;330&lt;/Width&gt;
+  &lt;Height&gt;500&lt;/Height&gt;
+&lt;/RectangleF&gt;</Value>
+    </Setting>
+    <Setting Name="ChatPreserveCount" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">1000</Value>
+    </Setting>
+    <Setting Name="ChatCollectServiceCreationPresets" Type="TVTComment.Model.Serialization.ChatCollectServiceCreationPresetEntity[]" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="ClearChatsOnChannelChange" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ChatPostMailTextExamples" Type="System.Collections.Specialized.StringCollection" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+  </Settings>
+</SettingsFile>

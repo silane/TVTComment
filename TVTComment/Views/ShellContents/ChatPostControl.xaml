@@ -1,0 +1,99 @@
+﻿<UserControl x:Class="TVTComment.Views.ShellContents.ChatPostControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+             xmlns:prism="http://prismlibrary.com/"
+             xmlns:acb="clr-namespace:AttachedCommandBehavior;assembly=AttachedCommandBehavior"
+             xmlns:behaviors="clr-namespace:TVTComment.Views.Behaviors"
+             xmlns:local="clr-namespace:TVTComment.Views"
+             prism:ViewModelLocator.AutoWireViewModel="True"
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="300">
+    <i:Interaction.Triggers>
+    <prism:InteractionRequestTrigger SourceObject="{Binding AlertRequest}">
+        <prism:PopupWindowAction IsModal="True" CenterOverAssociatedObject="True">
+        </prism:PopupWindowAction>
+    </prism:InteractionRequestTrigger>
+        <!--<behaviors:WindowEventTrigger EventName="Loaded">
+            <behaviors:SetKeyboardFocusedElementAction Element="{Binding ElementName=PostTextBox}"/>
+        </behaviors:WindowEventTrigger>
+        <behaviors:WindowEventTrigger EventName="Activated">
+            <behaviors:SetKeyboardFocusedElementAction Element="{Binding ElementName=PostTextBox}"/>
+        </behaviors:WindowEventTrigger>-->
+    </i:Interaction.Triggers>
+
+    <StackPanel Orientation="Vertical">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="80"/>
+                <ColumnDefinition Width="auto"/>
+            </Grid.ColumnDefinitions>
+            <ComboBox SelectedItem="{Binding SelectedPostService}" ItemsSource="{Binding Path=PostServices}" DisplayMemberPath="Name" SelectedIndex="0" Grid.Column="0"/>
+            <Slider Value="{Binding ChatOpacity.Value}" Grid.Column="1" VerticalAlignment="Center" Minimum="0" Maximum="15" IsSnapToTickEnabled="True" TickPlacement="BottomRight">
+                <Slider.ToolTip>
+                    <TextBlock>
+                            コメント透過度: <Run Text="{Binding ChatOpacity.Value}"/>
+                    </TextBlock>
+                </Slider.ToolTip>
+            </Slider>
+            <Button Content="NG設定" Grid.Column="2">
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="Click">
+                        <behaviors:ShowWindowAction WindowType="local:NgSettingWindow"/>
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
+            </Button>
+        </Grid>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="3"/>
+                <ColumnDefinition Width="3*"/>
+                <ColumnDefinition Width="auto"/>
+            </Grid.ColumnDefinitions>
+            <Grid.Resources>
+            </Grid.Resources>
+            <ComboBox Text="{Binding PostMailText.Value,UpdateSourceTrigger=PropertyChanged}" IsEditable="True" ToolTip="コマンド" Grid.Column="0">
+                <ComboBox.Resources>
+                    <ContextMenu x:Key="ItemContextMenu">
+                        <MenuItem Header="削除" Command="{Binding DataContext.RemovePostMailTextExampleCommand,RelativeSource={RelativeSource AncestorType=ComboBox}}" CommandParameter="{Binding}"/>
+                    </ContextMenu>
+                    <CollectionViewSource x:Key="CollectionViewSource" Source="{Binding PostMailTextExamples}"/>
+                </ComboBox.Resources>
+                <ComboBox.ItemContainerStyle>
+                    <Style TargetType="ComboBoxItem">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding}" Value="{x:Null}">
+                                <Setter Property="Content" Value="現在のコマンドを追加"/>
+                                <Setter Property="ContextMenu" Value="{x:Null}"/>
+                                <Setter Property="FontStyle" Value="Italic"/>
+                                <Setter Property="acb:CommandBehavior.Event" Value="PreviewMouseLeftButtonDown"/>
+                                <Setter Property="acb:CommandBehavior.Command" Value="{Binding Path=DataContext.AddPostMailTextExampleCommand,RelativeSource={RelativeSource AncestorType=ComboBox}}"/>
+                                <Setter Property="acb:CommandBehavior.CommandParameter" Value="{Binding Path=DataContext.PostMailText.Value,RelativeSource={RelativeSource AncestorType=ComboBox}}"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                        <Setter Property="ContextMenu" Value="{StaticResource ItemContextMenu}"/>
+                    </Style>
+                </ComboBox.ItemContainerStyle>
+                <ComboBox.ItemsSource>
+                    <CompositeCollection>
+                        <CollectionContainer Collection="{Binding Source={StaticResource ResourceKey=CollectionViewSource}}"/>
+                        <x:Null/>
+                    </CompositeCollection>
+                </ComboBox.ItemsSource>
+            </ComboBox>
+            <GridSplitter HorizontalAlignment="Stretch" Grid.Column="1"/>
+            <TextBox Name="PostTextBox" Text="{Binding PostText.Value,UpdateSourceTrigger=PropertyChanged}" ToolTip="コメント (Alt+Enterで改行)" AcceptsReturn="True" Grid.Column="2">
+                <i:Interaction.Triggers>
+                    <behaviors:ReturnKeyTextBoxTrigger>
+                        <i:InvokeCommandAction Command="{Binding PostCommand}"/>
+                    </behaviors:ReturnKeyTextBoxTrigger>
+                </i:Interaction.Triggers>
+            </TextBox>
+            <Button Content="投稿" Command="{Binding PostCommand}" Grid.Column="3"/>
+        </Grid>
+    </StackPanel>
+</UserControl>

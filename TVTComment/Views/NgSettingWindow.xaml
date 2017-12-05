@@ -1,0 +1,96 @@
+﻿<Window x:Class="TVTComment.Views.NgSettingWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+        xmlns:prism="http://prismlibrary.com/"
+        xmlns:local="clr-namespace:TVTComment.Views"
+        xmlns:behaviors="clr-namespace:TVTComment.Views.Behaviors"
+        mc:Ignorable="d"
+        prism:ViewModelLocator.AutoWireViewModel="True"
+        Title="NgSettingWindow" Top="{Binding WindowTop,Mode=TwoWay}" Left="{Binding WindowLeft,Mode=TwoWay}" Height="{Binding WindowHeight,Mode=TwoWay}" Width="{Binding WindowWidth,Mode=TwoWay}" WindowStyle="ToolWindow">
+
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="Closed">
+            <behaviors:DisposeDataContextAction/>
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
+    
+    <Window.Resources>
+        <Style TargetType="{x:Type Button}">
+            <Setter Property="Margin" Value="4"/>
+        </Style>
+    </Window.Resources>
+    
+    <Grid VerticalAlignment="Stretch">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="7"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <StackPanel Grid.Column="0">
+            <GroupBox Header="ルール追加">
+                <StackPanel Orientation="Vertical">
+                    <GroupBox Header="適用するコメント元">
+                        <ItemsControl ItemsSource="{Binding TargetChatCollectServiceEntries}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <CheckBox Content="{Binding Value.Name}" IsChecked="{Binding IsSelected,Mode=TwoWay}"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </GroupBox>
+                    <GroupBox Header="NG">
+                        <StackPanel>
+                            <TextBox Text="{Binding NgText,UpdateSourceTrigger=PropertyChanged}" ToolTip="NGワード or NGユーザー"/>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                <Button Content="NGワード" Command="{Binding AddWordNgCommand}"/>
+                                <Button Content="NGユーザー" Command="{Binding AddUserNgCommand}"/>
+                            </StackPanel>
+                            <Button Content="色コメNG" Command="{Binding AddIroKomeNgCommand}"/>
+                            <Button Content="上下コメNG" Command="{Binding AddJyougeKomeNgCommand}"/>
+                            <Button Content="色コメかつ上下コメNG" Command="{Binding AddJyougeIroKomeNgCommand}"/>
+                        </StackPanel>
+                    </GroupBox>
+                    <GroupBox Header="改変">
+                        <StackPanel>
+                            <Button Command="{Binding AddRandomizeColorRuleCommand}">色ランダム化</Button>
+                            <Button Command="{Binding AddSmallOnMultiLineRuleCommand}" VerticalContentAlignment="Center">
+                                <TextBlock VerticalAlignment="Center">
+                                    <TextBox VerticalAlignment="Center" Width="30" Text="{Binding SmallOnMultiLineRuleLineCount.Value,UpdateSourceTrigger=PropertyChanged}" InputMethod.IsInputMethodSuspended="True"/>
+                                    行以上のコメントsmall化
+                                </TextBlock>
+                            </Button>
+                        </StackPanel>
+                    </GroupBox>
+                </StackPanel>
+            </GroupBox>
+        </StackPanel>
+        <GridSplitter HorizontalAlignment="Stretch" Grid.Column="1"/>
+        <DockPanel Grid.Column="2">
+            <Button Content="ルール削除" Command="{Binding RemoveRuleCommand}" HorizontalAlignment="Right" DockPanel.Dock="Bottom"/>
+            <ListView x:Name="listview" ItemsSource="{Binding Rules,Mode=OneWay}" SelectedItem="{Binding SelectedRule}" Grid.Column="2">
+                <ListView.View>
+                    <GridView>
+                        <GridView.Columns>
+                            <GridViewColumn Header="対象コメント元">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ItemsControl ItemsSource="{Binding ChatModRule.TargetChatCollectServiceEntries}" DisplayMemberPath="Name" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                                           
+                                        </ItemsControl>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Header="ルール" DisplayMemberBinding="{Binding ChatModRule.Description}"/>
+                            <GridViewColumn Header="最後に適用した日時" DisplayMemberBinding="{Binding LastAppliedTime,StringFormat=yy/M/d HH:mm:ss,FallbackValue=未適用}"/>
+                            <GridViewColumn Header="適用回数" DisplayMemberBinding="{Binding AppliedCount}"/>
+                        </GridView.Columns>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+        </DockPanel>
+    </Grid>
+</Window>

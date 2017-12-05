@@ -1,0 +1,43 @@
+﻿<UserControl x:Class="TVTComment.Views.ChatCollectServiceCreationOptionControl.FileChatCollectServiceCreationOptionControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+             xmlns:prism="http://prismlibrary.com/"
+             xmlns:behaviors="clr-namespace:TVTComment.Views.Behaviors"
+             xmlns:local="clr-namespace:TVTComment.Views.ChatCollectServiceCreationOptionControl"
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="300" prism:ViewModelLocator.AutoWireViewModel="True">
+    <i:Interaction.Behaviors>
+        <behaviors:RegionContextBinderBehavior Binding="{Binding RelativeSource={RelativeSource AncestorType=UserControl},Path=DataContext}"/>
+    </i:Interaction.Behaviors>
+    <i:Interaction.Triggers>
+        <behaviors:FileDroppedTrigger FilePath="{Binding FilePath,Mode=OneWayToSource}"/>
+    </i:Interaction.Triggers>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <Label Grid.Row="0" Grid.Column="0">ファイルパス</Label>
+        <Label Grid.Row="1" Grid.Column="0" ToolTip="コメントファイルの時刻と再生する録画の時刻が違う場合に使う">相対時間</Label>
+        <DockPanel Grid.Row="0" Grid.Column="1">
+            <Button Content="..." DockPanel.Dock="Right" VerticalAlignment="Center" MinWidth="20">
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="Click">
+                        <behaviors:ShowOpenFileDialogAction FileName="{Binding FilePath,Mode=TwoWay}"/>
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
+            </Button>
+            <TextBox Name="FilePathTextBox" Text="{Binding FilePath}" Grid.Row="0" Grid.Column="1" VerticalAlignment="Center"/>
+
+        </DockPanel>
+        <CheckBox IsChecked="{Binding RelativeTime}" Grid.Row="1" Grid.Column="1" VerticalAlignment="Center"/>
+    </Grid>
+</UserControl>

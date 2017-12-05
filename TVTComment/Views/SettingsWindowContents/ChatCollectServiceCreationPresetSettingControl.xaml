@@ -1,0 +1,42 @@
+﻿<UserControl x:Class="TVTComment.Views.SettingsWindowContents.ChatCollectServiceCreationPresetSettingControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+             xmlns:prism="http://prismlibrary.com/"
+             xmlns:views="clr-namespace:TVTComment.Views"
+             xmlns:local="clr-namespace:TVTComment.Views.ShellContents"
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="300">
+    <DockPanel>
+        <i:Interaction.Triggers>
+            <prism:InteractionRequestTrigger SourceObject="{Binding AddPresetRequest}">
+                <prism:PopupWindowAction IsModal="True" CenterOverAssociatedObject="True">
+                    <prism:PopupWindowAction.WindowContent>
+                    <views:ChatCollectServiceCreationPresetControl/>
+                    </prism:PopupWindowAction.WindowContent>
+                    <prism:PopupWindowAction.WindowStyle>
+                        <Style TargetType="Window">
+                            <Setter Property="Width" Value="500"/>
+                            <Setter Property="Height" Value="400"/>
+                        </Style>
+                    </prism:PopupWindowAction.WindowStyle>
+                </prism:PopupWindowAction>
+            </prism:InteractionRequestTrigger>
+        </i:Interaction.Triggers>
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+            <Button Command="{Binding AddPreset}">追加</Button>
+            <Button Command="{Binding RemovePreset}">削除</Button>
+        </StackPanel>
+        <ListBox ItemsSource="{Binding ChatCollectServiceCreationPresets}" SelectedItem="{Binding SelectedChatCollectServiceCreationPreset}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock>
+                        <Run Text="{Binding Name,Mode=OneWay}" FontSize="13"/><Run Text="{Binding ServiceEntry.Name,Mode=OneWay}" Foreground="Gray"/>
+                    </TextBlock>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </DockPanel>
+</UserControl>
