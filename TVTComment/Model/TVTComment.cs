@@ -3,6 +3,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Configuration;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
@@ -66,7 +67,7 @@ namespace TVTComment.Model
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
             State = TVTCommentState.NotInitialized;
-            string baseDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            string baseDir = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
             channelDatabase = new ChannelDatabase(Path.Combine(baseDir, "channels.txt"));
             ChatServices = new ReadOnlyCollection<IChatService>(new IChatService[] {
                 NiconicoChatService.Create(Settings, channelDatabase,Path.Combine(baseDir, "niconicojikkyouids.txt")),

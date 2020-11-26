@@ -8,7 +8,6 @@
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <StartupObject>TVTComment.Launcher</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="AttachedCommandBehavior" Version="2.0.0" />
@@ -21,13 +20,6 @@
     <PackageReference Include="System.Reactive" Version="3.1.1" />
     <PackageReference Include="Unity" Version="4.0.1" />
   </ItemGroup>
-  <Target Name="AfterResolveReferences">
-    <ItemGroup>
-      <EmbeddedResource Include="@(ReferenceCopyLocalPaths)" Condition="'%(ReferenceCopyLocalPaths.Extension)' == '.dll'">
-        <LogicalName>%(ReferenceCopyLocalPaths.DestinationSubDirectory)%(ReferenceCopyLocalPaths.Filename)%(ReferenceCopyLocalPaths.Extension)</LogicalName>
-      </EmbeddedResource>
-    </ItemGroup>
-  </Target>
   <ItemGroup>
     <Compile Update="Properties\Settings.Designer.cs">
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
