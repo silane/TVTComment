@@ -6,6 +6,7 @@ using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -62,13 +63,16 @@ namespace TVTComment.Model
       
         public TVTComment()
         {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
             State = TVTCommentState.NotInitialized;
             string baseDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
             channelDatabase = new ChannelDatabase(Path.Combine(baseDir, "channels.txt"));
             ChatServices = new ReadOnlyCollection<IChatService>(new IChatService[] {
                 NiconicoChatService.Create(Settings, channelDatabase,Path.Combine(baseDir, "niconicojikkyouids.txt")),
                 NichanChatService.Create(Settings, channelDatabase,Path.Combine(baseDir,"2chthreads.txt")),
-            ChatService.FileChatService.Create(Settings)});
+                ChatService.FileChatService.Create(Settings)
+            });
 
             var chatCollectServiceEntryIds = ChatServices.SelectMany(x => x.ChatCollectServiceEntries).Select(x => x.Id);
             System.Diagnostics.Debug.Assert(chatCollectServiceEntryIds.Distinct().Count() == chatCollectServiceEntryIds.Count(), "IDs of ChatCollectServiceEntries are not unique");
