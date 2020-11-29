@@ -6,10 +6,8 @@ using System.Threading.Tasks;
 
 namespace TVTComment.Model
 {
-    class NiconicoChatService:IChatService
+    class NiconicoChatService : IChatService
     {
-        private static bool instanceCreated = false;
-
         public string Name => "ニコニコ実況";
         public IReadOnlyList<ChatCollectServiceEntry.IChatCollectServiceEntry> ChatCollectServiceEntries { get; }
         public IReadOnlyList<IChatTrendServiceEntry> ChatTrendServiceEntries { get; }
@@ -31,14 +29,10 @@ namespace TVTComment.Model
         }
         public bool IsLoggedin { get; private set; }
 
-        public static NiconicoChatService Create(SettingsBase settings, ChannelDatabase channelDatabase,string jikkyouIdTableFilePath)
-        {
-            System.Diagnostics.Debug.Assert(!instanceCreated, "Can't call NiconicoChatService::Create method more than once");
-            instanceCreated = true;
-            return new NiconicoChatService(settings, channelDatabase, jikkyouIdTableFilePath);
-        }
-
-        private NiconicoChatService(SettingsBase settings,ChannelDatabase channelDatabase,string jikkyouIdTableFilePath)
+        public NiconicoChatService(
+            SettingsBase settings, ChannelDatabase channelDatabase,
+            string jikkyouIdTableFilePath
+        )
         {
             this.settings = settings;
             this.jkIdResolver = new NiconicoUtils.JkIdResolver(channelDatabase, new NiconicoUtils.JkIdTable(jikkyouIdTableFilePath));

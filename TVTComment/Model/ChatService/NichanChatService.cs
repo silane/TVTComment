@@ -9,10 +9,8 @@ using System.Drawing;
 
 namespace TVTComment.Model
 {
-    class NichanChatService:IChatService
+    class NichanChatService : IChatService
     {
-        private static bool instanceCreated=false;
-
         public class BoardInfo
         {
             public string Title { get; }
@@ -44,14 +42,10 @@ namespace TVTComment.Model
 
         private SettingsBase settings;
 
-        public static NichanChatService Create(SettingsBase settings, ChannelDatabase channelDatabase, string threadSettingFilePath)
-        {
-            System.Diagnostics.Debug.Assert(!instanceCreated, "Can't call NichanChatService::Create method more than once");
-            instanceCreated = true;
-            return new NichanChatService(settings, channelDatabase, threadSettingFilePath);
-        }
-
-        private NichanChatService(SettingsBase settings,ChannelDatabase channelDatabase,string threadSettingFilePath)
+        public NichanChatService(
+            SettingsBase settings, ChannelDatabase channelDatabase,
+            string threadSettingFilePath
+        )
         {
             this.settings = settings;
             

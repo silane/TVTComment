@@ -70,9 +70,9 @@ namespace TVTComment.Model
             string baseDir = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
             channelDatabase = new ChannelDatabase(Path.Combine(baseDir, "channels.txt"));
             ChatServices = new ReadOnlyCollection<IChatService>(new IChatService[] {
-                NiconicoChatService.Create(Settings, channelDatabase,Path.Combine(baseDir, "niconicojikkyouids.txt")),
-                NichanChatService.Create(Settings, channelDatabase,Path.Combine(baseDir,"2chthreads.txt")),
-                ChatService.FileChatService.Create(Settings)
+                new NiconicoChatService(Settings, channelDatabase,Path.Combine(baseDir, "niconicojikkyouids.txt")),
+                new NichanChatService(Settings, channelDatabase,Path.Combine(baseDir,"2chthreads.txt")),
+                new ChatService.FileChatService(Settings)
             });
 
             var chatCollectServiceEntryIds = ChatServices.SelectMany(x => x.ChatCollectServiceEntries).Select(x => x.Id);
