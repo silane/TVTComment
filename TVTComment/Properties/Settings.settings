@@ -44,23 +44,6 @@
     <Setting Name="NichanChatColor" Type="System.Drawing.Color" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="MainWindowPosition" Type="System.Drawing.RectangleF" Scope="User">
-      <Value Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;
-&lt;RectangleF xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"&gt;
-  &lt;Location&gt;
-    &lt;X&gt;NaN&lt;/X&gt;
-    &lt;Y&gt;NaN&lt;/Y&gt;
-  &lt;/Location&gt;
-  &lt;Size&gt;
-    &lt;Width&gt;330&lt;/Width&gt;
-    &lt;Height&gt;500&lt;/Height&gt;
-  &lt;/Size&gt;
-  &lt;X&gt;NaN&lt;/X&gt;
-  &lt;Y&gt;NaN&lt;/Y&gt;
-  &lt;Width&gt;330&lt;/Width&gt;
-  &lt;Height&gt;500&lt;/Height&gt;
-&lt;/RectangleF&gt;</Value>
-    </Setting>
     <Setting Name="ChatPreserveCount" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">1000</Value>
     </Setting>
@@ -71,6 +54,36 @@
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="ChatPostMailTextExamples" Type="System.Collections.Specialized.StringCollection" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="MainWindowPosition" Type="System.Drawing.RectangleF" Scope="User">
+      <Value Profile="(Default)">
+                    &lt;RectangleF xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"&gt;
+                        &lt;Location&gt;
+                            &lt;X&gt;NaN&lt;/X&gt;
+                            &lt;Y&gt;NaN&lt;/Y&gt;
+                        &lt;/Location&gt;
+                        &lt;Size&gt;
+                            &lt;Width&gt;330&lt;/Width&gt;
+                            &lt;Height&gt;500&lt;/Height&gt;
+                        &lt;/Size&gt;
+                        &lt;X&gt;NaN&lt;/X&gt;
+                        &lt;Y&gt;NaN&lt;/Y&gt;
+                        &lt;Width&gt;330&lt;/Width&gt;
+                        &lt;Height&gt;500&lt;/Height&gt;
+                    &lt;/RectangleF&gt;
+                </Value>
+    </Setting>
+    <Setting Name="NichanHMKey" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="NichanAppKey" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="NichanUserID" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="NichanPassword" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
   </Settings>

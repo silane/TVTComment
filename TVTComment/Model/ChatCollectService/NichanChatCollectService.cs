@@ -11,7 +11,7 @@ using System.Net;
 
 namespace TVTComment.Model.ChatCollectService
 {
-    class NichanChatCollectService:OnceASecondChatCollectService
+    abstract class NichanChatCollectService : OnceASecondChatCollectService
     {
         private class ThreadTitleAndResCount
         {
@@ -19,7 +19,6 @@ namespace TVTComment.Model.ChatCollectService
             public int ResCount { get; set; } = 0;
         }
 
-        public override string Name => "2ch";
         public override ChatCollectServiceEntry.IChatCollectServiceEntry ServiceEntry { get; }
         public override string GetInformationText()
         {
@@ -92,48 +91,42 @@ namespace TVTComment.Model.ChatCollectService
                         i = 0;
                         if (currentChannel != null && currentTime != null)
                         {
-                            lock (threads)
-                            {
-                                IEnumerable<string> threadUris = threadSelector.Get(currentChannel, currentTime.Value);
+                            IEnumerable<string> threadUris = threadSelector.Get(currentChannel, currentTime.Value);
 
-                                //新しいスレ一覧に入ってないものを消す
-                                foreach (string uri in threads.Keys.Where(x => !threadUris.Contains(x)).ToList())
-                                    threads.Remove(uri);
-                                //新しいスレ一覧で追加されたものを追加する
-                                foreach (string uri in threadUris)
-                                    if (!threads.ContainsKey(uri))
-                                        threads.Add(uri, new ThreadTitleAndResCount());
-                            }
+                            //新しいスレ一覧に入ってないものを消す
+                            foreach (string uri in threads.Keys.Where(x => !threadUris.Contains(x)).ToList())
+                                threads.Remove(uri);
+                            //新しいスレ一覧で追加されたものを追加する
+                            foreach (string uri in threadUris)
+                                if (!threads.ContainsKey(uri))
+                                    threads.Add(uri, new ThreadTitleAndResCount());
                         }
                         else
                             i = count - 1;//取得対象のチャンネル、時刻が設定されていなければやり直す
                     }
 
-                    lock (threads)
+                    foreach (var pair in threads)
                     {
-                        foreach (var pair in threads)
-                        {
-                            Nichan.Thread thread = Nichan.ThreadParser.ParseFromUri(pair.Key);
-                            int fromResIdx=thread.Res.FindLastIndex(res=>res.Number<=pair.Value.ResCount);
-                            fromResIdx++;
+                        Nichan.Thread thread = await this.getThread(pair.Key);
+                        int fromResIdx=thread.Res.FindLastIndex(res=>res.Number<=pair.Value.ResCount);
+                        fromResIdx++;
                             
-                            for(int resIdx=fromResIdx;resIdx<thread.Res.Count;resIdx++)
+                        for(int resIdx=fromResIdx;resIdx<thread.Res.Count;resIdx++)
+                        {
+                            //1001から先のレスは返さない
+                            if (thread.Res[resIdx].Number > 1000)
+                                break;
+                            foreach (XElement elem in thread.Res[resIdx].Text.Elements("br").ToArray())
                             {
-                                //1001から先のレスは返さない
-                                if (thread.Res[resIdx].Number > 1000)
-                                    break;
-                                foreach (XElement elem in thread.Res[resIdx].Text.Elements("br").ToArray())
-                                {
-                                    elem.ReplaceWith("\n");
-                                }
-                                chats.Enqueue(new Chat(thread.Res[resIdx].Date.Value, thread.Res[resIdx].Text.Value, Chat.PositionType.Normal, Chat.SizeType.Normal,
-                                    chatColor.IsEmpty ? Color.White : chatColor, thread.Res[resIdx].UserId,thread.Res[resIdx].Number));
+                                elem.ReplaceWith("\n");
                             }
-
-                            if (pair.Value.ResCount == 0)
-                                pair.Value.ThreadTitle = thread.Title;
-                            pair.Value.ResCount = thread.Res[thread.Res.Count - 1].Number;
+                            chats.Enqueue(new Chat(thread.Res[resIdx].Date.Value, thread.Res[resIdx].Text.Value, Chat.PositionType.Normal, Chat.SizeType.Normal,
+                                chatColor.IsEmpty ? Color.White : chatColor, thread.Res[resIdx].UserId,thread.Res[resIdx].Number));
                         }
+
+                        if (pair.Value.ResCount == 0)
+                            pair.Value.ThreadTitle = thread.Title;
+                        pair.Value.ResCount = thread.Res[thread.Res.Count - 1].Number;
                     }
                     await Task.Delay(1000, cancellationToken);
                 }
@@ -158,8 +151,8 @@ namespace TVTComment.Model.ChatCollectService
             if(e!=null)
             {
                 errored = true;
-                if (e.InnerExceptions.All(innerE => innerE is WebException))
-                    throw new ChatCollectException("サーバーとの通信でエラーが発生しました", e);
+                if (e.InnerExceptions.Count == 1 && e.InnerExceptions[0] is ChatCollectException)
+                    throw e.InnerExceptions[0];
                 else
                     throw new ChatCollectException($"スレ巡回スレッド内で予期しないエラー発生\n\n{e.ToString()}",e);
             }
@@ -183,5 +176,92 @@ namespace TVTComment.Model.ChatCollectService
                 if (!errored) throw;
             }
         }
+
+        protected abstract Task<Nichan.Thread> getThread(string url);
     }
+
+    class HTMLNichanChatCollectService : NichanChatCollectService
+    {
+        public override string Name => "2chHTML";
+
+        public HTMLNichanChatCollectService(
+            ChatCollectServiceEntry.IChatCollectServiceEntry serviceEntry,
+            Color chatColor,
+            TimeSpan resCollectInterval,
+            TimeSpan threadSearchInterval,
+            NichanUtils.INichanThreadSelector threadSelector
+        ) : base(serviceEntry, chatColor, resCollectInterval, threadSearchInterval, threadSelector)
+        {
+        }
+
+        protected override async Task<Nichan.Thread> getThread(string url)
+        {
+            try
+            {
+                return Nichan.ThreadParser.ParseFromUri(url);
+            }
+            catch(WebException e)
+            {
+                throw new ChatCollectException($"サーバーとの通信でエラーが発生しました\n\n{e}", e);
+            }
+        }
+    }
+
+    class DATNichanChatCollectService : NichanChatCollectService
+    {
+        public override string Name => "2chDAT";
+
+        private Nichan.ApiClient apiClient;
+
+        public DATNichanChatCollectService(
+            ChatCollectServiceEntry.IChatCollectServiceEntry serviceEntry,
+            Color chatColor,
+            TimeSpan resCollectInterval,
+            TimeSpan threadSearchInterval,
+            NichanUtils.INichanThreadSelector threadSelector,
+            Nichan.ApiClient nichanApiClient
+        ) : base(serviceEntry, chatColor, resCollectInterval, threadSearchInterval, threadSelector)
+        {
+            this.apiClient = nichanApiClient;
+        }
+
+        protected override async Task<Nichan.Thread> getThread(string url)
+        {
+            var uri = new Uri(url);
+            var server = uri.Host.Split('.')[0];
+            var pathes = uri.Segments.SkipWhile(x => x != "read.cgi/").ToArray();
+            var board = pathes[1][..^1];
+            var threadID = pathes[2][..^1];
+
+            string dat;
+            try
+            {
+                dat = await this.apiClient.GetDat(server, board, threadID);
+            }
+            catch(Nichan.AuthorizationApiClientException e)
+            {
+                throw new ChatCollectException("API認証に問題があります。API設定を確認してください", e);
+            }
+            catch(Nichan.ResponseApiClientException e)
+            {
+                throw new ChatCollectException("サーバーからの返信にエラーがあります", e);
+            }
+            catch(Nichan.NetworkApiClientException e)
+            {
+                throw new ChatCollectException("サーバーに接続できません", e);
+            }
+
+            Nichan.Thread thread;
+            try
+            {
+                thread = Nichan.DatParser.Parse(dat);
+            }
+            catch(Nichan.DatParserException e)
+            {
+                throw new ChatCollectException($"取得したDATのフォーマットが不正です\n\n{dat}", e);
+            }
+            return thread;
+        }
+    }
+
 }

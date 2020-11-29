@@ -4,7 +4,7 @@ using System.Drawing;
 
 namespace TVTComment.Model.ChatCollectServiceEntry
 {
-    class NichanChatCollectServiceEntry:IChatCollectServiceEntry
+    abstract class NichanChatCollectServiceEntry : IChatCollectServiceEntry
     {
         public class ChatCollectServiceCreationOption : IChatCollectServiceCreationOption
         {
@@ -46,15 +46,15 @@ namespace TVTComment.Model.ChatCollectServiceEntry
         }
 
         public IChatService Owner { get; }
-        public string Id => "2ch";
-        public string Name => "2ch";
-        public string Description => "2chのレスを表示";
+        public abstract string Id { get; }
+        public abstract string Name { get; }
+        public abstract string Description { get; }
         public bool CanUseDefaultCreationOption => true;
 
-        private ObservableValue<Color> chatColor;
-        private ObservableValue<TimeSpan> resCollectInterval;
-        private ObservableValue<TimeSpan> threadSearchInterval;
-        private NichanUtils.ThreadResolver threadResolver;
+        protected ObservableValue<Color> chatColor;
+        protected ObservableValue<TimeSpan> resCollectInterval;
+        protected ObservableValue<TimeSpan> threadSearchInterval;
+        protected NichanUtils.ThreadResolver threadResolver;
 
         public NichanChatCollectServiceEntry(NichanChatService owner,ObservableValue<Color> chatColor,ObservableValue<TimeSpan> resCollectInterval,ObservableValue<TimeSpan> threadSearchInterval,NichanUtils.ThreadResolver threadResolver)
         {
@@ -85,7 +85,64 @@ namespace TVTComment.Model.ChatCollectServiceEntry
             else
                 throw new ArgumentOutOfRangeException("((ChatCollectServiceCreationOption)creationOption).Method is out of range");
 
-            return new ChatCollectService.NichanChatCollectService(this, chatColor.Value, resCollectInterval.Value, threadSearchInterval.Value,selector);
+            return this.getNichanChatCollectService(selector);
+        }
+
+        protected abstract ChatCollectService.IChatCollectService getNichanChatCollectService(
+            NichanUtils.INichanThreadSelector threadSelector
+        );
+    }
+
+    class HTMLNichanChatCollectServiceEntry : NichanChatCollectServiceEntry
+    {
+        public override string Id => "2chHTML";
+        public override string Name => "2chHTML";
+        public override string Description => "2chのレスをHTMLのスクレイピングで表示";
+
+
+        public HTMLNichanChatCollectServiceEntry(
+            NichanChatService owner, ObservableValue<Color> chatColor,
+            ObservableValue<TimeSpan> resCollectInterval,
+            ObservableValue<TimeSpan> threadSearchInterval,
+            NichanUtils.ThreadResolver threadResolver
+        ) : base(owner, chatColor, resCollectInterval, threadSearchInterval, threadResolver)
+        {
+        }
+
+        protected override ChatCollectService.IChatCollectService getNichanChatCollectService(NichanUtils.INichanThreadSelector threadSelector)
+        {
+            return new ChatCollectService.HTMLNichanChatCollectService(
+                this, this.chatColor.Value, this.resCollectInterval.Value,
+                this.threadSearchInterval.Value, threadSelector
+            );
+        }
+    }
+
+    class DATNichanChatCollectServiceEntry : NichanChatCollectServiceEntry
+    {
+        public override string Id => "2chDAT";
+        public override string Name => "2chDAT";
+        public override string Description => "2chのレスをAPIでのDAT取得により表示";
+
+        private ObservableValue<Nichan.ApiClient> apiClient;
+
+        public DATNichanChatCollectServiceEntry(
+            NichanChatService owner, ObservableValue<Color> chatColor,
+            ObservableValue<TimeSpan> resCollectInterval,
+            ObservableValue<TimeSpan> threadSearchInterval,
+            NichanUtils.ThreadResolver threadResolver,
+            ObservableValue<Nichan.ApiClient> nichanApiClient
+        ) : base(owner, chatColor, resCollectInterval, threadSearchInterval, threadResolver)
+        {
+            this.apiClient = nichanApiClient;
+        }
+
+        protected override ChatCollectService.IChatCollectService getNichanChatCollectService(NichanUtils.INichanThreadSelector threadSelector)
+        {
+            return new ChatCollectService.DATNichanChatCollectService(
+                this, this.chatColor.Value, this.resCollectInterval.Value,
+                this.threadSearchInterval.Value, threadSelector, this.apiClient.Value
+            );
         }
     }
 }

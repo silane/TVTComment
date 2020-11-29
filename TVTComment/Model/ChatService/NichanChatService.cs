@@ -37,6 +37,7 @@ namespace TVTComment.Model
         private ObservableValue<TimeSpan> resCollectInterval=new ObservableValue<TimeSpan>();
         private ObservableValue<TimeSpan> threadSearchInterval = new ObservableValue<TimeSpan>();
         private ObservableValue<Color> chatColor = new ObservableValue<Color>();
+        private ObservableValue<Nichan.ApiClient> nichanApiClient = new ObservableValue<Nichan.ApiClient>();
 
         private NichanUtils.BoardDatabase boardDatabase;
         private NichanUtils.ThreadResolver threadResolver;
@@ -61,8 +62,15 @@ namespace TVTComment.Model
             resCollectInterval.Value = (TimeSpan)settings["NichanResCollectInterval"];
             threadSearchInterval.Value = (TimeSpan)settings["NichanThreadSearchInterval"];
             chatColor.Value = (Color)(settings["NichanChatColor"] ?? Color.Empty);
+            this.nichanApiClient.Value = new Nichan.ApiClient(
+                (string)settings["NichanHMKey"], (string)settings["NichanAppKey"],
+                (string)settings["NichanUserID"], (string)settings["NichanPassword"]
+            );
 
-            ChatCollectServiceEntries = new ChatCollectServiceEntry.IChatCollectServiceEntry[1] { new ChatCollectServiceEntry.NichanChatCollectServiceEntry(this,chatColor,resCollectInterval,threadSearchInterval,threadResolver) };
+            ChatCollectServiceEntries = new ChatCollectServiceEntry.IChatCollectServiceEntry[] {
+                new ChatCollectServiceEntry.HTMLNichanChatCollectServiceEntry(this, chatColor, resCollectInterval, threadSearchInterval, threadResolver),
+                new ChatCollectServiceEntry.DATNichanChatCollectServiceEntry(this, chatColor, resCollectInterval, threadSearchInterval, threadResolver, nichanApiClient),
+            };
             ChatTrendServiceEntries = new IChatTrendServiceEntry[0];
 
             BoardList = boardDatabase.BoardList.Select(x => new BoardInfo(x.Title, x.Uri));
@@ -81,6 +89,16 @@ namespace TVTComment.Model
         {
             settings["NichanChatColor"] = chatColor;
             this.chatColor.Value = chatColor;
+        }
+
+        public void SetApiParams(string hmKey, string appKey, string userId, string password)
+        {
+            settings["NichanHMKey"] = hmKey;
+            settings["NichanAppKey"] = appKey;
+            settings["NichanUserID"] = userId;
+            settings["NichanPassword"] = password;
+
+            this.nichanApiClient.Value = new Nichan.ApiClient(hmKey, appKey, userId, password);
         }
 
         public void Dispose()
