@@ -3,7 +3,6 @@ using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Configuration;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
@@ -65,18 +64,7 @@ namespace TVTComment.Model
         public TVTComment()
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-
             State = TVTCommentState.NotInitialized;
-            string baseDir = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
-            channelDatabase = new ChannelDatabase(Path.Combine(baseDir, "channels.txt"));
-            ChatServices = new ReadOnlyCollection<IChatService>(new IChatService[] {
-                new NiconicoChatService(Settings, channelDatabase,Path.Combine(baseDir, "niconicojikkyouids.txt")),
-                new NichanChatService(Settings, channelDatabase,Path.Combine(baseDir,"2chthreads.txt")),
-                new ChatService.FileChatService(Settings)
-            });
-
-            var chatCollectServiceEntryIds = ChatServices.SelectMany(x => x.ChatCollectServiceEntries).Select(x => x.Id);
-            System.Diagnostics.Debug.Assert(chatCollectServiceEntryIds.Distinct().Count() == chatCollectServiceEntryIds.Count(), "IDs of ChatCollectServiceEntries are not unique");
         }
 
         /// <summary>
@@ -91,8 +79,23 @@ namespace TVTComment.Model
 
         private async Task initialize()
         {
-            if (State != TVTCommentState.NotInitialized) throw new InvalidOperationException("This object is already initialized");
-            
+            if (State != TVTCommentState.NotInitialized)
+                throw new InvalidOperationException("This object is already initialized");
+
+            string baseDir = Path.GetDirectoryName(System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName);
+            this.channelDatabase = new ChannelDatabase(Path.Combine(baseDir, "channels.txt"));
+            this.ChatServices = new ReadOnlyCollection<IChatService>(new IChatService[] {
+                new NiconicoChatService(Settings, this.channelDatabase,Path.Combine(baseDir, "niconicojikkyouids.txt")),
+                new NichanChatService(Settings, this.channelDatabase,Path.Combine(baseDir,"2chthreads.txt")),
+                new ChatService.FileChatService(Settings)
+            });
+
+            var chatCollectServiceEntryIds = this.ChatServices.SelectMany(x => x.ChatCollectServiceEntries).Select(x => x.Id);
+            System.Diagnostics.Debug.Assert(
+                chatCollectServiceEntryIds.Distinct().Count() == chatCollectServiceEntryIds.Count(),
+                "IDs of ChatCollectServiceEntries are not unique"
+            );
+
             //Viewerとの接続
             string[] commandLine = Environment.GetCommandLineArgs();
             if (commandLine.Length == 3)
