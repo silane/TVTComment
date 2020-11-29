@@ -52,7 +52,7 @@ namespace TVTComment.Model
         private ManualResetEventSlim closingResetEvent = new ManualResetEventSlim(true);
 
         public SettingsBase Settings => Properties.Settings.Default;
-        public ReadOnlyCollection<IChatService> ChatServices { get; private set; }
+        public ReadOnlyCollection<ChatService.IChatService> ChatServices { get; private set; }
         public ObservableValue<byte> ChatOpacity { get; private set; }
         public ObservableCollection<string> ChatPostMailTextExamples { get; } = new ObservableCollection<string>();
 
@@ -84,9 +84,9 @@ namespace TVTComment.Model
 
             string baseDir = Path.GetDirectoryName(System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName);
             this.channelDatabase = new ChannelDatabase(Path.Combine(baseDir, "channels.txt"));
-            this.ChatServices = new ReadOnlyCollection<IChatService>(new IChatService[] {
-                new NiconicoChatService(Settings, this.channelDatabase,Path.Combine(baseDir, "niconicojikkyouids.txt")),
-                new NichanChatService(Settings, this.channelDatabase,Path.Combine(baseDir,"2chthreads.txt")),
+            this.ChatServices = new ReadOnlyCollection<ChatService.IChatService>(new ChatService.IChatService[] {
+                new ChatService.NiconicoChatService(Settings, this.channelDatabase,Path.Combine(baseDir, "niconicojikkyouids.txt")),
+                new ChatService.NichanChatService(Settings, this.channelDatabase,Path.Combine(baseDir,"2chthreads.txt")),
                 new ChatService.FileChatService(Settings)
             });
 

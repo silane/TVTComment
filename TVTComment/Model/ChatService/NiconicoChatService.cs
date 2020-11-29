@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Threading.Tasks;
 
-namespace TVTComment.Model
+namespace TVTComment.Model.ChatService
 {
     class NiconicoChatService : IChatService
     {

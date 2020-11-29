@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace TVTComment.Model
+namespace TVTComment.Model.ChatService
 {
     public interface IChatService:IDisposable
     {

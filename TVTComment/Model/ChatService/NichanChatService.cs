@@ -7,7 +7,7 @@ using System.Linq;
 using System.Configuration;
 using System.Drawing;
 
-namespace TVTComment.Model
+namespace TVTComment.Model.ChatService
 {
     class NichanChatService : IChatService
     {

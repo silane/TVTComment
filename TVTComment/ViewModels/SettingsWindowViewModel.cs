@@ -22,7 +22,7 @@ namespace TVTComment.ViewModels
         public ObservableValue<string> NichanThreadSearchInterval { get; } = new ObservableValue<string>();
         public ObservableValue<System.Drawing.Color> NichanChatColor { get; } = new ObservableValue<System.Drawing.Color>();
 
-        public Model.NichanChatService.BoardInfo SelectedNichanBoard { get; set; }
+        public Model.ChatService.NichanChatService.BoardInfo SelectedNichanBoard { get; set; }
 
         public ICommand LoginNiconicoCommand { get; }
         public ICommand OpenUserScopeSettingFileLocationCommand { get; }
@@ -33,16 +33,16 @@ namespace TVTComment.ViewModels
         public SettingsWindowContents.ChatCollectServiceCreationPresetSettingControlViewModel ChatCollectServiceCreationPresetSettingControlViewModel { get; }
 
         private Model.TVTComment model;
-        private Model.NiconicoChatService niconico;
-        private Model.NichanChatService nichan;
+        private Model.ChatService.NiconicoChatService niconico;
+        private Model.ChatService.NichanChatService nichan;
 
         public SettingsWindowViewModel(Model.TVTComment model)
         {
             DefaultChatCollectServices = new ShellContents.DefaultChatCollectServicesViewModel(model);
 
             this.model = model;
-            niconico = model.ChatServices.OfType<Model.NiconicoChatService>().Single();
-            nichan = model.ChatServices.OfType<Model.NichanChatService>().Single();
+            niconico = model.ChatServices.OfType<Model.ChatService.NiconicoChatService>().Single();
+            nichan = model.ChatServices.OfType<Model.ChatService.NichanChatService>().Single();
 
             ChatCollectServiceCreationPresetSettingControlViewModel = new SettingsWindowContents.ChatCollectServiceCreationPresetSettingControlViewModel(model);
 

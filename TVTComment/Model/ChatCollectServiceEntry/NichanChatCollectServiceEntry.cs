@@ -45,7 +45,7 @@ namespace TVTComment.Model.ChatCollectServiceEntry
             }
         }
 
-        public IChatService Owner { get; }
+        public ChatService.IChatService Owner { get; }
         public abstract string Id { get; }
         public abstract string Name { get; }
         public abstract string Description { get; }
@@ -56,7 +56,7 @@ namespace TVTComment.Model.ChatCollectServiceEntry
         protected ObservableValue<TimeSpan> threadSearchInterval;
         protected NichanUtils.ThreadResolver threadResolver;
 
-        public NichanChatCollectServiceEntry(NichanChatService owner,ObservableValue<Color> chatColor,ObservableValue<TimeSpan> resCollectInterval,ObservableValue<TimeSpan> threadSearchInterval,NichanUtils.ThreadResolver threadResolver)
+        public NichanChatCollectServiceEntry(ChatService.NichanChatService owner,ObservableValue<Color> chatColor,ObservableValue<TimeSpan> resCollectInterval,ObservableValue<TimeSpan> threadSearchInterval,NichanUtils.ThreadResolver threadResolver)
         {
             this.Owner = owner;
             this.chatColor = chatColor;
@@ -101,7 +101,7 @@ namespace TVTComment.Model.ChatCollectServiceEntry
 
 
         public HTMLNichanChatCollectServiceEntry(
-            NichanChatService owner, ObservableValue<Color> chatColor,
+            ChatService.NichanChatService owner, ObservableValue<Color> chatColor,
             ObservableValue<TimeSpan> resCollectInterval,
             ObservableValue<TimeSpan> threadSearchInterval,
             NichanUtils.ThreadResolver threadResolver
@@ -127,7 +127,7 @@ namespace TVTComment.Model.ChatCollectServiceEntry
         private ObservableValue<Nichan.ApiClient> apiClient;
 
         public DATNichanChatCollectServiceEntry(
-            NichanChatService owner, ObservableValue<Color> chatColor,
+            ChatService.NichanChatService owner, ObservableValue<Color> chatColor,
             ObservableValue<TimeSpan> resCollectInterval,
             ObservableValue<TimeSpan> threadSearchInterval,
             NichanUtils.ThreadResolver threadResolver,

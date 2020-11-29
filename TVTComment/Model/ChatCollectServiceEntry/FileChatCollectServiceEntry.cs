@@ -20,7 +20,7 @@ namespace TVTComment.Model.ChatCollectServiceEntry
             }
         }
 
-        public IChatService Owner { get;}
+        public ChatService.IChatService Owner { get;}
         public string Id => "File";
         public string Name => "ファイル";
         public string Description => "ニコニコ実況形式のコメントファイルからコメントを表示";

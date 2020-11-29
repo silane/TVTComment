@@ -22,7 +22,7 @@ namespace TVTComment.Model.ChatCollectServiceEntry
 
     public interface IChatCollectServiceEntry
     {
-        IChatService Owner { get; }
+        ChatService.IChatService Owner { get; }
         string Id { get; }
         string Name { get; }
         string Description { get; }

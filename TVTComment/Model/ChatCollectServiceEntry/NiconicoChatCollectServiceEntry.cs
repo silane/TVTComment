@@ -10,7 +10,7 @@ namespace TVTComment.Model.ChatCollectServiceEntry
         {
         }
 
-        public IChatService Owner { get; }
+        public ChatService.IChatService Owner { get; }
         public string Id => "Niconico";
         public string Name => "ニコニコ実況";
         public string Description => "現在のニコニコ実況を表示";
@@ -19,7 +19,7 @@ namespace TVTComment.Model.ChatCollectServiceEntry
         private NiconicoUtils.JkIdResolver jkIdResolver;
         private ObservableValue<NiconicoUtils.NiconicoLoginSession> session;
 
-        public NiconicoChatCollectServiceEntry(NiconicoChatService owner, NiconicoUtils.JkIdResolver jkIdResolver,ObservableValue<NiconicoUtils.NiconicoLoginSession> session)
+        public NiconicoChatCollectServiceEntry(ChatService.NiconicoChatService owner, NiconicoUtils.JkIdResolver jkIdResolver,ObservableValue<NiconicoUtils.NiconicoLoginSession> session)
         {
             this.Owner = owner;
             this.jkIdResolver = jkIdResolver;

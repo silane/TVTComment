@@ -16,8 +16,8 @@ namespace TVTComment.ViewModels.ChatCollectServiceCreationOptionControl
         public ICommand OkCommand { get; }
         public ICommand RefreshThreadsCommand { get; }
 
-        private Model.NichanChatService.BoardInfo selectedBoard;
-        public Model.NichanChatService.BoardInfo SelectedBoard
+        private Model.ChatService.NichanChatService.BoardInfo selectedBoard;
+        public Model.ChatService.NichanChatService.BoardInfo SelectedBoard
         {
             get { return selectedBoard; }
             set { SetProperty(ref selectedBoard, value); RefreshThreads(); }
@@ -25,7 +25,7 @@ namespace TVTComment.ViewModels.ChatCollectServiceCreationOptionControl
 
         public Nichan.Thread SelectedThread { get; set; }
 
-        public IEnumerable<Model.NichanChatService.BoardInfo> Boards { get; }
+        public IEnumerable<Model.ChatService.NichanChatService.BoardInfo> Boards { get; }
 
         private List<Nichan.Thread> threads;
         public List<Nichan.Thread> Threads
@@ -45,7 +45,7 @@ namespace TVTComment.ViewModels.ChatCollectServiceCreationOptionControl
 
         public NichanChatCollectServiceCreationOptionControlViewModel(Model.TVTComment model)
         {
-            var nichan = model.ChatServices.OfType<Model.NichanChatService>().Single();
+            var nichan = model.ChatServices.OfType<Model.ChatService.NichanChatService>().Single();
             Boards = nichan.BoardList;
             Method = Model.ChatCollectServiceEntry.NichanChatCollectServiceEntry.ChatCollectServiceCreationOption.ThreadSelectMethod.Auto;
             OkCommand = new DelegateCommand(() => Finished?.Invoke(this,new EventArgs()));

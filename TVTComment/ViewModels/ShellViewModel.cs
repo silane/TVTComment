@@ -173,7 +173,7 @@ namespace TVTComment.ViewModels
             disposables.Add(CurrentEvent.Subscribe(_ => updateWindowTitle()));
 
             //勢い値は「ニコニコ実況」のものを固定で表示
-            model.ChatTrendServiceModule.AddService(model.ChatServices.OfType<Model.NiconicoChatService>().Single().ChatTrendServiceEntries[0]);
+            model.ChatTrendServiceModule.AddService(model.ChatServices.OfType<Model.ChatService.NiconicoChatService>().Single().ChatTrendServiceEntries[0]);
             forceValueData = new ReadOnlyObservableValue<Model.IForceValueData>(Observable.FromEventPattern<Model.ChatTrendServiceModule.ForceValueUpdatedEventArgs>(
                         h => model.ChatTrendServiceModule.ForceValueUpdated += h, h => model.ChatTrendServiceModule.ForceValueUpdated -= h).Select(y => y.EventArgs.ForceValueData));
 

@@ -26,7 +26,7 @@ namespace TVTComment.Model
         private IPCModule ipc;
         private ChatCollectServiceModule collectServiceModule;
         private ChannelInformationModule channelInformationModule;
-        private IEnumerable<IChatService> chatServices;
+        private IEnumerable<ChatService.IChatService> chatServices;
         private CompositeDisposable disposables = new CompositeDisposable();
 
         public ObservableValue<int> ChatPreserveCount { get; } = new ObservableValue<int>();
@@ -38,7 +38,7 @@ namespace TVTComment.Model
         private ObservableCollection<ChatModRuleEntry> chatModRules = new ObservableCollection<ChatModRuleEntry>();
         public ReadOnlyObservableCollection<ChatModRuleEntry> ChatModRules { get; }
 
-        public ChatModule(SettingsBase settings,IEnumerable<IChatService> chatServices,ChatCollectServiceModule collectServiceModule,IPCModule ipc,ChannelInformationModule channelInformationModule)
+        public ChatModule(SettingsBase settings,IEnumerable<ChatService.IChatService> chatServices,ChatCollectServiceModule collectServiceModule,IPCModule ipc,ChannelInformationModule channelInformationModule)
         {
             Chats = new ReadOnlyObservableCollection<Chat>(chats);
             ChatModRules = new ReadOnlyObservableCollection<ChatModRuleEntry>(chatModRules);
