@@ -22,15 +22,25 @@ namespace TVTComment.Model.NichanUtils
 
         public MatchingThread Resolve(ushort networkId, ushort serviceId)
         {
-            if (networkId != 0)
+            if (networkId == 0)
+            {
+                //録画ファイルなどではネットワークIDが分からないのでサービスIDだけで検索
+                //BSとCSの間ではサービスIDが重複する可能性があるがほとんどないので割り切る
+                foreach (ChannelEntry channel in channelDatabase.GetByServiceId(serviceId))
+                {
+                    MatchingThread ret = boardDatabase.GetMatchingThreadForChannel(channel);
+                    if (ret != null)
+                        return ret;
+                }
+                return null;
+            }
+            else
             {
                 ChannelEntry channel = channelDatabase.GetByNetworkIdAndServiceId(networkId, serviceId);//channels.txtの登録チャンネルに解決
                 if (channel == null)
                     return null;
                 return boardDatabase.GetMatchingThreadForChannel(channel);
             }
-            else
-                return null;
         }
     }
 }
