@@ -178,7 +178,7 @@ namespace TVTComment.Model
         {
             var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
             if(File.Exists(config.FilePath))
-                System.Diagnostics.Process.Start(Path.GetDirectoryName(config.FilePath));
+                System.Diagnostics.Process.Start("explorer.exe", $"/select, {config.FilePath}");
         }
 
         public void Dispose()
