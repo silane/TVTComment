@@ -30,6 +30,10 @@ namespace TVTComment.Model.ChatService
         public TimeSpan ResCollectInterval => resCollectInterval.Value;
         public TimeSpan ThreadSearchInterval => threadSearchInterval.Value;
         public Color ChatColor => chatColor.Value;
+        public string HmKey => nichanApiClient.Value.HmKey;
+        public string AppKey => nichanApiClient.Value.AppKey;
+        public string UserId => nichanApiClient.Value.UserId;
+        public string Password => nichanApiClient.Value.Password;
 
         //このChatServiceに行われた設定変更が子のChatServiceEntryに伝わるようにするためにObservableValueで包む
         private ObservableValue<TimeSpan> resCollectInterval=new ObservableValue<TimeSpan>();
