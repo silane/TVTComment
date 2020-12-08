@@ -27,16 +27,18 @@ namespace TVTComment.Model.ChatCollectService
                 if (threads.Count == 0)
                     return "対応スレがありません";
                 else
-                    return string.Join("\n", threads.Select(pair => $"{pair.Value.ThreadTitle ?? "[スレタイ不明]"}  ({pair.Value.ResCount})  {pair.Key}"));
+                    return
+                        $"遅延: {this.delays.Max().TotalSeconds}秒\n" +
+                        string.Join("\n", threads.Select(pair => $"{pair.Value.ThreadTitle ?? "[スレタイ不明]"}  ({pair.Value.ResCount})  {pair.Key}"));
             }
         }
 
-        private Color chatColor;
-        private TimeSpan resCollectInterval, threadSearchInterval;
-        private NichanUtils.INichanThreadSelector threadSelector;
+        private readonly Color chatColor;
+        private readonly TimeSpan resCollectInterval, threadSearchInterval;
+        private readonly NichanUtils.INichanThreadSelector threadSelector;
 
-        private Task resCollectTask;
-        private CancellationTokenSource cancel=new CancellationTokenSource();
+        private readonly Task resCollectTask;
+        private readonly CancellationTokenSource cancel = new CancellationTokenSource();
 
         /// <summary>
         /// <see cref="ChatCollectException"/>を送出したか
@@ -51,6 +53,8 @@ namespace TVTComment.Model.ChatCollectService
         /// キーはスレッドのURI
         /// </summary>
         private Dictionary<string, ThreadTitleAndResCount> threads = new Dictionary<string, ThreadTitleAndResCount>();
+        private List<Chat> chatBuffer = new List<Chat>();
+        private Queue<TimeSpan> delays = new Queue<TimeSpan>(Enumerable.Repeat(TimeSpan.Zero, 30));
 
         /// <summary>
         /// <see cref="NichanChatCollectService"/>を初期化する
@@ -154,11 +158,25 @@ namespace TVTComment.Model.ChatCollectService
                 if (e.InnerExceptions.Count == 1 && e.InnerExceptions[0] is ChatCollectException)
                     throw e.InnerExceptions[0];
                 else
-                    throw new ChatCollectException($"スレ巡回スレッド内で予期しないエラー発生\n\n{e.ToString()}",e);
+                    throw new ChatCollectException($"スレ巡回スレッド内で予期しないエラー発生\n\n{e}",e);
             }
 
-            var ret = new List<Chat>(chats.Where(x => (time - x.Time).Duration() < TimeSpan.FromSeconds(30)));//投稿から30秒以内のレスのみ返す
-            chats = new ConcurrentQueue<Chat>();
+            var newChats = this.chats.Where(x => (time - x.Time).Duration() < TimeSpan.FromSeconds(15)).ToArray();//投稿から15秒以内のレスのみ返す
+            // 新たに収集したChatをchatBufferに移す
+            this.chats.Clear();
+            this.chatBuffer.AddRange(newChats);
+            // それぞれの遅延を計算しdelaysに記憶
+            foreach (var delay in newChats.Select(x => time - x.Time))
+            {
+                this.delays.Enqueue(delay);
+                this.delays.Dequeue();
+            }
+            // 団子になるのを防ぐため、delays内の最大値分だけ遅延してChatを返す
+            var ret = this.chatBuffer.Where(x => x.Time + this.delays.Max() <= time).ToArray();
+            foreach(var chat in ret)
+            {
+                this.chatBuffer.Remove(chat);
+            }
             return ret;
         }
 
