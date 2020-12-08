@@ -251,15 +251,25 @@ namespace TVTComment.Model.ChatCollectService
                 throw new ChatCollectException("サーバーに接続できません", e);
             }
 
-            Nichan.Thread thread;
+            var thread = new Nichan.Thread{ Uri = new Uri(url) };
+            var parser = new Nichan.DatParser();
             try
             {
-                thread = Nichan.DatParser.Parse(dat);
+                parser.Feed(dat);
             }
             catch(Nichan.DatParserException e)
             {
                 throw new ChatCollectException($"取得したDATのフォーマットが不正です\n\n{dat}", e);
             }
+            thread.Title = parser.ThreadTitle;
+            while(true)
+            {
+                var res = parser.PopRes();
+                if (res == null)
+                    break;
+                thread.Res.Add(res);
+            }
+            thread.ResCount = thread.Res.Count;
             return thread;
         }
     }

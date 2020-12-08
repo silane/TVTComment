@@ -2,6 +2,7 @@
 
 using Sgml;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -25,54 +26,46 @@ namespace Nichan
           System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     }
 
-    public static class DatParser
+    public class DatParser
     {
-        private static readonly Regex reDate = new Regex(@"(\d+)/(\d+)/(\d+)[^ ]* (\d+):(\d+):(\d+)\.(\d+)");
+        /// <summary>
+        /// 解析結果のスレタイが入る。解析前の場合は<c>null</c>。
+        /// </summary>
+        public string ThreadTitle { get; private set; }
 
-        private static DateTime? getDate(string str)
+        public DatParser()
         {
-            Match m = reDate.Match(str);
-            if (m.Success)
-                return new DateTime(
-                    int.Parse(m.Groups[1].Value), int.Parse(m.Groups[2].Value), int.Parse(m.Groups[3].Value),
-                    int.Parse(m.Groups[4].Value), int.Parse(m.Groups[5].Value), int.Parse(m.Groups[6].Value), int.Parse(m.Groups[7].Value) * 10, DateTimeKind.Local
-                );
-            else
-                return null;
+            this.Reset();
         }
 
-        public static Thread Parse(string dat)
+        /// <summary>
+        /// DAT文字列を追加し解析する
+        /// </summary>
+        /// <exception cref="DatParserException"></exception>
+        public void Feed(string datString)
         {
-            var thread = new Thread();
+            this.buffer += datString;
+            if (this.buffer == "")
+                return;
+            var rows = this.buffer.Split('\n');
+            var reses = rows[..^1].Select(x => x.Split("<>")).ToArray();
+            this.buffer = rows[^1];
 
-            var rows = dat.Split(
-                '\n', StringSplitOptions.RemoveEmptyEntries
-            ).Select(row => row.Split("<>")).ToArray();
-
-            foreach(var row in rows)
+            if (reses.Any(x => x.Length != 5))
             {
-                if (row.Length != 5)
-                    throw new DatParserException();
+                throw new DatParserException();
             }
 
-            thread.Title = rows[0][4];
-            thread.Res.AddRange(rows.Select((row, idx) => {
+            if(this.ThreadTitle == null && reses.Length > 0)
+            {
+                this.ThreadTitle = reses[0][4];
+            }
+
+            foreach(var row in reses)
+            {
                 int startIdx = row[2].IndexOf("ID:");
-                string userId = startIdx != -1 ? row[2].Substring(startIdx + 3) : null;
+                string userId = startIdx != -1 ? row[2][(startIdx + 3)..] : null;
 
-
-                //string text = string.Join('\n', row[3].Split('<br>').Select(x => {
-                //    if (x.Length == 0)
-                //        return x;
-                //    if (x[0] == ' ')
-                //        x = x.Substring(1);
-
-                //    if (x.Length == 0)
-                //        return x;
-                //    if (x[x.Length - 1] == ' ')
-                //        x = x.Substring(0, x.Length - 1);
-                //    return x;
-                //}).Select(x => HttpUtility.HtmlDecode(x)));
                 XElement text;
                 using (StringReader reader = new StringReader($"<html><div>{row[3]}</div></html>"))
                 {
@@ -84,19 +77,52 @@ namespace Nichan
                     }
                 }
 
-                return new Res
+                this.reses.Enqueue(new Res
                 {
-                    Number = idx + 1,
+                    Number = ++this.resNum,
                     Name = HttpUtility.HtmlDecode(row[0]),
                     Mail = HttpUtility.HtmlDecode(row[1]),
                     UserId = userId,
                     Date = getDate(row[2]),
                     Text = text,
-                };
-            }));
-            thread.ResCount = thread.Res.Count;
+                });
+            }
+        }
 
-            return thread;
+        /// <summary>
+        /// 解析結果のレスのキューからレスをポップして返す
+        /// </summary>
+        public Res PopRes()
+        {
+            return this.reses.TryDequeue(out Res res) ? res : null;
+        }
+
+        /// <summary>
+        /// パーサの状態を初期化する
+        /// </summary>
+        public void Reset()
+        {
+            this.ThreadTitle = null;
+            this.buffer = "";
+            this.reses.Clear();
+            this.resNum = 0;
+        }
+
+        private string buffer;
+        private Queue<Res> reses = new Queue<Res>();
+        private int resNum;
+
+        private static readonly Regex reDate = new Regex(@"(\d+)/(\d+)/(\d+)[^ ]* (\d+):(\d+):(\d+)\.(\d+)");
+        private static DateTime? getDate(string str)
+        {
+            Match m = reDate.Match(str);
+            if (m.Success)
+                return new DateTime(
+                    int.Parse(m.Groups[1].Value), int.Parse(m.Groups[2].Value), int.Parse(m.Groups[3].Value),
+                    int.Parse(m.Groups[4].Value), int.Parse(m.Groups[5].Value), int.Parse(m.Groups[6].Value), int.Parse(m.Groups[7].Value) * 10, DateTimeKind.Local
+                );
+            else
+                return null;
         }
     }
 }
