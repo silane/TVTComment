@@ -229,8 +229,6 @@ namespace TVTComment.Model.ChatCollectService
     {
         public override string Name => "2chDAT";
 
-        private Nichan.ApiClient apiClient;
-
         public DATNichanChatCollectService(
             ChatCollectServiceEntry.IChatCollectServiceEntry serviceEntry,
             Color chatColor,
@@ -251,45 +249,38 @@ namespace TVTComment.Model.ChatCollectService
             var board = pathes[1][..^1];
             var threadID = pathes[2][..^1];
 
-            string dat;
+            if (!this.threadLoaders.TryGetValue((server, board, threadID), out var threadLoader))
+            {
+                threadLoader = new Nichan.DatThreadLoader(server, board, threadID);
+                this.threadLoaders.Add((server, board, threadID), threadLoader);
+            }
+
             try
             {
-                dat = await this.apiClient.GetDat(server, board, threadID);
+                await threadLoader.Update(this.apiClient);
             }
-            catch(Nichan.AuthorizationApiClientException e)
+            catch (Nichan.AuthorizationApiClientException e)
             {
                 throw new ChatCollectException("API認証に問題があります。API設定を確認してください", e);
             }
-            catch(Nichan.ResponseApiClientException e)
+            catch (Nichan.ResponseApiClientException e)
             {
                 throw new ChatCollectException("サーバーからの返信にエラーがあります", e);
             }
-            catch(Nichan.NetworkApiClientException e)
+            catch (Nichan.NetworkApiClientException e)
             {
                 throw new ChatCollectException("サーバーに接続できません", e);
             }
+            catch (Nichan.DatFormatDatThreadLoaderException e)
+            {
+                throw new ChatCollectException($"取得したDATのフォーマットが不正です\n\n{e.DatString}", e);
+            }
 
-            var thread = new Nichan.Thread{ Uri = new Uri(url) };
-            var parser = new Nichan.DatParser();
-            try
-            {
-                parser.Feed(dat);
-            }
-            catch(Nichan.DatParserException e)
-            {
-                throw new ChatCollectException($"取得したDATのフォーマットが不正です\n\n{dat}", e);
-            }
-            thread.Title = parser.ThreadTitle;
-            while(true)
-            {
-                var res = parser.PopRes();
-                if (res == null)
-                    break;
-                thread.Res.Add(res);
-            }
-            thread.ResCount = thread.Res.Count;
-            return thread;
+            threadLoader.Thread.Uri = new Uri(url);
+            return threadLoader.Thread;
         }
-    }
 
+        private Nichan.ApiClient apiClient;
+        private Dictionary<(string server, string board, string thread), Nichan.DatThreadLoader> threadLoaders = new Dictionary<(string, string, string), Nichan.DatThreadLoader>();
+    }
 }
