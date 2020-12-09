@@ -28,7 +28,7 @@ namespace TVTComment.Model.ChatCollectService
                     return "対応スレがありません";
                 else
                     return
-                        $"遅延: {this.delays.Max().TotalSeconds}秒\n" +
+                        $"遅延: {this.chatTimes.Select(x => x.RetrieveTime - x.PostTime).DefaultIfEmpty(TimeSpan.Zero).Max().TotalSeconds}秒\n" +
                         string.Join("\n", threads.Select(pair => $"{pair.Value.ThreadTitle ?? "[スレタイ不明]"}  ({pair.Value.ResCount})  {pair.Key}"));
             }
         }
@@ -54,7 +54,7 @@ namespace TVTComment.Model.ChatCollectService
         /// </summary>
         private Dictionary<string, ThreadTitleAndResCount> threads = new Dictionary<string, ThreadTitleAndResCount>();
         private List<Chat> chatBuffer = new List<Chat>();
-        private Queue<TimeSpan> delays = new Queue<TimeSpan>(Enumerable.Repeat(TimeSpan.Zero, 30));
+        private List<(DateTime PostTime, DateTime RetrieveTime)> chatTimes = new List<(DateTime, DateTime)>();
 
         /// <summary>
         /// <see cref="NichanChatCollectService"/>を初期化する
@@ -165,14 +165,12 @@ namespace TVTComment.Model.ChatCollectService
             // 新たに収集したChatをchatBufferに移す
             this.chats.Clear();
             this.chatBuffer.AddRange(newChats);
-            // それぞれの遅延を計算しdelaysに記憶
-            foreach (var delay in newChats.Select(x => time - x.Time))
-            {
-                this.delays.Enqueue(delay);
-                this.delays.Dequeue();
-            }
-            // 団子になるのを防ぐため、delays内の最大値分だけ遅延してChatを返す
-            var ret = this.chatBuffer.Where(x => x.Time + this.delays.Max() <= time).ToArray();
+            // 直近15秒のChatの投稿時刻と取得時刻をchatTimesに記憶
+            this.chatTimes.AddRange(newChats.Select(x => (x.Time, time)));
+            this.chatTimes.RemoveAll(x => x.RetrieveTime + TimeSpan.FromSeconds(15) < time);
+            // 団子になるのを防ぐため、chatTimes内の時刻差の最大値分だけ遅延してChatを返す
+            var delay = this.chatTimes.Select(x => x.RetrieveTime - x.PostTime).DefaultIfEmpty(TimeSpan.Zero).Max();
+            var ret = this.chatBuffer.Where(x => x.Time + delay <= time).ToArray();
             foreach(var chat in ret)
             {
                 this.chatBuffer.Remove(chat);
