@@ -3,11 +3,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Net.Http;
 using System.Net;
+using System.Net.Http;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Nichan
@@ -104,7 +103,7 @@ namespace Nichan
                 throw new NetworkApiClientException(e);
             }
 
-            if(response.StatusCode != System.Net.HttpStatusCode.OK)
+            if(response.StatusCode != HttpStatusCode.OK)
             {
                 throw new AuthorizationApiClientException();
             }
@@ -118,18 +117,36 @@ namespace Nichan
             this.sessionID = responseContent[(idx + 1)..];
         }
 
-        public async Task<string> GetDat(string server, string board, string threadID)
+        public async Task<string> GetDat(string server, string board, string threadId)
         {
-            if(this.sessionID == "")
+            HttpResponseMessage response = await this.GetDatResponse(server, board, threadId, new (string, string)[0]);
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                throw new ResponseApiClientException();
+            }
+
+            string responseContent = Encoding.GetEncoding(932).GetString(
+                await response.Content.ReadAsByteArrayAsync()
+            );
+            return responseContent;
+        }
+
+        public async Task<HttpResponseMessage> GetDatResponse(string server, string board, string threadId, IEnumerable<(string name, string value)> additionalHeaders)
+        {
+            if (this.sessionID == "")
             {
                 await this.authorize();
             }
-            string message = $"/v1/{server}/{board}/{threadID}{this.sessionID}{this.AppKey}";
+            string message = $"/v1/{server}/{board}/{threadId}{this.sessionID}{this.AppKey}";
             string hobo = this.getHash(message);
 
-            var request = new HttpRequestMessage(HttpMethod.Post, $"https://api.5ch.net/v1/{server}/{board}/{threadID}");
+            var request = new HttpRequestMessage(HttpMethod.Post, $"https://api.5ch.net/v1/{server}/{board}/{threadId}");
             request.Headers.TryAddWithoutValidation("User-Agent", "Mozilla/5.0 (compatible; JaneStyle/3.80..)");
             request.Headers.TryAddWithoutValidation("Connection", "close");
+            foreach(var (name, value) in additionalHeaders)
+            {
+                request.Headers.TryAddWithoutValidation(name, value);
+            }
             request.Content = new FormUrlEncodedContent(
                 new Dictionary<string, string> { { "sid", this.sessionID }, { "hobo", hobo }, { "appkey", this.AppKey } }
             );
@@ -145,7 +162,7 @@ namespace Nichan
                 {
                     throw new NetworkApiClientException(e);
                 }
-                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
                 {
                     throw new AuthorizationApiClientException();
                 }
@@ -157,24 +174,13 @@ namespace Nichan
             {
                 response = await post();
             }
-            catch(AuthorizationApiClientException)
+            catch (AuthorizationApiClientException)
             {
                 await this.authorize();
                 response = await post();
             }
 
-            if (response.StatusCode != HttpStatusCode.OK)
-            {
-                string responseBody = Encoding.GetEncoding(932).GetString(
-                    await response.Content.ReadAsByteArrayAsync()
-                );
-                throw new ResponseApiClientException();
-            }
-
-            string responseContent = Encoding.GetEncoding(932).GetString(
-                await response.Content.ReadAsByteArrayAsync()
-            );
-            return responseContent;
+            return response;
         }
     }
 }
