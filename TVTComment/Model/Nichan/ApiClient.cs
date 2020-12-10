@@ -58,9 +58,9 @@ namespace Nichan
         private string sessionID = "";
 
         private readonly HttpClient httpClient = new HttpClient(
-            new HttpClientHandler() {
-                AutomaticDecompression = DecompressionMethods.GZip
-            }
+            //new HttpClientHandler() {
+            //    AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
+            //}
         );
 
         public ApiClient(string hmKey, string appKey, string userId = "", string password = "")
