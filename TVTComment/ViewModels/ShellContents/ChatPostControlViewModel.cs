@@ -2,11 +2,10 @@
 using Prism.Commands;
 using Prism.Interactivity.InteractionRequest;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
-using System.Text;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
@@ -18,8 +17,6 @@ namespace TVTComment.ViewModels.ShellContents
 
         private ObservableValue<byte> chatOpacity;
         public ObservableValue<byte> ChatOpacity => chatOpacity ?? (chatOpacity = model?.ChatOpacity?.MakeLinkedObservableValue(x => (byte)(x / 16), x => (byte)(x * 16)));
-
-        public Model.ChatCollectService.IChatCollectService SelectedPostService { get; set; }
         public ObservableValue<string> PostText { get; } = new ObservableValue<string>("");
         public ObservableValue<string> PostMailText { get; } = new ObservableValue<string>("");
 
@@ -30,6 +27,10 @@ namespace TVTComment.ViewModels.ShellContents
             if (x.CanPost) return new[] { x };
             else return new Model.ChatCollectService.IChatCollectService[0];
         }));
+        public ObservableValue<Model.ChatCollectService.IChatCollectService> SelectedPostService { get; } = new ObservableValue<Model.ChatCollectService.IChatCollectService>();
+        public ReadOnlyObservableValue<bool> IsShowingNiconicoPostForm => new ReadOnlyObservableValue<bool>(
+            this.SelectedPostService.Select(x => x is Model.ChatCollectService.NiconicoChatCollectService)
+        );
 
         public ObservableCollection<string> PostMailTextExamples => model.ChatPostMailTextExamples;
 
@@ -63,16 +64,19 @@ namespace TVTComment.ViewModels.ShellContents
             if (string.IsNullOrWhiteSpace(PostText.Value))
                 return;
 
-            if (SelectedPostService == null)
+            if (SelectedPostService.Value == null)
             {
                 AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = "コメントの投稿先が選択されていません" });
                 return;
             }
 
-            if (SelectedPostService is Model.ChatCollectService.NiconicoChatCollectService)
-                model.ChatCollectServiceModule.PostChat(SelectedPostService, new Model.ChatCollectService.NiconicoChatCollectService.ChatPostObject(PostText.Value, PostMailText.Value));
+            if (SelectedPostService.Value is Model.ChatCollectService.NiconicoChatCollectService)
+                model.ChatCollectServiceModule.PostChat(
+                    SelectedPostService.Value,
+                    new Model.ChatCollectService.NiconicoChatCollectService.ChatPostObject(PostText.Value, PostMailText.Value)
+                );
             else
-                throw new Exception("Unknown ChatCollectService to post: " + SelectedPostService.ToString());
+                throw new Exception("Unknown ChatCollectService to post: " + SelectedPostService.Value.ToString());
 
             PostText.Value = "";
         }

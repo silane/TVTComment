@@ -11,11 +11,15 @@
              prism:ViewModelLocator.AutoWireViewModel="True"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+    </UserControl.Resources>
+    
     <i:Interaction.Triggers>
-    <prism:InteractionRequestTrigger SourceObject="{Binding AlertRequest}">
-        <prism:PopupWindowAction IsModal="True" CenterOverAssociatedObject="True">
-        </prism:PopupWindowAction>
-    </prism:InteractionRequestTrigger>
+        <prism:InteractionRequestTrigger SourceObject="{Binding AlertRequest}">
+            <prism:PopupWindowAction IsModal="True" CenterOverAssociatedObject="True">
+            </prism:PopupWindowAction>
+        </prism:InteractionRequestTrigger>
         <!--<behaviors:WindowEventTrigger EventName="Loaded">
             <behaviors:SetKeyboardFocusedElementAction Element="{Binding ElementName=PostTextBox}"/>
         </behaviors:WindowEventTrigger>
@@ -31,7 +35,7 @@
                 <ColumnDefinition Width="80"/>
                 <ColumnDefinition Width="auto"/>
             </Grid.ColumnDefinitions>
-            <ComboBox SelectedItem="{Binding SelectedPostService}" ItemsSource="{Binding Path=PostServices}" DisplayMemberPath="Name" SelectedIndex="0" Grid.Column="0"/>
+            <ComboBox SelectedItem="{Binding SelectedPostService.Value}" ItemsSource="{Binding Path=PostServices}" DisplayMemberPath="Name" SelectedIndex="0" Grid.Column="0"/>
             <Slider Value="{Binding ChatOpacity.Value}" Grid.Column="1" VerticalAlignment="Center" Minimum="0" Maximum="15" IsSnapToTickEnabled="True" TickPlacement="BottomRight">
                 <Slider.ToolTip>
                     <TextBlock>
@@ -47,7 +51,7 @@
                 </i:Interaction.Triggers>
             </Button>
         </Grid>
-        <Grid>
+        <Grid Visibility="{Binding IsShowingNiconicoPostForm.Value, Converter={StaticResource BooleanToVisibilityConverter}}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="3"/>
