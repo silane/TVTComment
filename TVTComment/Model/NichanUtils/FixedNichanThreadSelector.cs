@@ -1,23 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TVTComment.Model.NichanUtils
 {
-    class FixedNichanThreadSelector:INichanThreadSelector
+    class FixedNichanThreadSelector : INichanThreadSelector
     {
-        private IEnumerable<string> uris;
+        public IEnumerable<string> Uris { get; }
 
         public FixedNichanThreadSelector(IEnumerable<string> uris)
         {
-            this.uris = uris;
+            this.Uris = uris;
         }
 
-        public IEnumerable<string> Get(ChannelInfo channel,DateTime time)
+        public IEnumerable<string> Get(ChannelInfo channel, DateTime time)
         {
-            return uris;
+            return this.Uris;
         }
     }
 }
