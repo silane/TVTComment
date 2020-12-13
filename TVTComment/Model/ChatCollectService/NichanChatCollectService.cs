@@ -24,7 +24,17 @@ namespace TVTComment.Model.ChatCollectService
             }
         }
 
-        public override ChatCollectServiceEntry.IChatCollectServiceEntry ServiceEntry { get; }
+        protected abstract string TypeName { get; }
+        protected abstract Task<Nichan.Thread> GetThread(string url);
+
+        public override string Name => this.TypeName + this.threadSelector switch
+        {
+            NichanUtils.AutoNichanThreadSelector auto => " ([自動])",
+            NichanUtils.FuzzyNichanThreadSelector fuzzy => $" ([類似] {fuzzy.ThreadTitleExample})",
+            NichanUtils.KeywordNichanThreadSelector keyword => $" ([キーワード] {string.Join(", ", keyword.Keywords)})",
+            NichanUtils.FixedNichanThreadSelector fix => $" ([固定] {string.Join(", ", fix.Uris)})",
+            _ => "",
+        };
         public override string GetInformationText()
         {
             lock (threads)
@@ -37,11 +47,26 @@ namespace TVTComment.Model.ChatCollectService
                         string.Join("\n", threads.Select(pair => $"{pair.Value.Title ?? "[スレタイ不明]"}  ({pair.Value.ResCount})  {pair.Key}"));
             }
         }
+        public override ChatCollectServiceEntry.IChatCollectServiceEntry ServiceEntry { get; }
         public override bool CanPost => true;
 
-        private readonly Color chatColor;
-        private readonly TimeSpan resCollectInterval, threadSearchInterval;
-        private readonly NichanUtils.INichanThreadSelector threadSelector;
+        public IEnumerable<Nichan.Thread> CurrentThreads
+        {
+            get
+            {
+                lock (this.threads)
+                    return this.threads.Select(x => new Nichan.Thread()
+                    {
+                        Uri = new Uri(x.Key),
+                        Title = x.Value.Title,
+                        ResCount = x.Value.ResCount,
+                    }).ToArray();
+            }
+        }
+
+        protected readonly Color chatColor;
+        protected readonly TimeSpan resCollectInterval, threadSearchInterval;
+        protected readonly NichanUtils.INichanThreadSelector threadSelector;
 
         private readonly Task resCollectTask;
         private readonly CancellationTokenSource cancel = new CancellationTokenSource();
@@ -123,7 +148,7 @@ namespace TVTComment.Model.ChatCollectService
                         copiedThreads = this.threads.ToArray();
                     foreach (var pair in copiedThreads.ToArray())
                     {
-                        Nichan.Thread thread = await this.getThread(pair.Key);
+                        Nichan.Thread thread = await this.GetThread(pair.Key);
                         int fromResIdx = thread.Res.FindLastIndex(res => res.Number <= pair.Value.ResCount);
                         fromResIdx++;
 
@@ -222,27 +247,11 @@ namespace TVTComment.Model.ChatCollectService
                 if (!errored) throw;
             }
         }
-
-        protected abstract Task<Nichan.Thread> getThread(string url);
-
-        public IEnumerable<Nichan.Thread> CurrentThreads
-        {
-            get
-            {
-                lock (this.threads)
-                    return this.threads.Select(x => new Nichan.Thread()
-                    {
-                        Uri = new Uri(x.Key),
-                        Title = x.Value.Title,
-                        ResCount = x.Value.ResCount,
-                    }).ToArray();
-            }
-        }
     }
 
     class HTMLNichanChatCollectService : NichanChatCollectService
     {
-        public override string Name => "2chHTML";
+        protected override string TypeName => "2chHTML";
 
         public HTMLNichanChatCollectService(
             ChatCollectServiceEntry.IChatCollectServiceEntry serviceEntry,
@@ -254,7 +263,7 @@ namespace TVTComment.Model.ChatCollectService
         {
         }
 
-        protected override async Task<Nichan.Thread> getThread(string url)
+        protected override async Task<Nichan.Thread> GetThread(string url)
         {
             try
             {
@@ -269,7 +278,7 @@ namespace TVTComment.Model.ChatCollectService
 
     class DATNichanChatCollectService : NichanChatCollectService
     {
-        public override string Name => "2chDAT";
+        protected override string TypeName => "2chDAT";
 
         public DATNichanChatCollectService(
             ChatCollectServiceEntry.IChatCollectServiceEntry serviceEntry,
@@ -283,7 +292,7 @@ namespace TVTComment.Model.ChatCollectService
             this.apiClient = nichanApiClient;
         }
 
-        protected override async Task<Nichan.Thread> getThread(string url)
+        protected override async Task<Nichan.Thread> GetThread(string url)
         {
             var uri = new Uri(url);
             var server = uri.Host.Split('.')[0];
