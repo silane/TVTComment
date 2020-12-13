@@ -99,5 +99,19 @@
             </TextBox>
             <Button Content="投稿" Command="{Binding PostCommand}" Grid.Column="3"/>
         </Grid>
+        <Grid Visibility="{Binding IsShowingNichanPostForm.Value, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="auto"/>
+            </Grid.ColumnDefinitions>
+            <ComboBox Grid.Column="0" ItemsSource="{Binding NichanCurrentThreads}" SelectedItem="{Binding SelectedNichanCurrentThread.Value}" DisplayMemberPath="Title" SelectedIndex="0">
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="DropDownOpened">
+                        <i:InvokeCommandAction Command="{Binding UpdateNichanCurrentThreadsCommand}"/>
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
+            </ComboBox>
+            <Button Grid.Column="1" Command="{Binding PostCommand}">スレを開く</Button>
+        </Grid>
     </StackPanel>
 </UserControl>

@@ -2,6 +2,7 @@
 using Prism.Commands;
 using Prism.Interactivity.InteractionRequest;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
@@ -21,9 +22,13 @@ namespace TVTComment.ViewModels.ShellContents
         public DisposableReadOnlyObservableCollection<Model.ChatCollectService.IChatCollectService> PostServices { get; private set; }
         public ObservableValue<Model.ChatCollectService.IChatCollectService> SelectedPostService { get; } = new ObservableValue<Model.ChatCollectService.IChatCollectService>();
         public ReadOnlyObservableValue<bool> IsShowingNiconicoPostForm { get; private set; }
+        public ReadOnlyObservableValue<bool> IsShowingNichanPostForm { get; private set; }
+        public ObservableCollection<Nichan.Thread> NichanCurrentThreads { get; } = new ObservableCollection<Nichan.Thread>();
+        public ObservableValue<Nichan.Thread> SelectedNichanCurrentThread { get; } = new ObservableValue<Nichan.Thread>();
         public ObservableCollection<string> PostMailTextExamples => model.ChatPostMailTextExamples;
 
         public ICommand PostCommand { get; private set; }
+        public ICommand UpdateNichanCurrentThreadsCommand { get; private set; }
         public ICommand AddPostMailTextExampleCommand { get; private set; }
         public ICommand RemovePostMailTextExampleCommand { get; private set; }
 
@@ -50,8 +55,19 @@ namespace TVTComment.ViewModels.ShellContents
             this.IsShowingNiconicoPostForm = new ReadOnlyObservableValue<bool>(
                 this.SelectedPostService.Select(x => x is Model.ChatCollectService.NiconicoChatCollectService)
             );
+            this.IsShowingNichanPostForm = new ReadOnlyObservableValue<bool>(
+                this.SelectedPostService.Select(x => x is Model.ChatCollectService.NichanChatCollectService)
+            );
 
             this.PostCommand = new DelegateCommand(PostChat);
+            this.UpdateNichanCurrentThreadsCommand = new DelegateCommand(() =>
+            {
+                if (!(this.SelectedPostService.Value is Model.ChatCollectService.NichanChatCollectService nichanChatCollectService))
+                    return;
+                this.NichanCurrentThreads.Clear();
+                foreach (var thread in nichanChatCollectService.CurrentThreads)
+                    this.NichanCurrentThreads.Add(thread);
+            });
             this.AddPostMailTextExampleCommand = new DelegateCommand<string>(AddPostMailTextExample);
             this.RemovePostMailTextExampleCommand = new DelegateCommand<string>(RemovePostMailTextExample);
 
@@ -60,9 +76,6 @@ namespace TVTComment.ViewModels.ShellContents
 
         private void PostChat()
         {
-            if (string.IsNullOrWhiteSpace(PostText.Value))
-                return;
-
             if (SelectedPostService.Value == null)
             {
                 AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = "コメントの投稿先が選択されていません" });
@@ -70,10 +83,23 @@ namespace TVTComment.ViewModels.ShellContents
             }
 
             if (SelectedPostService.Value is Model.ChatCollectService.NiconicoChatCollectService)
+            {
+                if (string.IsNullOrWhiteSpace(PostText.Value))
+                    return;
                 model.ChatCollectServiceModule.PostChat(
                     SelectedPostService.Value,
                     new Model.ChatCollectService.NiconicoChatCollectService.ChatPostObject(PostText.Value, PostMailText.Value)
                 );
+            }
+            else if (SelectedPostService.Value is Model.ChatCollectService.NichanChatCollectService)
+            {
+                if (this.SelectedNichanCurrentThread.Value == null)
+                    return;
+                model.ChatCollectServiceModule.PostChat(
+                    SelectedPostService.Value,
+                    new Model.ChatCollectService.NichanChatCollectService.ChatPostObject(this.SelectedNichanCurrentThread.Value.Uri.ToString())
+                );
+            }
             else
                 throw new Exception("Unknown ChatCollectService to post: " + SelectedPostService.Value.ToString());
 

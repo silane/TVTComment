@@ -8,15 +8,20 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.Drawing;
 using System.Net;
+using System.Diagnostics;
 
 namespace TVTComment.Model.ChatCollectService
 {
     abstract class NichanChatCollectService : OnceASecondChatCollectService
     {
-        private class ThreadTitleAndResCount
+        public class ChatPostObject : BasicChatPostObject
         {
-            public string ThreadTitle { get; set; } = null;
-            public int ResCount { get; set; } = 0;
+            public string ThreadUri { get; }
+
+            public ChatPostObject(string threadUri) : base("")
+            {
+                this.ThreadUri = threadUri;
+            }
         }
 
         public override ChatCollectServiceEntry.IChatCollectServiceEntry ServiceEntry { get; }
@@ -29,9 +34,10 @@ namespace TVTComment.Model.ChatCollectService
                 else
                     return
                         $"遅延: {this.chatTimes.Select(x => x.RetrieveTime - x.PostTime).DefaultIfEmpty(TimeSpan.Zero).Max().TotalSeconds}秒\n" +
-                        string.Join("\n", threads.Select(pair => $"{pair.Value.ThreadTitle ?? "[スレタイ不明]"}  ({pair.Value.ResCount})  {pair.Key}"));
+                        string.Join("\n", threads.Select(pair => $"{pair.Value.Title ?? "[スレタイ不明]"}  ({pair.Value.ResCount})  {pair.Key}"));
             }
         }
+        public override bool CanPost => true;
 
         private readonly Color chatColor;
         private readonly TimeSpan resCollectInterval, threadSearchInterval;
@@ -52,7 +58,7 @@ namespace TVTComment.Model.ChatCollectService
         /// <summary>
         /// キーはスレッドのURI
         /// </summary>
-        private Dictionary<string, ThreadTitleAndResCount> threads = new Dictionary<string, ThreadTitleAndResCount>();
+        private SortedList<string, (string Title, int ResCount)> threads = new SortedList<string, (string, int)>();
         private List<Chat> chatBuffer = new List<Chat>();
         private List<(DateTime PostTime, DateTime RetrieveTime)> chatTimes = new List<(DateTime, DateTime)>();
 
@@ -97,25 +103,31 @@ namespace TVTComment.Model.ChatCollectService
                         {
                             IEnumerable<string> threadUris = threadSelector.Get(currentChannel, currentTime.Value);
 
-                            //新しいスレ一覧に入ってないものを消す
-                            foreach (string uri in threads.Keys.Where(x => !threadUris.Contains(x)).ToList())
-                                threads.Remove(uri);
-                            //新しいスレ一覧で追加されたものを追加する
-                            foreach (string uri in threadUris)
-                                if (!threads.ContainsKey(uri))
-                                    threads.Add(uri, new ThreadTitleAndResCount());
+                            lock (this.threads)
+                            {
+                                //新しいスレ一覧に入ってないものを消す
+                                foreach (string uri in this.threads.Keys.Where(x => !threadUris.Contains(x)).ToList())
+                                    this.threads.Remove(uri);
+                                //新しいスレ一覧で追加されたものを追加する
+                                foreach (string uri in threadUris)
+                                    if (!this.threads.ContainsKey(uri))
+                                        this.threads.Add(uri, (null, 0));
+                            }
                         }
                         else
                             i = count - 1;//取得対象のチャンネル、時刻が設定されていなければやり直す
                     }
 
-                    foreach (var pair in threads)
+                    KeyValuePair<string, (string Title, int ResCount)>[] copiedThreads;
+                    lock(this.threads)
+                        copiedThreads = this.threads.ToArray();
+                    foreach (var pair in copiedThreads.ToArray())
                     {
                         Nichan.Thread thread = await this.getThread(pair.Key);
-                        int fromResIdx=thread.Res.FindLastIndex(res=>res.Number<=pair.Value.ResCount);
+                        int fromResIdx = thread.Res.FindLastIndex(res => res.Number <= pair.Value.ResCount);
                         fromResIdx++;
-                            
-                        for(int resIdx=fromResIdx;resIdx<thread.Res.Count;resIdx++)
+
+                        for (int resIdx = fromResIdx; resIdx < thread.Res.Count; resIdx++)
                         {
                             //1001から先のレスは返さない
                             if (thread.Res[resIdx].Number > 1000)
@@ -125,12 +137,15 @@ namespace TVTComment.Model.ChatCollectService
                                 elem.ReplaceWith("\n");
                             }
                             chats.Enqueue(new Chat(thread.Res[resIdx].Date.Value, thread.Res[resIdx].Text.Value, Chat.PositionType.Normal, Chat.SizeType.Normal,
-                                chatColor.IsEmpty ? Color.White : chatColor, thread.Res[resIdx].UserId,thread.Res[resIdx].Number));
+                                chatColor.IsEmpty ? Color.White : chatColor, thread.Res[resIdx].UserId, thread.Res[resIdx].Number));
                         }
 
+                        var pairValue = pair.Value;
                         if (pair.Value.ResCount == 0)
-                            pair.Value.ThreadTitle = thread.Title;
-                        pair.Value.ResCount = thread.Res[thread.Res.Count - 1].Number;
+                            pairValue.Title = thread.Title;
+                        pairValue.ResCount = thread.Res[^1].Number;
+                        lock(this.threads)
+                            this.threads[pair.Key] = pairValue;
                     }
                     await Task.Delay(1000, cancellationToken);
                 }
@@ -178,6 +193,21 @@ namespace TVTComment.Model.ChatCollectService
             return ret;
         }
 
+        public override async Task PostChat(BasicChatPostObject basicChatPostObject)
+        {
+            var chatPostObject = (ChatPostObject)basicChatPostObject;
+
+            string threadUri = chatPostObject.ThreadUri;
+
+            var uri = new UriBuilder(threadUri);
+            var pathes = uri.Path.Split('/').ToArray();
+            var readcgiIdx = Array.IndexOf(pathes, "read.cgi");
+            uri.Path = string.Join('/', pathes[..(readcgiIdx + 3)].Append("1"));
+            uri.Fragment = "1";
+
+            Process.Start(new ProcessStartInfo("cmd", $"/c start {uri.ToString().Replace("&", "^&")}"));
+        }
+
         public override void Dispose()
         {
             cancel.Cancel();
@@ -194,6 +224,20 @@ namespace TVTComment.Model.ChatCollectService
         }
 
         protected abstract Task<Nichan.Thread> getThread(string url);
+
+        public IEnumerable<Nichan.Thread> CurrentThreads
+        {
+            get
+            {
+                lock (this.threads)
+                    return this.threads.Select(x => new Nichan.Thread()
+                    {
+                        Uri = new Uri(x.Key),
+                        Title = x.Value.Title,
+                        ResCount = x.Value.ResCount,
+                    }).ToArray();
+            }
+        }
     }
 
     class HTMLNichanChatCollectService : NichanChatCollectService
