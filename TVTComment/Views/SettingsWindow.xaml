@@ -67,7 +67,7 @@
                         <ColumnDefinition Width="auto"/>
                         <ColumnDefinition/>
                     </Grid.ColumnDefinitions>
-                    <Label Grid.Column="0" Grid.Row="0">コメントログ数: </Label>
+                    <Label Grid.Column="0" Grid.Row="0">コメントログ数 (0で無限): </Label>
                     <TextBox Text="{Binding ChatPreserveCount.Value}" Grid.Column="1" Grid.Row="0" InputMethod.IsInputMethodSuspended="True" VerticalAlignment="Center"/>
                 </Grid>
             </StackPanel>

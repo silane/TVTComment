@@ -81,8 +81,11 @@ namespace TVTComment.Model
             {
                 applyChatModRule(chat);
 
-                if (chats.Count >= ChatPreserveCount.Value)
-                    chats.RemoveAt(0);
+                if (ChatPreserveCount.Value > 0)
+                {
+                    while(chats.Count >= ChatPreserveCount.Value)
+                        chats.RemoveAt(0);
+                }
                 chats.Add(chat);
 
                 if (!chat.Ng)
