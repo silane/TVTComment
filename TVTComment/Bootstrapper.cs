@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TVTComment.Views;
-using Microsoft.Practices.Unity;
+﻿using Microsoft.Practices.Unity;
 using Prism.Unity;
 using System.Windows;
+using TVTComment.Views;
 
 namespace TVTComment
 {
@@ -31,6 +26,8 @@ namespace TVTComment
                  (nameof(Views.ChatCollectServiceCreationOptionControl.NichanChatCollectServiceCreationOptionControl));
             this.Container.RegisterTypeForNavigation<Views.ChatCollectServiceCreationOptionControl.FileChatCollectServiceCreationOptionControl>
                 (nameof(Views.ChatCollectServiceCreationOptionControl.FileChatCollectServiceCreationOptionControl));
+            this.Container.RegisterTypeForNavigation<Views.ChatCollectServiceCreationOptionControl.NiconicoLiveChatCollectServiceCreationOptionControl>
+                (nameof(Views.ChatCollectServiceCreationOptionControl.NiconicoLiveChatCollectServiceCreationOptionControl));
         }
     }
 }

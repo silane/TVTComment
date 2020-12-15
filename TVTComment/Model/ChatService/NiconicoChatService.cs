@@ -44,7 +44,11 @@ namespace TVTComment.Model.ChatService
             }
             catch (NiconicoUtils.NiconicoLoginException) { }
 
-            ChatCollectServiceEntries = new ChatCollectServiceEntry.IChatCollectServiceEntry[2] { new ChatCollectServiceEntry.NiconicoChatCollectServiceEntry(this,jkIdResolver, loginSession) ,new ChatCollectServiceEntry.NiconicoLogChatCollectServiceEntry(this,jkIdResolver, loginSession)};
+            ChatCollectServiceEntries = new ChatCollectServiceEntry.IChatCollectServiceEntry[3] {
+                new ChatCollectServiceEntry.NiconicoChatCollectServiceEntry(this, this.jkIdResolver, this.loginSession),
+                new ChatCollectServiceEntry.NiconicoLogChatCollectServiceEntry(this, this.jkIdResolver, this.loginSession),
+                new ChatCollectServiceEntry.NiconicoLiveChatCollectServiceEntry(this, this.loginSession),
+            };
             ChatTrendServiceEntries = new IChatTrendServiceEntry[1] { new NiconicoChatTrendServiceEntry(jkIdResolver) };
         }
 

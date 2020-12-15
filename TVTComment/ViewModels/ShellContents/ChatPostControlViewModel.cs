@@ -53,7 +53,7 @@ namespace TVTComment.ViewModels.ShellContents
                 else return new Model.ChatCollectService.IChatCollectService[0];
             });
             this.IsShowingNiconicoPostForm = new ReadOnlyObservableValue<bool>(
-                this.SelectedPostService.Select(x => x is Model.ChatCollectService.NiconicoChatCollectService)
+                this.SelectedPostService.Select(x => x is Model.ChatCollectService.NiconicoChatCollectService || x is Model.ChatCollectService.NiconicoLiveChatCollectService)
             );
             this.IsShowingNichanPostForm = new ReadOnlyObservableValue<bool>(
                 this.SelectedPostService.Select(x => x is Model.ChatCollectService.NichanChatCollectService)
@@ -89,6 +89,15 @@ namespace TVTComment.ViewModels.ShellContents
                 model.ChatCollectServiceModule.PostChat(
                     SelectedPostService.Value,
                     new Model.ChatCollectService.NiconicoChatCollectService.ChatPostObject(PostText.Value, PostMailText.Value)
+                );
+            }
+            else if (SelectedPostService.Value is Model.ChatCollectService.NiconicoLiveChatCollectService)
+            {
+                if (string.IsNullOrWhiteSpace(PostText.Value))
+                    return;
+                model.ChatCollectServiceModule.PostChat(
+                    SelectedPostService.Value,
+                    new Model.ChatCollectService.NiconicoLiveChatCollectService.ChatPostObject(PostText.Value, PostMailText.Value)
                 );
             }
             else if (SelectedPostService.Value is Model.ChatCollectService.NichanChatCollectService)

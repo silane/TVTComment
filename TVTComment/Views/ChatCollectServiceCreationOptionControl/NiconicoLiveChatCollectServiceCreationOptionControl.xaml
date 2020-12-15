@@ -1,0 +1,32 @@
+﻿<UserControl x:Class="TVTComment.Views.ChatCollectServiceCreationOptionControl.NiconicoLiveChatCollectServiceCreationOptionControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+             xmlns:prism="http://prismlibrary.com/"
+             xmlns:behaviors="clr-namespace:TVTComment.Views.Behaviors"
+             xmlns:local="clr-namespace:TVTComment.Views.ChatCollectServiceCreationOptionControl"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800"
+             prism:ViewModelLocator.AutoWireViewModel="True">
+    <i:Interaction.Behaviors>
+        <behaviors:RegionContextBinderBehavior Binding="{Binding RelativeSource={RelativeSource AncestorType=UserControl},Path=DataContext}"/>
+    </i:Interaction.Behaviors>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <Label Grid.Row="0" Grid.Column="0">生放送ID (lv*********)</Label>
+        <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding LiveId, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center">
+            <TextBox.InputBindings>
+                <KeyBinding Key="Return" Command="{Binding OkCommand}" />
+            </TextBox.InputBindings>
+        </TextBox>
+    </Grid>
+</UserControl>

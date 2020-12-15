@@ -1,14 +1,12 @@
 ﻿using ObservableUtils;
+using Prism.Commands;
+using Prism.Interactivity.InteractionRequest;
+using Prism.Regions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Prism.Interactivity.InteractionRequest;
 using System.Windows.Input;
-using Prism.Commands;
 using TVTComment.ViewModels.Contents;
-using Prism.Regions;
 
 namespace TVTComment.ViewModels
 {
@@ -69,14 +67,14 @@ namespace TVTComment.ViewModels
         private void serviceEntryChanged()
         {
             var entry = ChatCollectServiceEntries.FirstOrDefault(x => x.IsSelected)?.Value;
-            if (entry is Model.ChatCollectServiceEntry.NichanChatCollectServiceEntry)
+            string creationOptionControl = entry switch
             {
-                regionManager.RequestNavigate("ChatCollectServiceCreationPresetControl_OptionRegion", "NichanChatCollectServiceCreationOptionControl");
-            }
-            else if (entry is Model.ChatCollectServiceEntry.FileChatCollectServiceEntry)
-            {
-                regionManager.RequestNavigate("ChatCollectServiceCreationPresetControl_OptionRegion", "FileChatCollectServiceCreationOptionControl");
-            }
+                Model.ChatCollectServiceEntry.NichanChatCollectServiceEntry _ => "NichanChatCollectServiceCreationOptionControl",
+                Model.ChatCollectServiceEntry.FileChatCollectServiceEntry _ => "FileChatCollectServiceCreationOptionControl",
+                Model.ChatCollectServiceEntry.NiconicoLiveChatCollectServiceEntry _ => "NiconicoLiveChatCollectServiceCreationOptionControl",
+                _ => "",
+            };
+            regionManager.RequestNavigate("ChatCollectServiceCreationSettingsControl_CreationOptionRegion", creationOptionControl);
         }
     }
 }

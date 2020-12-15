@@ -207,7 +207,11 @@ namespace TVTComment.ViewModels
                     model.ChatCollectServiceModule.AddService(item.ServiceEntry, new Model.ChatCollectServiceEntry.NiconicoChatCollectServiceEntry.ChatCollectServiceCreationOption());
                 else if (item.ServiceEntry is Model.ChatCollectServiceEntry.NiconicoLogChatCollectServiceEntry)
                     model.ChatCollectServiceModule.AddService(item.ServiceEntry, new Model.ChatCollectServiceEntry.NiconicoLogChatCollectServiceEntry.ChatCollectServiceCreationOption());
-                else if (item.ServiceEntry is Model.ChatCollectServiceEntry.NichanChatCollectServiceEntry || item.ServiceEntry is Model.ChatCollectServiceEntry.FileChatCollectServiceEntry)
+                else if (
+                    item.ServiceEntry is Model.ChatCollectServiceEntry.NichanChatCollectServiceEntry ||
+                    item.ServiceEntry is Model.ChatCollectServiceEntry.FileChatCollectServiceEntry ||
+                    item.ServiceEntry is Model.ChatCollectServiceEntry.NiconicoLiveChatCollectServiceEntry
+                )
                 {
                     var confirmation = await ChatCollectServiceCreationSettingsRequest.RaiseAsync(
                         new Notifications.ChatCollectServiceCreationSettingsConfirmation { Title = "コメント元設定", TargetChatCollectServiceEntry = item.ServiceEntry });

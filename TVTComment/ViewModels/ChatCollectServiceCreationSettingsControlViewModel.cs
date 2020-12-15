@@ -59,16 +59,14 @@ namespace TVTComment.ViewModels
             confirmation.Confirmed = false;
             confirmation.ChatCollectServiceCreationOption = null;
 
-            if (confirmation.TargetChatCollectServiceEntry is Model.ChatCollectServiceEntry.NichanChatCollectServiceEntry)
+            string creationOptionControl = confirmation.TargetChatCollectServiceEntry switch
             {
-                regionManager.RequestNavigate("ChatCollectServiceCreationSettingsControl_CreationOptionRegion", "NichanChatCollectServiceCreationOptionControl");
-            }
-            else if (confirmation.TargetChatCollectServiceEntry is Model.ChatCollectServiceEntry.FileChatCollectServiceEntry)
-            {
-                regionManager.RequestNavigate("ChatCollectServiceCreationSettingsControl_CreationOptionRegion", "FileChatCollectServiceCreationOptionControl");
-            }
-            else
-                throw new Exception($"Unknown TargetChatCollectServiceEntry: {confirmation.TargetChatCollectServiceEntry.ToString()}");
+                Model.ChatCollectServiceEntry.NichanChatCollectServiceEntry _ => "NichanChatCollectServiceCreationOptionControl",
+                Model.ChatCollectServiceEntry.FileChatCollectServiceEntry _ => "FileChatCollectServiceCreationOptionControl",
+                Model.ChatCollectServiceEntry.NiconicoLiveChatCollectServiceEntry _ => "NiconicoLiveChatCollectServiceCreationOptionControl",
+                _ => throw new Exception($"Unknown TargetChatCollectServiceEntry: {confirmation.TargetChatCollectServiceEntry}"),
+            };
+            regionManager.RequestNavigate("ChatCollectServiceCreationSettingsControl_CreationOptionRegion", creationOptionControl);
         }
 
         private void RegionChanged(ChatCollectServiceCreationOptionControlViewModel oldViewModel, ChatCollectServiceCreationOptionControlViewModel newViewModel)
