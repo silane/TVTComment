@@ -20,7 +20,7 @@ namespace TVTComment.Model.NiconicoUtils
         }
     }
 
-    class NiconicoJikkyouXmlParser
+    class NiconicoCommentXmlParser
     {
         public class XmlTag
         {
@@ -102,10 +102,10 @@ namespace TVTComment.Model.NiconicoUtils
         private string buffer;
 
         /// <summary>
-        /// <see cref="NiconicoJikkyouXmlParser"/>を初期化する
+        /// <see cref="NiconicoCommentXmlParser"/>を初期化する
         /// </summary>
-        /// <param name="socketFormat">ソケットを使うリアルタイムの実況データ形式ならtrue 過去ログなどのデータ形式ならfalse</param>
-        public NiconicoJikkyouXmlParser(bool socketFormat)
+        /// <param name="socketFormat">ソケットを使うリアルタイムのデータ形式ならtrue 過去ログなどのデータ形式ならfalse</param>
+        public NiconicoCommentXmlParser(bool socketFormat)
         {
             this.socketFormat = socketFormat;
             this.inChatTag = false;
@@ -271,7 +271,11 @@ namespace TVTComment.Model.NiconicoUtils
         private static readonly Regex reNo = new Regex(" no=\"(\\d+)\"");
         private static int getNumberFromChatTag(string str)
         {
-            return int.Parse(reNo.Match(str).Groups[1].Value);
+            var match = reNo.Match(str);
+            if (match.Success)
+                return int.Parse(match.Groups[1].Value);
+            else
+                return 0;
         }
 
         private static readonly Regex reVpos = new Regex(@"vpos=""(-?\d+)""");
@@ -293,7 +297,7 @@ namespace TVTComment.Model.NiconicoUtils
         
 
         /// <summary>
-        /// (マシンのカルチャ設定に関係なく)今の日本標準時を返す
+        /// マシンのロケール設定に関係なく今の日本標準時を返す
         /// </summary>
         private static DateTime getDateTimeJstNow()
         {

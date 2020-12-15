@@ -144,14 +144,14 @@ namespace TVTComment.Model.ChatCollectService
 
             string data = await client.GetStringAsync($"http://{ms}:{http_port}/api/thread?thread={thread_id}&res_from={resFrom}&version=20061206&when={endTimeStr}&user_id={user_id}&waybackkey={waybackkey}&scores=1").ConfigureAwait(false);
 
-            NiconicoUtils.NiconicoJikkyouXmlParser parser = new NiconicoUtils.NiconicoJikkyouXmlParser(false);
+            NiconicoUtils.NiconicoCommentXmlParser parser = new NiconicoUtils.NiconicoCommentXmlParser(false);
             parser.Push(data);
             lock (chats)
             {
                 while (parser.DataAvailable())
                 {
-                    NiconicoUtils.NiconicoJikkyouXmlParser.XmlTag tag = parser.Pop();
-                    var chatTag = tag as NiconicoUtils.NiconicoJikkyouXmlParser.ChatXmlTag;
+                    NiconicoUtils.NiconicoCommentXmlParser.XmlTag tag = parser.Pop();
+                    var chatTag = tag as NiconicoUtils.NiconicoCommentXmlParser.ChatXmlTag;
                     if (chatTag != null)
                         chats.Add(chatTag.Chat);
                 }

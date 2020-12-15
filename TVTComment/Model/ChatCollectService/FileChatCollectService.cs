@@ -19,7 +19,7 @@ namespace TVTComment.Model.ChatCollectService
         private bool relativeTime;
         private DateTime? baseTime;
         private Task readTask;
-        private NiconicoUtils.NiconicoJikkyouXmlParser parser = new NiconicoUtils.NiconicoJikkyouXmlParser(false);
+        private NiconicoUtils.NiconicoCommentXmlParser parser = new NiconicoUtils.NiconicoCommentXmlParser(false);
         private ConcurrentQueue<NiconicoUtils.ChatAndVpos> chats = new ConcurrentQueue<NiconicoUtils.ChatAndVpos>();
 
         public override string GetInformationText()
@@ -43,7 +43,7 @@ namespace TVTComment.Model.ChatCollectService
                 parser.Push(line);
                 while (parser.DataAvailable())
                 {
-                    var chatTag = parser.Pop() as NiconicoUtils.NiconicoJikkyouXmlParser.ChatXmlTag;
+                    var chatTag = parser.Pop() as NiconicoUtils.NiconicoCommentXmlParser.ChatXmlTag;
                     if (chatTag == null) continue;
                     chats.Enqueue(chatTag.Chat);
                 }

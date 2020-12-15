@@ -42,9 +42,9 @@ namespace TVTComment.Model.ChatCollectService
 
         private NiconicoUtils.JkIdResolver jkIdResolver;
         private int lastJkId = 0;
-        private NiconicoUtils.NiconicoJikkyouXmlParser parser = new NiconicoUtils.NiconicoJikkyouXmlParser(true);
+        private NiconicoUtils.NiconicoCommentXmlParser parser = new NiconicoUtils.NiconicoCommentXmlParser(true);
         private NetworkStream socketStream;
-        private NiconicoUtils.NiconicoJikkyouXmlParser.ThreadXmlTag lastThreadTag;
+        private NiconicoUtils.NiconicoCommentXmlParser.ThreadXmlTag lastThreadTag;
         private int lastResNum = -1;
         private string userId;
         private bool isPremium;
@@ -110,9 +110,9 @@ namespace TVTComment.Model.ChatCollectService
                 while (parser.DataAvailable())
                 {
                     var tag = parser.Pop();
-                    var chatTag = tag as NiconicoUtils.NiconicoJikkyouXmlParser.ChatXmlTag;
-                    var threadTag = tag as NiconicoUtils.NiconicoJikkyouXmlParser.ThreadXmlTag;
-                    var chatResultTag = tag as NiconicoUtils.NiconicoJikkyouXmlParser.ChatResultXmlTag;
+                    var chatTag = tag as NiconicoUtils.NiconicoCommentXmlParser.ChatXmlTag;
+                    var threadTag = tag as NiconicoUtils.NiconicoCommentXmlParser.ThreadXmlTag;
+                    var chatResultTag = tag as NiconicoUtils.NiconicoCommentXmlParser.ChatResultXmlTag;
                     if (chatTag != null)
                     {
                         ret.Add(chatTag.Chat.Chat);
