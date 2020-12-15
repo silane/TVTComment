@@ -82,13 +82,19 @@ namespace TVTComment.ViewModels.ShellContents
                 return;
             }
 
+            string mail184 = this.PostMailText.Value;
+            if (mail184 == "")
+                mail184 = "184";
+            else
+                mail184 += " 184";
+
             if (SelectedPostService.Value is Model.ChatCollectService.NiconicoChatCollectService)
             {
                 if (string.IsNullOrWhiteSpace(PostText.Value))
                     return;
                 model.ChatCollectServiceModule.PostChat(
                     SelectedPostService.Value,
-                    new Model.ChatCollectService.NiconicoChatCollectService.ChatPostObject(PostText.Value, PostMailText.Value)
+                    new Model.ChatCollectService.NiconicoChatCollectService.ChatPostObject(PostText.Value, mail184)
                 );
             }
             else if (SelectedPostService.Value is Model.ChatCollectService.NiconicoLiveChatCollectService)
@@ -97,7 +103,7 @@ namespace TVTComment.ViewModels.ShellContents
                     return;
                 model.ChatCollectServiceModule.PostChat(
                     SelectedPostService.Value,
-                    new Model.ChatCollectService.NiconicoLiveChatCollectService.ChatPostObject(PostText.Value, PostMailText.Value)
+                    new Model.ChatCollectService.NiconicoLiveChatCollectService.ChatPostObject(PostText.Value, mail184)
                 );
             }
             else if (SelectedPostService.Value is Model.ChatCollectService.NichanChatCollectService)

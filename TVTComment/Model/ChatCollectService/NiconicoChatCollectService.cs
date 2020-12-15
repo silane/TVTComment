@@ -247,10 +247,6 @@ namespace TVTComment.Model.ChatCollectService
             int vpos = (int)(lastThreadTag.ServerTime - lastThreadTag.Thread) * 100 + (int)((getDateTimeJstNow() - lastThreadTag.ReceivedTime).Value.TotalMilliseconds) / 10;
 
             string mail = (chatPostObject as ChatPostObject)?.Mail ?? "";
-            if (mail == "")
-                mail = "184";
-            else
-                mail += " 184";
 
             XElement postXml = new XElement("chat",
                 new XAttribute("thread", lastThreadTag.Thread),
