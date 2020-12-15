@@ -49,6 +49,7 @@ namespace TVTComment.Model.ChatCollectService
         private HttpClient httpClient;
         private CancellationTokenSource cancel = new CancellationTokenSource();
         private Task chatCollectTask;
+        private DateTime lastHeartbeatTime = DateTime.MinValue;
         private static readonly Encoding utf8Encoding = new UTF8Encoding(false);
 
         public NiconicoLiveChatCollectService(
@@ -89,6 +90,13 @@ namespace TVTComment.Model.ChatCollectService
                     e is ChatReceivingException ? e.Message : $"コメント取得で予期しないエラーが発生: {e}",
                     chatCollectTask.Exception
                 );
+            }
+
+            // Heartbeat送信
+            if(DateTime.Now >= this.lastHeartbeatTime.AddSeconds(60))
+            {
+                this.lastHeartbeatTime = DateTime.Now;
+                this.heartbeat(this.cancel.Token);
             }
 
             //非同期部分で集めたデータからチャットを生成
@@ -152,7 +160,6 @@ namespace TVTComment.Model.ChatCollectService
                             await socketStream.WriteAsync(body_encoded, 0, body_encoded.Length, cancel).ConfigureAwait(false);
 
                             //コメント受信ループ
-                            DateTime lastHeartbeatSentTime = DateTime.MinValue;
                             while (true)
                             {
                                 byte[] buf = new byte[2048];
@@ -162,16 +169,6 @@ namespace TVTComment.Model.ChatCollectService
 
                                 lock (parser)
                                     parser.Push(utf8Encoding.GetString(buf, 0, receivedByte));
-
-                                //heartbeat送信
-                                if(DateTime.Now >= lastHeartbeatSentTime.AddSeconds(60))
-                                {
-                                    lastHeartbeatSentTime = DateTime.Now;
-                                    await this.httpClient.PostAsync(
-                                        "http://ow.live.nicovideo.jp/api/heartbeat",
-                                        new FormUrlEncodedContent(new Dictionary<string, string> { { "v", this.liveId } })
-                                    );
-                                }
                             }
                         }
                         catch (ChatReceivingException)
@@ -201,6 +198,16 @@ namespace TVTComment.Model.ChatCollectService
                     throw new OperationCanceledException("Receive loop was canceled", e, cancel);
                 throw new ChatReceivingException("コメントサーバーとの通信でエラーが発生しました", e);
             }
+        }
+
+        private async void heartbeat(CancellationToken cancel)
+        {
+            // async void なのでこの関数内の例外は無視される
+            await this.httpClient.PostAsync(
+                "http://ow.live.nicovideo.jp/api/heartbeat",
+                new FormUrlEncodedContent(new Dictionary<string, string> { { "v", this.liveId } }),
+                cancel
+            );
         }
 
         public async Task PostChat(BasicChatPostObject chatPostObject)
