@@ -13,6 +13,11 @@
     <i:Interaction.Behaviors>
         <behaviors:RegionContextBinderBehavior Binding="{Binding RelativeSource={RelativeSource AncestorType=UserControl},Path=DataContext}"/>
     </i:Interaction.Behaviors>
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="Loaded">
+            <behaviors:SetKeyboardFocusedElementAction Element="{Binding Source={x:Reference liveIdTextbox}}"/>
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
