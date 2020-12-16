@@ -53,7 +53,6 @@ namespace TVTComment.ViewModels
                   if (string.IsNullOrWhiteSpace(NiconicoUserId.Value) || string.IsNullOrWhiteSpace(NiconicoPassword.Value))
                       return;
 
-                  bool wasLoggedin = niconico.IsLoggedin;
                   try
                   {
                       await niconico.SetUser(NiconicoUserId.Value, NiconicoPassword.Value);
@@ -61,11 +60,8 @@ namespace TVTComment.ViewModels
                   }
                   catch (Model.NiconicoUtils.NiconicoLoginException)
                   {
-                      //if (wasLoggedin)
-                          //syncNiconicoUserStatus();//前にログインしていたなら表示をそのログイン情報に戻す
                       AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = "ニコニコへのログインに失敗しました" });
                   }
-                  syncNiconicoUserStatus();
               });
 
             OpenUserScopeSettingFileLocationCommand = new DelegateCommand(() => model.OpenUserScopeSettingFileLocation());
@@ -83,12 +79,13 @@ namespace TVTComment.ViewModels
                       nichan.SetChatColor(NichanChatColor.Value);
 
                       nichan.SetApiParams(NichanHmKey.Value, NichanAppKey.Value, nichan.UserId, nichan.Password);
+
+                      syncNichanSettings();
                   }
                   catch (Exception e) when (e is FormatException || e is OverflowException)
                   {
                       AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = "2ch設定の値が不正です" });
                   }
-                  syncNichanSettings();
               });
 
             ChatPreserveCount = model.ChatModule.ChatPreserveCount;
