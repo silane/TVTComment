@@ -42,7 +42,8 @@ namespace TVTComment.Model.ChatCollectService
               System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
         }
 
-        private string liveId;
+        private string originalLiveId;
+        private string liveId = "";
         private NiconicoUtils.NiconicoCommentXmlParser parser = new NiconicoUtils.NiconicoCommentXmlParser(true);
         private NetworkStream socketStream;
         private NiconicoUtils.NiconicoCommentXmlParser.ThreadXmlTag lastThreadTag;
@@ -58,7 +59,7 @@ namespace TVTComment.Model.ChatCollectService
         )
         {
             this.ServiceEntry = serviceEntry;
-            this.liveId = liveId;
+            this.originalLiveId = liveId;
 
             var assembly = Assembly.GetExecutingAssembly().GetName();
             var ua = assembly.Name + "/" + assembly.Version.ToString(3);
@@ -73,7 +74,7 @@ namespace TVTComment.Model.ChatCollectService
 
         public string GetInformationText()
         {
-            return $"生放送ID: {this.liveId} - {(socketStream == null ?  "サーバーに未接続" : "サーバーに接続中")}";
+            return $"生放送ID: {this.originalLiveId} - {(socketStream == null ?  "サーバーに未接続" : "サーバーに接続中")}";
         }
 
         public IEnumerable<Chat> GetChats(ChannelInfo channel, DateTime time)
@@ -133,7 +134,7 @@ namespace TVTComment.Model.ChatCollectService
 
                 for (int disconnectedCount = 0; ; disconnectedCount++)
                 {
-                    string str = await httpClient.GetStringAsync($"http://live.nicovideo.jp/api/getplayerstatus/{this.liveId}").ConfigureAwait(false);
+                    string str = await httpClient.GetStringAsync($"http://live.nicovideo.jp/api/getplayerstatus/{this.originalLiveId}").ConfigureAwait(false);
                     var playerStatus = XDocument.Parse(str).Root;
 
                     if (playerStatus.Attribute("status").Value != "ok")
@@ -145,6 +146,7 @@ namespace TVTComment.Model.ChatCollectService
                         throw new ChatReceivingException("コメントサーバーから予期しないエラーが返されました:\n" + str);
                     }
 
+                    this.liveId = playerStatus.Element("stream").Element("id").Value;
                     string threadId = playerStatus.Element("ms").Element("thread").Value;
                     string ms = playerStatus.Element("ms").Element("addr").Value;
                     string msPort = playerStatus.Element("ms").Element("port").Value;
@@ -202,6 +204,8 @@ namespace TVTComment.Model.ChatCollectService
 
         private async void heartbeat(CancellationToken cancel)
         {
+            if (this.liveId == "")
+                return;
             // async void なのでこの関数内の例外は無視される
             await this.httpClient.PostAsync(
                 "http://ow.live.nicovideo.jp/api/heartbeat",
@@ -212,10 +216,10 @@ namespace TVTComment.Model.ChatCollectService
 
         public async Task PostChat(BasicChatPostObject chatPostObject)
         {
-            if (!CanPost)
+            if (!this.CanPost)
                 throw new NotSupportedException("Posting is not supprted on this ChatCollectService");
 
-            if (lastThreadTag == null)
+            if (this.lastThreadTag == null || this.liveId == "")
                 throw new ChatPostException("コメントが投稿できる状態にありません。しばらく待ってから再試行してください。");
 
             // vposは10msec単位 サーバ時刻を基準に計算

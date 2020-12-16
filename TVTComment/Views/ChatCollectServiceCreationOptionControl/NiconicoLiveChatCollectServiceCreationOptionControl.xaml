@@ -16,17 +16,19 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="auto"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <Label Grid.Row="0" Grid.Column="0">生放送ID (lv*********)</Label>
-        <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding LiveId, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center">
+        <Label Grid.Row="0" Grid.Column="0">生放送ID: </Label>
+        <TextBox Grid.Row="0" Grid.Column="1" x:Name="liveIdTextbox" Text="{Binding LiveId, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center">
             <TextBox.InputBindings>
                 <KeyBinding Key="Return" Command="{Binding OkCommand}" />
             </TextBox.InputBindings>
         </TextBox>
+        <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">生放送IDは lv********* や ch********* の形式</TextBlock>
     </Grid>
 </UserControl>
