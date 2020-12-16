@@ -75,7 +75,7 @@ namespace TVTComment.Model.ChatService
             IsLoggedin = true;
             settings["NiconicoUserId"] = userId;
             settings["NiconicoPassword"] = userPassword;
-            loginSession.Value?.Logout();
+            await (loginSession.Value?.Logout() ?? Task.CompletedTask);
             loginSession.Value = tmpSession;
         }
 

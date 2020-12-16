@@ -70,7 +70,7 @@ namespace TVTComment.Model.NiconicoUtils
             this.cookie = cookieCollection;
         }
 
-        public void Logout()
+        public async Task Logout()
         {
             if (!this.IsLoggedin)
                 throw new InvalidOperationException("ログインしていません");
@@ -79,7 +79,7 @@ namespace TVTComment.Model.NiconicoUtils
             using var client = new HttpClient(handler);
 
             handler.CookieContainer.Add(this.cookie);
-            client.GetAsync("https://secure.nicovideo.jp/secure/logout").ConfigureAwait(false);
+            await client.GetAsync("https://secure.nicovideo.jp/secure/logout").ConfigureAwait(false);
             this.cookie = null;
         }
     }
