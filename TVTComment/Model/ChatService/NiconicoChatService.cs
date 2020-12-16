@@ -8,7 +8,7 @@ namespace TVTComment.Model.ChatService
 {
     class NiconicoChatService : IChatService
     {
-        public string Name => "ニコニコ実況";
+        public string Name => "ニコニコ";
         public IReadOnlyList<ChatCollectServiceEntry.IChatCollectServiceEntry> ChatCollectServiceEntries { get; }
         public IReadOnlyList<IChatTrendServiceEntry> ChatTrendServiceEntries { get; }
 
