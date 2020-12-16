@@ -58,7 +58,7 @@ namespace TVTComment.ViewModels
                       await niconico.SetUser(NiconicoUserId.Value, NiconicoPassword.Value);
                       syncNiconicoUserStatus();
                   }
-                  catch (Model.NiconicoUtils.NiconicoLoginException)
+                  catch (Model.NiconicoUtils.NiconicoLoginSessionException)
                   {
                       AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = "ニコニコへのログインに失敗しました" });
                   }

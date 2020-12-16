@@ -42,7 +42,9 @@ namespace TVTComment.Model.ChatService
                 if(!string.IsNullOrWhiteSpace(UserId) && !string.IsNullOrWhiteSpace(UserPassword))
                     SetUser(UserId, UserPassword).Wait();
             }
-            catch (NiconicoUtils.NiconicoLoginException) { }
+            catch (AggregateException e)
+            when (e.InnerExceptions.Count == 1 && e.InnerExceptions[0] is NiconicoUtils.NiconicoLoginSessionException)
+            { }
 
             ChatCollectServiceEntries = new ChatCollectServiceEntry.IChatCollectServiceEntry[3] {
                 new ChatCollectServiceEntry.NiconicoChatCollectServiceEntry(this, this.jkIdResolver, this.loginSession),
@@ -59,7 +61,7 @@ namespace TVTComment.Model.ChatService
         /// <param name="userId">ニコニコのユーザーID</param>
         /// <param name="userPassword">ニコニコのパスワード</param>
         /// <exception cref="ArgumentException"><paramref name="userId"/>または<paramref name="userPassword"/>がnull若しくはホワイトスペースだった時</exception>
-        /// <exception cref="NiconicoUtils.NiconicoLoginException">ログインに失敗した時</exception>
+        /// <exception cref="NiconicoUtils.NiconicoLoginSessionException">ログインに失敗した時</exception>
         public async Task SetUser(string userId,string userPassword)
         {
             if (string.IsNullOrWhiteSpace(userId))
@@ -75,7 +77,12 @@ namespace TVTComment.Model.ChatService
             IsLoggedin = true;
             settings["NiconicoUserId"] = userId;
             settings["NiconicoPassword"] = userPassword;
-            await (loginSession.Value?.Logout() ?? Task.CompletedTask);
+            try
+            {
+                await (loginSession.Value?.Logout() ?? Task.CompletedTask);
+            }
+            catch(NiconicoUtils.NiconicoLoginSessionException)
+            { }
             loginSession.Value = tmpSession;
         }
 

@@ -9,15 +9,33 @@ using System.Net.Http;
 
 namespace TVTComment.Model.NiconicoUtils
 {
+    /// <summary>
+    /// <see cref="NiconicoLoginSession"/>で投げられる例外
+    /// </summary>
     [System.Serializable]
-    class NiconicoLoginException : Exception
+    class NiconicoLoginSessionException : Exception
     {
-        public NiconicoLoginException() { }
-        public NiconicoLoginException(string message) : base(message) { }
-        public NiconicoLoginException(string message, Exception inner) : base(message, inner) { }
-        protected NiconicoLoginException(
+        public NiconicoLoginSessionException() { }
+        public NiconicoLoginSessionException(string message) : base(message) { }
+        public NiconicoLoginSessionException(string message, Exception inner) : base(message, inner) { }
+        protected NiconicoLoginSessionException(
           System.Runtime.Serialization.SerializationInfo info,
           System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+    }
+
+    /// <summary>
+    /// ログインに失敗した
+    /// </summary>
+    class LoginFailureNiconicoLoginSessionException : NiconicoLoginSessionException
+    { }
+
+    /// <summary>
+    /// ネットワークエラーが発生した
+    /// </summary>
+    class NetworkNiconicoLoginSessionException : NiconicoLoginSessionException
+    {
+        public NetworkNiconicoLoginSessionException(Exception inner) : base(null, inner)
+        { }
     }
 
     class NiconicoLoginSession
@@ -27,6 +45,10 @@ namespace TVTComment.Model.NiconicoUtils
         private CookieCollection cookie = null;
 
         public bool IsLoggedin => cookie != null;
+        /// <summary>
+        /// 送信するべき認証情報を含んだクッキー
+        /// </summary>
+        /// <exception cref="InvalidOperationException">ログインしていない</exception>
         public CookieCollection Cookie
         {
             get
@@ -44,6 +66,12 @@ namespace TVTComment.Model.NiconicoUtils
             this.password = password;
         }
 
+        /// <summary>
+        /// ログインする
+        /// </summary>
+        /// <exception cref="InvalidOperationException">すでにログインしている</exception>
+        /// <exception cref="LoginFailureNiconicoLoginSessionException"></exception>
+        /// <exception cref="NetworkNiconicoLoginSessionException"></exception>
         public async Task Login()
         {
             if (this.IsLoggedin)
@@ -60,16 +88,28 @@ namespace TVTComment.Model.NiconicoUtils
                 { "mail", this.mail },
                 { "password", this.password }
             });
-                    
-            await client.PostAsync(loginUrl, content).ConfigureAwait(false);
+            
+            try
+            {
+                await client.PostAsync(loginUrl, content).ConfigureAwait(false);
+            }
+            catch(HttpRequestException e)
+            {
+                throw new NetworkNiconicoLoginSessionException(e);
+            }
 
             CookieCollection cookieCollection = handler.CookieContainer.GetCookies(new Uri(loginUrl));
             if (cookieCollection.All(x => x.Name != "user_session"))
-                throw new NiconicoLoginException("ログインに失敗しました");
+                throw new LoginFailureNiconicoLoginSessionException();
 
             this.cookie = cookieCollection;
         }
 
+        /// <summary>
+        /// ログアウトする
+        /// </summary>
+        /// <exception cref="InvalidOperationException">ログインしていない</exception>
+        /// <exception cref="NetworkNiconicoLoginSessionException"></exception>
         public async Task Logout()
         {
             if (!this.IsLoggedin)
@@ -79,7 +119,14 @@ namespace TVTComment.Model.NiconicoUtils
             using var client = new HttpClient(handler);
 
             handler.CookieContainer.Add(this.cookie);
-            await client.GetAsync("https://secure.nicovideo.jp/secure/logout").ConfigureAwait(false);
+            try
+            {
+                await client.GetAsync("https://secure.nicovideo.jp/secure/logout").ConfigureAwait(false);
+            }
+            catch(HttpRequestException e)
+            {
+                throw new NetworkNiconicoLoginSessionException(e);
+            }
             this.cookie = null;
         }
     }
