@@ -45,7 +45,7 @@ namespace Nichan
     }
 
 
-    public class ApiClient
+    public class ApiClient : IDisposable
     {
         private static readonly Random random = new Random();
         private const string ctChars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -181,6 +181,11 @@ namespace Nichan
             }
 
             return response;
+        }
+
+        public void Dispose()
+        {
+            this.httpClient.Dispose();
         }
     }
 }

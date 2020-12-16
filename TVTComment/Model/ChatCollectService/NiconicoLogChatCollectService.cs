@@ -160,13 +160,15 @@ namespace TVTComment.Model.ChatCollectService
 
         public override void Dispose()
         {
-            client.CancelPendingRequests();
-            try
+            using(this.client)
             {
-                chatCollectTask?.Wait();
+                client.CancelPendingRequests();
+                try
+                {
+                    chatCollectTask?.Wait();
+                }
+                catch (AggregateException e) when (e.InnerException is OperationCanceledException || e.InnerException is HttpRequestException || e.InnerException is ServerErrorException) { }
             }
-            catch (AggregateException e) when (e.InnerException is OperationCanceledException || e.InnerException is HttpRequestException || e.InnerException is ServerErrorException) { }
-            client.Dispose();
         }
     }
 }

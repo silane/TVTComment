@@ -91,12 +91,15 @@ namespace TVTComment.Model.ChatService
 
         public void SetApiParams(string hmKey, string appKey, string userId, string password)
         {
-            settings["NichanHMKey"] = hmKey;
-            settings["NichanAppKey"] = appKey;
-            settings["NichanUserID"] = userId;
-            settings["NichanPassword"] = password;
+            using (this.nichanApiClient.Value)
+            {
+                settings["NichanHMKey"] = hmKey;
+                settings["NichanAppKey"] = appKey;
+                settings["NichanUserID"] = userId;
+                settings["NichanPassword"] = password;
 
-            this.nichanApiClient.Value = new Nichan.ApiClient(hmKey, appKey, userId, password);
+                this.nichanApiClient.Value = new Nichan.ApiClient(hmKey, appKey, userId, password);
+            }
         }
 
         public void Dispose()

@@ -288,17 +288,20 @@ namespace TVTComment.Model.ChatCollectService
 
         public void Dispose()
         {
-            cancel?.Cancel();
-            cancel = null;
-            try
+            using(this.httpClient)
             {
-                chatCollectTask?.Wait();
+                cancel?.Cancel();
+                cancel = null;
+                try
+                {
+                    chatCollectTask?.Wait();
+                }
+                //Waitからの例外がタスクがキャンセルされたことによるものか、通信エラーなら無視
+                catch (AggregateException e) when (e.InnerExceptions.All(innerE => innerE is OperationCanceledException || innerE is ChatReceivingException))
+                {
+                }
+                chatCollectTask = null;
             }
-            //Waitからの例外がタスクがキャンセルされたことによるものか、通信エラーなら無視
-            catch (AggregateException e) when (e.InnerExceptions.All(innerE => innerE is OperationCanceledException || innerE is ChatReceivingException))
-            {
-            }
-            chatCollectTask = null;
         }
 
         /// <summary>
