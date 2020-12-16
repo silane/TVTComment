@@ -10,7 +10,7 @@ using System.Windows.Interactivity;
 
 namespace TVTComment.Views.Behaviors
 {
-    class RegionContextBinderBehavior:Behavior<DependencyObject>
+    class RegionContextBinderBehavior : Behavior<FrameworkElement>
     {
         public object Binding
         {
@@ -28,24 +28,33 @@ namespace TVTComment.Views.Behaviors
         {
             regionContext = RegionContext.GetObservableContext(AssociatedObject);
             regionContext.PropertyChanged += RegionContext_PropertyChanged;
+            AssociatedObject.Loaded += Element_Loaded;
         }
 
         protected override void OnDetaching()
         {
             regionContext.PropertyChanged -= RegionContext_PropertyChanged;
+            AssociatedObject.Loaded -= Element_Loaded;
             regionContext = null;
         }
 
         private void RegionContext_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            if(regionContext.Value!=Binding)
-                Binding = regionContext.Value;
+            //if(regionContext.Value!=Binding)
+            //    Binding = regionContext.Value;
         }
 
-        private static void BindingPropertyChanged(DependencyObject d,DependencyPropertyChangedEventArgs e)
+        private void Element_Loaded(object sender, RoutedEventArgs e)
+        {
+            var regionContext = this.regionContext;
+            if (regionContext.Value != this.Binding)
+                regionContext.Value = this.Binding;
+        }
+
+        private static void BindingPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var regionContext = ((RegionContextBinderBehavior)d).regionContext;
-            if(regionContext.Value!=e.NewValue)
+            if (regionContext.Value != e.NewValue)
                 regionContext.Value = e.NewValue;
         }
     }
