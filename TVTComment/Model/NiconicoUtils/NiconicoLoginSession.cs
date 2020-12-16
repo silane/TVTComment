@@ -24,21 +24,21 @@ namespace TVTComment.Model.NiconicoUtils
     {
         private string mail;
         private string password;
-        private CookieCollection cookie =null;
+        private CookieCollection cookie = null;
 
         public bool IsLoggedin => cookie != null;
         public CookieCollection Cookie
         {
             get
             {
-                if (IsLoggedin)
-                    return cookie;
+                if (this.IsLoggedin)
+                    return this.cookie;
                 else
                     throw new InvalidOperationException("ログインしていません");
             }
         }
 
-        public NiconicoLoginSession(string mail,string password)
+        public NiconicoLoginSession(string mail, string password)
         {
             this.mail = mail;
             this.password = password;
@@ -46,52 +46,41 @@ namespace TVTComment.Model.NiconicoUtils
 
         public async Task Login()
         {
-            if (IsLoggedin)
+            if (this.IsLoggedin)
                 throw new InvalidOperationException("すでにログインしています");
 
             const string loginUrl = "https://secure.nicovideo.jp/secure/login?site=niconico";
 
-            using (var handler = new HttpClientHandler())
-            {
-                using (var client = new HttpClient(handler))
-                {
-                    var content = new FormUrlEncodedContent(new Dictionary<string, string>
-                    {
-                        { "next_url", string.Empty },
-                        { "mail", mail },
-                        { "password", password }
-                    });
-                    
-                    await client.PostAsync(loginUrl, content).ConfigureAwait(false);
+            var handler = new HttpClientHandler();
+            using var client = new HttpClient(handler);
 
-                    CookieCollection cookieCollection = handler.CookieContainer.GetCookies(new Uri(loginUrl));
-                    for (int i = 0; i < cookieCollection.Count; i++)
-                    {
-                        if (cookieCollection[i].Name == "user_session")
-                        {
-                            cookie = cookieCollection;
-                            return;
-                        }
-                    }
-                    throw new NiconicoLoginException("ログインに失敗しました");
-                }
-            }
+            var content = new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                { "next_url", "" },
+                { "mail", this.mail },
+                { "password", this.password }
+            });
+                    
+            await client.PostAsync(loginUrl, content).ConfigureAwait(false);
+
+            CookieCollection cookieCollection = handler.CookieContainer.GetCookies(new Uri(loginUrl));
+            if (cookieCollection.All(x => x.Name != "user_session"))
+                throw new NiconicoLoginException("ログインに失敗しました");
+
+            this.cookie = cookieCollection;
         }
 
         public void Logout()
         {
-            if (!IsLoggedin)
+            if (!this.IsLoggedin)
                 throw new InvalidOperationException("ログインしていません");
 
-            using (var handler = new HttpClientHandler())
-            {
-                using (var client = new HttpClient(handler))
-                {
-                    handler.CookieContainer.Add(cookie);
-                    client.GetAsync("https://secure.nicovideo.jp/secure/logout").ConfigureAwait(false);
-                    cookie = null;
-                }
-            }
+            var handler = new HttpClientHandler();
+            using var client = new HttpClient(handler);
+
+            handler.CookieContainer.Add(this.cookie);
+            client.GetAsync("https://secure.nicovideo.jp/secure/logout").ConfigureAwait(false);
+            this.cookie = null;
         }
     }
 }
