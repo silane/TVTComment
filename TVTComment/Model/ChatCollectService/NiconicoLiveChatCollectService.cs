@@ -109,8 +109,8 @@ namespace TVTComment.Model.ChatCollectService
                 while (parser.DataAvailable())
                 {
                     var tag = parser.Pop();
-                    var chatTag = tag as NiconicoUtils.NiconicoCommentXmlParser.ChatXmlTag;
-                    var leaveThreadTag = tag as NiconicoUtils.NiconicoCommentXmlParser.LeaveThreadXmlTag;
+                    var chatTag = tag as NiconicoUtils.ChatNiconicoCommentXmlTag;
+                    var leaveThreadTag = tag as NiconicoUtils.LeaveThreadNiconicoCommentXmlTag;
                     if (chatTag != null)
                         ret.Add(chatTag.Chat.Chat);
                     else if (leaveThreadTag != null)

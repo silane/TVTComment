@@ -150,8 +150,8 @@ namespace TVTComment.Model.ChatCollectService
             {
                 while (parser.DataAvailable())
                 {
-                    NiconicoUtils.NiconicoCommentXmlParser.XmlTag tag = parser.Pop();
-                    var chatTag = tag as NiconicoUtils.NiconicoCommentXmlParser.ChatXmlTag;
+                    var tag = parser.Pop();
+                    var chatTag = tag as NiconicoUtils.ChatNiconicoCommentXmlTag;
                     if (chatTag != null)
                         chats.Add(chatTag.Chat);
                 }

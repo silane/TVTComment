@@ -43,7 +43,7 @@ namespace TVTComment.Model.ChatCollectService
                 parser.Push(line);
                 while (parser.DataAvailable())
                 {
-                    var chatTag = parser.Pop() as NiconicoUtils.NiconicoCommentXmlParser.ChatXmlTag;
+                    var chatTag = parser.Pop() as NiconicoUtils.ChatNiconicoCommentXmlTag;
                     if (chatTag == null) continue;
                     chats.Enqueue(chatTag.Chat);
                 }

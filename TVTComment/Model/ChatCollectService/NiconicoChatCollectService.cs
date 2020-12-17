@@ -44,7 +44,7 @@ namespace TVTComment.Model.ChatCollectService
         private int lastJkId = 0;
         private NiconicoUtils.NiconicoCommentXmlParser parser = new NiconicoUtils.NiconicoCommentXmlParser(true);
         private NetworkStream socketStream;
-        private NiconicoUtils.NiconicoCommentXmlParser.ThreadXmlTag lastThreadTag;
+        private NiconicoUtils.ThreadNiconicoCommentXmlTag lastThreadTag;
         private int lastResNum = -1;
         private string userId;
         private bool isPremium;
@@ -110,9 +110,9 @@ namespace TVTComment.Model.ChatCollectService
                 while (parser.DataAvailable())
                 {
                     var tag = parser.Pop();
-                    var chatTag = tag as NiconicoUtils.NiconicoCommentXmlParser.ChatXmlTag;
-                    var threadTag = tag as NiconicoUtils.NiconicoCommentXmlParser.ThreadXmlTag;
-                    var chatResultTag = tag as NiconicoUtils.NiconicoCommentXmlParser.ChatResultXmlTag;
+                    var chatTag = tag as NiconicoUtils.ChatNiconicoCommentXmlTag;
+                    var threadTag = tag as NiconicoUtils.ThreadNiconicoCommentXmlTag;
+                    var chatResultTag = tag as NiconicoUtils.ChatResultNiconicoCommentXmlTag;
                     if (chatTag != null)
                     {
                         ret.Add(chatTag.Chat.Chat);

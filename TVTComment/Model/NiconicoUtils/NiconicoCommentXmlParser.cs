@@ -7,65 +7,8 @@ using System.Web;
 
 namespace TVTComment.Model.NiconicoUtils
 {
-    class ChatAndVpos
-    {
-        public Chat Chat { get; }
-        
-        public int Vpos { get; }
-
-        public ChatAndVpos(Chat chat,int vpos)
-        {
-            Chat = chat;
-            Vpos = vpos;
-        }
-    }
-
     class NiconicoCommentXmlParser
     {
-        public class XmlTag
-        {
-            /// <summary>
-            /// 受信した時刻 正確にはパースされた時刻(JST)
-            /// </summary>
-            public DateTime? ReceivedTime { get; }
-            public XmlTag(DateTime? receivedTime=null)
-            {
-                ReceivedTime = receivedTime;
-            }
-        }
-        public class ChatXmlTag:XmlTag
-        {
-            public ChatAndVpos Chat { get; }
-            public ChatXmlTag(ChatAndVpos chat)
-            {
-                Chat = chat;
-            }
-        }
-        public class ThreadXmlTag : XmlTag
-        {
-            /// <summary>
-            /// スレッドができた日付時刻をUNIX時刻JSTで表す
-            /// </summary>
-            public ulong Thread { get; }
-            public string Ticket { get; }
-            public ulong ServerTime { get; }
-            public ThreadXmlTag(DateTime receivedTime,ulong thread,string ticket,ulong serverTime):base(receivedTime)
-            {
-                Thread = thread;
-                Ticket = ticket;
-                ServerTime = serverTime;
-            }
-        }
-        public class ChatResultXmlTag : XmlTag
-        {
-            public int Status { get; }
-            public ChatResultXmlTag(int status)
-            {
-                Status = status;
-            }
-        }
-        public class LeaveThreadXmlTag : XmlTag { }
-
         private static readonly Dictionary<string, Color?> colorNameMapping = new Dictionary<string, Color?> {
             {"red" , Color.FromArgb(0xFF, 0x00, 0x00)},
             {"pink", Color.FromArgb(0xFF, 0x80, 0x80)},
@@ -98,7 +41,7 @@ namespace TVTComment.Model.NiconicoUtils
         private bool socketFormat;
         private bool inChatTag;
         private bool inThreadTag;
-        private Queue<XmlTag> chats=new Queue<XmlTag>();
+        private Queue<NiconicoCommentXmlTag> chats = new Queue<NiconicoCommentXmlTag>();
         private string buffer;
 
         /// <summary>
@@ -125,11 +68,11 @@ namespace TVTComment.Model.NiconicoUtils
                     {
                         int idx = tagStr.IndexOf("status=")+8;
                         int status = int.Parse(tagStr.Substring(idx, tagStr.IndexOf('"', idx) - idx));
-                        chats.Enqueue(new ChatResultXmlTag(status));
+                        chats.Enqueue(new ChatResultNiconicoCommentXmlTag(status));
                     }
                     else if (tagStr.StartsWith("<chat"))
                     {
-                        chats.Enqueue(new ChatXmlTag(new ChatAndVpos(getChatFromChatTag(tagStr), getVposFromChatTag(tagStr))));
+                        chats.Enqueue(new ChatNiconicoCommentXmlTag(new ChatAndVpos(getChatFromChatTag(tagStr), getVposFromChatTag(tagStr))));
                     }
                     else if(tagStr.StartsWith("<thread"))
                     {
@@ -137,7 +80,7 @@ namespace TVTComment.Model.NiconicoUtils
                     }
                     else if(tagStr.StartsWith("<leave_thread"))
                     {
-                        chats.Enqueue(new LeaveThreadXmlTag());
+                        chats.Enqueue(new LeaveThreadNiconicoCommentXmlTag());
                     }
                 }
                 buffer = tmp[tmp.Length - 1];
@@ -154,7 +97,7 @@ namespace TVTComment.Model.NiconicoUtils
                         string tagStr = buffer.Substring(0, idx);
                         buffer = buffer.Substring(idx);
                         inChatTag = false;
-                        chats.Enqueue(new ChatXmlTag(new ChatAndVpos(getChatFromChatTag(tagStr), getVposFromChatTag(tagStr))));
+                        chats.Enqueue(new ChatNiconicoCommentXmlTag(new ChatAndVpos(getChatFromChatTag(tagStr), getVposFromChatTag(tagStr))));
                     }
                     else if(inThreadTag)
                     {
@@ -189,10 +132,10 @@ namespace TVTComment.Model.NiconicoUtils
         }
 
         /// <summary>
-        /// 解析結果を返す <see cref="socketFormat"/>がfalseなら<see cref="ChatXmlTag"/>しか返さない
+        /// 解析結果を返す <see cref="socketFormat"/>がfalseなら<see cref="ChatNiconicoCommentXmlTag"/>しか返さない
         /// </summary>
-        /// <returns>解析結果の<see cref="XmlTag"/></returns>
-        public XmlTag Pop()
+        /// <returns>解析結果の<see cref="NiconicoCommentXmlTag"/></returns>
+        public NiconicoCommentXmlTag Pop()
         {
             return chats.Dequeue();
         }
@@ -284,7 +227,7 @@ namespace TVTComment.Model.NiconicoUtils
             return int.Parse(reVpos.Match(str).Groups[1].Value);
         }
 
-        private static ThreadXmlTag getThreadXmlTag(string tagStr)
+        private static ThreadNiconicoCommentXmlTag getThreadXmlTag(string tagStr)
         {
             int idx = tagStr.IndexOf("thread=") + 8;
             ulong thread = ulong.Parse(tagStr.Substring(idx, tagStr.IndexOf('"', idx) - idx));
@@ -292,7 +235,7 @@ namespace TVTComment.Model.NiconicoUtils
             string ticket = tagStr.Substring(idx, tagStr.IndexOf('"', idx) - idx);
             idx = tagStr.IndexOf("server_time=") + 13;
             ulong serverTime = ulong.Parse(tagStr.Substring(idx, tagStr.IndexOf('"', idx) - idx));
-            return new ThreadXmlTag(getDateTimeJstNow(), thread, ticket, serverTime);
+            return new ThreadNiconicoCommentXmlTag(getDateTimeJstNow(), thread, ticket, serverTime);
         }
         
 
