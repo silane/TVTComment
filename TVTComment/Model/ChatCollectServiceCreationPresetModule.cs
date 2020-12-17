@@ -2,10 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Configuration;
-using System.Linq;
-using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TVTComment.Model
 {
@@ -51,15 +47,10 @@ namespace TVTComment.Model
 
         private void loadSettings()
         {
-            creationPresets.Clear();
-            creationPresets.AddRange(((Serialization.ChatCollectServiceCreationPresetEntity[])settings["ChatCollectServiceCreationPresets"])
-                .Select(x=>new ChatCollectServiceCreationPreset(x.Name,collectServiceEntries.Single(entry=>entry.Id==x.ServiceEntryId),x.CreationOption)));
         }
 
         private void saveSettings()
         {
-            settings["ChatCollectServiceCreationPresets"] = creationPresets
-                .Select(x=>new Serialization.ChatCollectServiceCreationPresetEntity(x.Name,x.ServiceEntry.Id,x.CreationOption)).ToArray();
         }
 
         public void Dispose()
