@@ -112,7 +112,7 @@ namespace TVTComment.Model.ChatCollectService
                     var chatTag = tag as NiconicoUtils.ChatNiconicoCommentXmlTag;
                     var leaveThreadTag = tag as NiconicoUtils.LeaveThreadNiconicoCommentXmlTag;
                     if (chatTag != null)
-                        ret.Add(chatTag.Chat.Chat);
+                        ret.Add(NiconicoUtils.ChatNiconicoCommentXmlTagToChat.Convert(chatTag));
                     else if (leaveThreadTag != null)
                         cancel.Cancel();
                 }

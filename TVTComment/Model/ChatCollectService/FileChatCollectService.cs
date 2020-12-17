@@ -45,7 +45,9 @@ namespace TVTComment.Model.ChatCollectService
                 {
                     var chatTag = parser.Pop() as NiconicoUtils.ChatNiconicoCommentXmlTag;
                     if (chatTag == null) continue;
-                    chats.Enqueue(chatTag.Chat);
+                    chats.Enqueue(new NiconicoUtils.ChatAndVpos(
+                        NiconicoUtils.ChatNiconicoCommentXmlTagToChat.Convert(chatTag), chatTag.Vpos
+                    ));
                 }
             }
         }

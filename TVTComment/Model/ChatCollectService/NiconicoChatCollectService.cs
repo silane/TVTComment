@@ -115,8 +115,9 @@ namespace TVTComment.Model.ChatCollectService
                     var chatResultTag = tag as NiconicoUtils.ChatResultNiconicoCommentXmlTag;
                     if (chatTag != null)
                     {
-                        ret.Add(chatTag.Chat.Chat);
-                        lastResNum = chatTag.Chat.Chat.Number;
+                        var chat = NiconicoUtils.ChatNiconicoCommentXmlTagToChat.Convert(chatTag);
+                        ret.Add(chat);
+                        lastResNum = chat.Number;
                     }
                     else if (threadTag != null)
                         lastThreadTag = threadTag;

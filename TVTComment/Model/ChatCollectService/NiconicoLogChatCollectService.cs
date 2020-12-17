@@ -153,7 +153,9 @@ namespace TVTComment.Model.ChatCollectService
                     var tag = parser.Pop();
                     var chatTag = tag as NiconicoUtils.ChatNiconicoCommentXmlTag;
                     if (chatTag != null)
-                        chats.Add(chatTag.Chat);
+                        chats.Add(new NiconicoUtils.ChatAndVpos(
+                            NiconicoUtils.ChatNiconicoCommentXmlTagToChat.Convert(chatTag), chatTag.Vpos
+                        ));
                 }
             }
         }

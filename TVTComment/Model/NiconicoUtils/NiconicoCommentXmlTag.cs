@@ -4,19 +4,6 @@ using System.Text;
 
 namespace TVTComment.Model.NiconicoUtils
 {
-    class ChatAndVpos
-    {
-        public Chat Chat { get; }
-
-        public int Vpos { get; }
-
-        public ChatAndVpos(Chat chat, int vpos)
-        {
-            Chat = chat;
-            Vpos = vpos;
-        }
-    }
-
     class NiconicoCommentXmlTag
     {
         /// <summary>
@@ -30,10 +17,34 @@ namespace TVTComment.Model.NiconicoUtils
     }
     class ChatNiconicoCommentXmlTag : NiconicoCommentXmlTag
     {
-        public ChatAndVpos Chat { get; }
-        public ChatNiconicoCommentXmlTag(ChatAndVpos chat)
+        public string Text { get; }
+        public long Thread { get; }
+        public int No { get; }
+        public int Vpos { get; }
+        public long Date { get; }
+        public int DateUsec { get; }
+        public string Mail { get; }
+        public string UserId { get; }
+        public int Premium { get; }
+        public int Anonymity { get; }
+        public int Abone { get; }
+
+        public ChatNiconicoCommentXmlTag(
+            string text, long thread, int no, int vpos, long date, int dateUsec,
+            string mail, string userId, int premium, int anonymity, int abone
+        )
         {
-            Chat = chat;
+            this.Text = text;
+            this.Thread = thread;
+            this.No = no;
+            this.Vpos = vpos;
+            this.Date = date;
+            this.DateUsec = dateUsec;
+            this.Mail = mail;
+            this.UserId = userId;
+            this.Premium = premium;
+            this.Anonymity = anonymity;
+            this.Abone = abone;
         }
     }
     class ThreadNiconicoCommentXmlTag : NiconicoCommentXmlTag

@@ -9,35 +9,6 @@ namespace TVTComment.Model.NiconicoUtils
 {
     class NiconicoCommentXmlParser
     {
-        private static readonly Dictionary<string, Color?> colorNameMapping = new Dictionary<string, Color?> {
-            {"red" , Color.FromArgb(0xFF, 0x00, 0x00)},
-            {"pink", Color.FromArgb(0xFF, 0x80, 0x80)},
-            {"orange",Color.FromArgb(0xFF, 0xC0, 0x00)},
-            {"yellow",Color.FromArgb(0xFF, 0xFF, 0x00)},
-            {"green", Color.FromArgb(0x00, 0xFF, 0x00) },
-            {"cyan", Color.FromArgb(0x00, 0xFF, 0xFF) },
-            {"blue", Color.FromArgb(0x00, 0x00, 0xFF) },
-            {"purple", Color.FromArgb(0xC0, 0x00, 0xFF)},
-            {"black", Color.FromArgb(0x00, 0x00, 0x00) },
-            {"white2", Color.FromArgb(0xCC, 0xCC, 0x99) },
-            {"niconicowhite", Color.FromArgb(0xCC, 0xCC, 0x99) },
-            {"red2", Color.FromArgb(0xCC, 0x00, 0x33) },
-            {"truered", Color.FromArgb(0xCC, 0x00, 0x33) },
-            {"pink2",Color.FromArgb(0xFF, 0x33, 0xCC)},
-            {"orange2", Color.FromArgb(0xFF, 0x66, 0x00) },
-            {"passionorange", Color.FromArgb(0xFF, 0x66, 0x00) },
-            {"yellow2", Color.FromArgb(0x99, 0x99, 0x00) },
-            {"madyellow", Color.FromArgb(0x99, 0x99, 0x00) },
-            {"green2", Color.FromArgb(0x00, 0xCC, 0x66) },
-            {"elementalgreen", Color.FromArgb(0x00, 0xCC, 0x66) },
-            {"cyan2", Color.FromArgb(0x00, 0xCC, 0xCC) },
-            {"blue2", Color.FromArgb(0x33, 0x99, 0xFF) },
-            {"marineblue", Color.FromArgb(0x33, 0x99, 0xFF) },
-            {"purple2", Color.FromArgb(0x66, 0x33, 0xCC)},
-            {"nobleviolet", Color.FromArgb(0x66, 0x33, 0xCC) },
-            {"black2", Color.FromArgb(0x66, 0x66, 0x66) },
-        };
-
         private bool socketFormat;
         private bool inChatTag;
         private bool inThreadTag;
@@ -72,7 +43,7 @@ namespace TVTComment.Model.NiconicoUtils
                     }
                     else if (tagStr.StartsWith("<chat"))
                     {
-                        chats.Enqueue(new ChatNiconicoCommentXmlTag(new ChatAndVpos(getChatFromChatTag(tagStr), getVposFromChatTag(tagStr))));
+                        chats.Enqueue(getChatXmlTag(tagStr));
                     }
                     else if(tagStr.StartsWith("<thread"))
                     {
@@ -97,7 +68,7 @@ namespace TVTComment.Model.NiconicoUtils
                         string tagStr = buffer.Substring(0, idx);
                         buffer = buffer.Substring(idx);
                         inChatTag = false;
-                        chats.Enqueue(new ChatNiconicoCommentXmlTag(new ChatAndVpos(getChatFromChatTag(tagStr), getVposFromChatTag(tagStr))));
+                        chats.Enqueue(getChatXmlTag(tagStr));
                     }
                     else if(inThreadTag)
                     {
@@ -156,59 +127,38 @@ namespace TVTComment.Model.NiconicoUtils
             chats.Clear();
         }
 
-        private static readonly Regex reChat=new Regex("<chat(?= )(.*)>(.*?)</chat>",RegexOptions.Singleline);
+        private static readonly Regex reChat = new Regex("<chat(?= )(.*)>(.*?)</chat>",RegexOptions.Singleline);
+        private static readonly Regex reThread = new Regex("thread=\"(\\d+)\"");
+        private static readonly Regex reDate = new Regex("date=\"(\\d+)\"");
+        private static readonly Regex reDateUsec = new Regex("date_usec=\"(\\d+)\"");
         private static readonly Regex reMail=new Regex(" mail=\"(.*?)\"");
-        private static readonly Regex reAbone=new Regex(" abone=\"1\"");
-        private static readonly Regex reUserID=new Regex(" user_id=\"([0-9A-Za-z\\-_]{0,27})");
-        private static readonly Regex reColor=new Regex("(?:^| )#([0-9A-Fa-f]{6})(?: |$)");
-        private static Chat getChatFromChatTag(string str)
+        private static readonly Regex reUserID = new Regex(" user_id=\"([0-9A-Za-z\\-_]{0,27})");
+        private static readonly Regex rePremium = new Regex(" abone=\"(\\d+)\"");
+        private static readonly Regex reAnonymity = new Regex(" abone=\"(\\d+)\"");
+        private static readonly Regex reAbone = new Regex(" abone=\"(\\d+)\"");
+
+        private static ChatNiconicoCommentXmlTag getChatXmlTag(string str)
         {
-            string text, userId;
-            Chat.PositionType position=Chat.PositionType.Normal;
-            Chat.SizeType size=Chat.SizeType.Normal;
-            Color color=Color.FromArgb(255,255,255);
+            string text = HttpUtility.HtmlDecode(reChat.Match(str).Groups[2].Value);
+            long thread = long.Parse(reThread.Match(str).Groups[1].Value);
+            long date = long.Parse(reDate.Match(str).Groups[1].Value);
+            int dateUsec = int.Parse(reDateUsec.Match(str).Groups[1].Value);
 
-            text=HttpUtility.HtmlDecode( reChat.Match(str).Groups[2].Value);
-            userId = reUserID.Match(str).Groups[1].Value;
+            Match match = reMail.Match(str);
+            string mail = match.Success ? HttpUtility.HtmlDecode(match.Groups[1].Value) : "";
 
-            var match = reMail.Match(str);
-            if(match.Success)
-            {
-                string mail = HttpUtility.HtmlDecode( match.Groups[1].Value);
+            string userId = reUserID.Match(str).Groups[1].Value;
 
-                if (mail.Contains("shita"))
-                    position = Chat.PositionType.Bottom;
-                else if (mail.Contains("ue"))
-                    position = Chat.PositionType.Top;
-                else
-                    position = Chat.PositionType.Normal;
+            match = rePremium.Match(str);
+            int premium = match.Success ? int.Parse(match.Groups[1].Value) : 0;
 
-                if (mail.Contains("small"))
-                    size = Chat.SizeType.Small;
-                else if (mail.Contains("big"))
-                    size = Chat.SizeType.Large;
-                else
-                    size = Chat.SizeType.Normal;
+            match = reAnonymity.Match(str);
+            int anonymity = match.Success ? int.Parse(match.Groups[1].Value) : 0;
 
-                match = reColor.Match(mail);
-                if(match.Success)
-                {
-                    int colorNum = int.Parse(match.Groups[1].Value, System.Globalization.NumberStyles.HexNumber);
-                    color = Color.FromArgb((colorNum >> 16) & 0xFF, (colorNum >> 8) & 0xFF, colorNum & 0xFF);
-                }
-                else
-                {
-                    color = colorNameMapping.FirstOrDefault((kv) => mail.Contains(kv.Key)).Value ?? Color.FromArgb(255, 255, 255);
-                }
-            }
+            match = reAbone.Match(str);
+            int abone = match.Success ? int.Parse(match.Groups[1].Value) : 0;
 
-            return new Chat(getTimeFromChatTag(str), text, position, size, color, userId,getNumberFromChatTag(str));
-        }
-
-        private static readonly Regex reDate=new Regex("date=\"(\\d+)\"");
-        private static DateTime getTimeFromChatTag(string str)
-        {
-            return DateTimeOffset.FromUnixTimeSeconds(long.Parse(reDate.Match(str).Groups[1].Value)).DateTime.ToLocalTime();
+            return new ChatNiconicoCommentXmlTag(text, thread, getNumberFromChatTag(str), getVposFromChatTag(str), date, dateUsec, mail, userId, premium, anonymity, abone);
         }
 
         private static readonly Regex reNo = new Regex(" no=\"(\\d+)\"");
