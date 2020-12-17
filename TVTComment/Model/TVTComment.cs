@@ -1,8 +1,6 @@
 ﻿using ObservableUtils;
 using System;
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
@@ -208,13 +206,6 @@ namespace TVTComment.Model
                     //Closeの返事を待っていたわけではない->相手がCloseした。
                     ApplicationClose();//thisがDisposeされる
             }
-        }
-
-        public void OpenUserScopeSettingFileLocation()
-        {
-            var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal);
-            if(File.Exists(config.FilePath))
-                System.Diagnostics.Process.Start("explorer.exe", $"/select, {config.FilePath}");
         }
 
         public void Dispose()

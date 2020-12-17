@@ -27,7 +27,6 @@ namespace TVTComment.ViewModels
         public Model.ChatService.NichanChatService.BoardInfo SelectedNichanBoard { get; set; }
 
         public ICommand LoginNiconicoCommand { get; }
-        public ICommand OpenUserScopeSettingFileLocationCommand { get; }
         public ICommand ApplyNichanSettingsCommand { get; }
         
         public InteractionRequest<Notification> AlertRequest { get; } = new InteractionRequest<Notification>();
@@ -63,8 +62,6 @@ namespace TVTComment.ViewModels
                       AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = "ニコニコへのログインに失敗しました" });
                   }
               });
-
-            OpenUserScopeSettingFileLocationCommand = new DelegateCommand(() => model.OpenUserScopeSettingFileLocation());
 
             ApplyNichanSettingsCommand = new DelegateCommand(() =>
               {

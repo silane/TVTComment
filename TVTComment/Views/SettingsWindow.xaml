@@ -149,11 +149,5 @@
                 <Button Content="適用" Command="{Binding ApplyNichanSettingsCommand}" HorizontalAlignment="Right" Grid.Row="4"/>
             </Grid>
         </TabItem>
-        <TabItem Header="その他">
-            <StackPanel Orientation="Vertical">
-                <Button Content="設定ファイルの保存場所を開く" Command="{Binding OpenUserScopeSettingFileLocationCommand}"/>
-                <TextBlock Text="初回起動時は設定ファイルが生成されていないので開きません"/>
-            </StackPanel>
-        </TabItem>
     </TabControl>
 </Window>
