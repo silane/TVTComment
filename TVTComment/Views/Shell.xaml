@@ -17,8 +17,15 @@
         Title="{Binding WindowTitle.Value}"
         Top="{Binding WindowPosition.X,Mode=TwoWay}" Left="{Binding WindowPosition.Y,Mode=TwoWay}"
         Height="{Binding WindowPosition.Height,Mode=TwoWay}" Width="{Binding WindowPosition.Width,Mode=TwoWay}"
-        Topmost="{Binding WindowTopmost.Value,Mode=TwoWay}" WindowStyle="None" ShowActivated="True" AllowsTransparency="True" ResizeMode="CanResizeWithGrip">
-
+        Topmost="{Binding WindowTopmost.Value,Mode=TwoWay}" WindowStyle="None" ShowActivated="True" AllowsTransparency="True" ResizeMode="CanResize">
+    <WindowChrome.WindowChrome>
+        <WindowChrome 
+         CaptionHeight="20"
+         GlassFrameThickness="0"
+         CornerRadius="0"
+         ResizeBorderThickness="8"/>
+    </WindowChrome.WindowChrome>
+    
     <Window.Resources>
         <converters:ColorToSolidColorBrushConverter x:Key="ColorConverter"/>
         <converters:InverseBoolConverter x:Key="InverseBoolConverter"/>
@@ -68,13 +75,14 @@
         </prism:InteractionRequestTrigger>
     </i:Interaction.Triggers>
 
-    <Grid>
+    <Grid Margin="4">
         <Grid.RowDefinitions>
+            <RowDefinition Height="28"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
-
-        <TabControl Grid.Row="0">
+        <TextBlock Grid.Row="0" Text="{Binding WindowTitle.Value}" VerticalAlignment="Center" Margin="5"/>
+        <TabControl Grid.Row="1">
             <TabItem Header="チャンネル">
                 <TabControl>
                     <TabItem Header="リスト">
@@ -308,7 +316,7 @@
             </TabItem>
         </TabControl>
 
-        <contents:ChatPostControl Grid.Row="1">
+        <contents:ChatPostControl Grid.Row="2">
             <!--<i:Interaction.Behaviors>
                 <behaviors:UserControlDataContextBinderBehavior Binding="{Binding RelativeSource={RelativeSource AncestorType=Window},Path=DataContext.ChatPostControlViewModel,Mode=OneWayToSource}"/>
             </i:Interaction.Behaviors>-->
