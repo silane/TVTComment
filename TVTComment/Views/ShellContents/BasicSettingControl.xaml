@@ -18,25 +18,25 @@
             </i:EventTrigger>
         </i:Interaction.Triggers>
         
-            <DockPanel>
-                <Label DockPanel.Dock="Left">コメント透過度</Label>
-                <TextBlock Text="{Binding ElementName=ChatOpacitySlider,Path=Value}" DockPanel.Dock="Left"/>
-                <Slider Name="ChatOpacitySlider" Value="{Binding Path=ChatOpacity.Value}" Minimum="0" Maximum="15" IsSnapToTickEnabled="True" TickPlacement="BottomRight" VerticalAlignment="Center"/>
-            </DockPanel>
-            <DockPanel>
-                <Label DockPanel.Dock="Left">ウィンドウ透過度</Label>
-                <TextBlock Text="{Binding ElementName=WindowOpacitySlider,Path=Value,StringFormat={}{0:N1}}" DockPanel.Dock="Left"/>
-                <Slider Name="WindowOpacitySlider" Value="{Binding WindowOpacity.Value}" Minimum="0.3" Maximum="1" LargeChange="0.1" SmallChange="0.1" IsSnapToTickEnabled="True" TickPlacement="BottomRight" VerticalAlignment="Center" TickFrequency="0.1"/>
-            </DockPanel>
-            <CheckBox IsChecked="{Binding WindowTopmost.Value,Mode=TwoWay}" VerticalAlignment="Center">最前面表示</CheckBox>
-            <DockPanel>
-                <Label>コメント表示時刻調整</Label>
-                <TextBlock Text="{Binding ChatCollectTimeAdjustment.Value}" VerticalAlignment="Center"/>
-                <Button Command="{Binding AddChatCollectTimeAdjustment}">
-                    <Button.CommandParameter>
-                        <sys:Int32>-60</sys:Int32>
-                    </Button.CommandParameter>-60s
-                </Button>
+        <DockPanel>
+            <Label DockPanel.Dock="Left">コメント透過度</Label>
+            <TextBlock Text="{Binding ElementName=ChatOpacitySlider,Path=Value}" DockPanel.Dock="Left"/>
+            <Slider Name="ChatOpacitySlider" Value="{Binding Path=ChatOpacity.Value}" Minimum="0" Maximum="15" IsSnapToTickEnabled="True" TickPlacement="BottomRight" VerticalAlignment="Center"/>
+        </DockPanel>
+        <DockPanel>
+            <Label DockPanel.Dock="Left">ウィンドウ透過度</Label>
+            <TextBlock Text="{Binding ElementName=WindowOpacitySlider,Path=Value,StringFormat={}{0:N1}}" DockPanel.Dock="Left"/>
+            <Slider Name="WindowOpacitySlider" Value="{Binding WindowOpacity.Value}" Minimum="0.3" Maximum="1" LargeChange="0.1" SmallChange="0.1" IsSnapToTickEnabled="True" TickPlacement="BottomRight" VerticalAlignment="Center" TickFrequency="0.1"/>
+        </DockPanel>
+        <CheckBox IsChecked="{Binding WindowTopmost.Value,Mode=TwoWay}" VerticalAlignment="Center">最前面表示</CheckBox>
+        <DockPanel>
+            <Label>コメント表示時刻調整</Label>
+            <TextBlock Text="{Binding ChatCollectTimeAdjustment.Value}" VerticalAlignment="Center"/>
+            <Button Command="{Binding AddChatCollectTimeAdjustment}">
+                <Button.CommandParameter>
+                    <sys:Int32>-60</sys:Int32>
+                </Button.CommandParameter>-60s
+            </Button>
             <Button Command="{Binding AddChatCollectTimeAdjustment}">
                 <Button.CommandParameter>
                     <sys:Int32>-1</sys:Int32>
@@ -53,20 +53,26 @@
                 </Button.CommandParameter> +1s
             </Button>
             <Button Command="{Binding AddChatCollectTimeAdjustment}">
-                    <Button.CommandParameter>
-                        <sys:Int32>+60</sys:Int32>
-                    </Button.CommandParameter>+60s
-                </Button>
+                <Button.CommandParameter>
+                    <sys:Int32>+60</sys:Int32>
+                </Button.CommandParameter>+60s
+            </Button>
             <FrameworkElement/>
         </DockPanel>
 
         <CheckBox IsChecked="{Binding ClearChatsOnChannelChange.Value}" VerticalAlignment="Center" HorizontalAlignment="Left">チャンネル変更時にログをクリアする</CheckBox>
-            <Button Content="その他設定">
-                <i:Interaction.Triggers>
-                    <i:EventTrigger EventName="Click">
-                    <behaviors:ShowWindowAction WindowType="local:SettingsWindow" IsModal="True" CenterOverAssociatedWindow="True"/>
-                    </i:EventTrigger>
-                </i:Interaction.Triggers>
-            </Button>
-        </StackPanel>
+        <Button Content="その他設定">
+            <i:Interaction.Triggers>
+                <i:EventTrigger EventName="Click">
+                <behaviors:ShowWindowAction WindowType="local:SettingsWindow" IsModal="True" CenterOverAssociatedWindow="True"/>
+                </i:EventTrigger>
+            </i:Interaction.Triggers>
+        </Button>
+        <TextBlock>
+            バージョン: <Run Text="{Binding Version, Mode=OneTime}"/>
+        </TextBlock>
+        <TextBlock>
+            © 2017 silane
+        </TextBlock>
+    </StackPanel>
 </UserControl>

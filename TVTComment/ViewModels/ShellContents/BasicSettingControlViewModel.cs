@@ -1,13 +1,9 @@
 ﻿using ObservableUtils;
 using Prism.Commands;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading;
+using System.Reflection;
 using System.Threading.Tasks;
-using System.Windows.Input;
 
 namespace TVTComment.ViewModels.ShellContents
 {
@@ -17,6 +13,7 @@ namespace TVTComment.ViewModels.ShellContents
 
         public event PropertyChangedEventHandler PropertyChanged;
 
+        public string Version { get; }
         public ObservableValue<byte> ChatOpacity { get; private set; }
         public ObservableValue<double> WindowOpacity { get; } = new ObservableValue<double>(1.0);
         public ObservableValue<bool> WindowTopmost { get; } = new ObservableValue<bool>(false);
@@ -29,6 +26,9 @@ namespace TVTComment.ViewModels.ShellContents
         public BasicSettingControlViewModel(Model.TVTComment model)
         {
             this.model = model;
+
+            var assembly = Assembly.GetExecutingAssembly().GetName();
+            this.Version = assembly.Version.ToString(3);
         }
 
         public async Task Initialize()
