@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Configuration;
 
 namespace TVTComment.Model
 {
@@ -19,15 +18,17 @@ namespace TVTComment.Model
         }
     }
 
-    class ChatCollectServiceCreationPresetModule:IDisposable
+    class ChatCollectServiceCreationPresetModule : IDisposable
     {
-        private SettingsBase settings;
+        private TVTCommentSettings settings;
         private IEnumerable<ChatCollectServiceEntry.IChatCollectServiceEntry> collectServiceEntries;
 
         private ObservableCollection<ChatCollectServiceCreationPreset> creationPresets = new ObservableCollection<ChatCollectServiceCreationPreset>();
         public ReadOnlyObservableCollection<ChatCollectServiceCreationPreset> CreationPresets { get; }
 
-        public ChatCollectServiceCreationPresetModule(SettingsBase settings,IEnumerable<ChatCollectServiceEntry.IChatCollectServiceEntry> collectServiceEntries)
+        public ChatCollectServiceCreationPresetModule(
+            TVTCommentSettings settings, IEnumerable<ChatCollectServiceEntry.IChatCollectServiceEntry> collectServiceEntries
+        )
         {
             this.settings = settings;
             this.collectServiceEntries = collectServiceEntries;

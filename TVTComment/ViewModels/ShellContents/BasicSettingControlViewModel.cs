@@ -37,8 +37,8 @@ namespace TVTComment.ViewModels.ShellContents
             //modelの初期化エラーへの対処はShellViewModelでするので全部無視    
             if (model.State != Model.TVTCommentState.Working) return;
 
-            WindowTopmost.Value = (bool)model.Settings["WindowTopmost"];
-            WindowOpacity.Value = (double)model.Settings["WindowOpacity"];
+            WindowTopmost.Value = model.Settings.View.WindowTopmost;
+            WindowOpacity.Value = model.Settings.View.WindowOpacity;
 
             //256段階でスライダーを動かすと大量にSetChatOpacityIPCMessageが発生してしまうため16段階にする
             ChatOpacity = model.ChatOpacity.MakeLinkedObservableValue(x => (byte)(x / 16), x => (byte)(x * 16));
@@ -54,8 +54,8 @@ namespace TVTComment.ViewModels.ShellContents
 
         public void Dispose()
         {
-            model.Settings["WindowTopmost"] = WindowTopmost.Value;
-            model.Settings ["WindowOpacity"]= WindowOpacity.Value;
+            model.Settings.View.WindowTopmost = WindowTopmost.Value;
+            model.Settings.View.WindowOpacity= WindowOpacity.Value;
         }
     }
 }

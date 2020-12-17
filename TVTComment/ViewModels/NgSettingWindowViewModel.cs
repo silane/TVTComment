@@ -88,14 +88,11 @@ namespace TVTComment.ViewModels
         {
             this.model = model;
 
-            System.Drawing.Rectangle rect = (System.Drawing.Rectangle)model.Settings["NgSettingWindowPosition"];
-            if (rect.Width != 0 || rect.Height != 0)
-            {
-                WindowLeft = rect.Left;
-                WindowTop = rect.Top;
-                WindowWidth = rect.Width;
-                WindowHeight = rect.Height;
-            }
+            Model.Serialization.WindowPositionEntity rect = model.Settings.View.NgSettingWindowPosition;
+            WindowLeft = rect.X;
+            WindowTop = rect.Y;
+            WindowWidth = rect.Width;
+            WindowHeight = rect.Height;
 
             TargetChatCollectServiceEntries=new List<Contents.SelectableViewModel<Model.ChatCollectServiceEntry.IChatCollectServiceEntry>>(
                 model.ChatServices.SelectMany(service => service.ChatCollectServiceEntries)
@@ -149,8 +146,11 @@ namespace TVTComment.ViewModels
 
         public void Dispose()
         {
-            System.Drawing.Rectangle rect = new System.Drawing.Rectangle((int)WindowLeft, (int)WindowTop, (int)WindowWidth, (int)WindowHeight);
-            model.Settings["NgSettingWindowPosition"]=rect;
+            model.Settings.View.NgSettingWindowPosition = new Model.Serialization.WindowPositionEntity()
+            {
+                X = WindowLeft, Y = WindowTop, Width = WindowWidth, Height = WindowHeight,
+            };
+
             disposables.Dispose();
         }
     }

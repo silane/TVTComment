@@ -22,12 +22,12 @@ namespace TVTComment.ViewModels
         //バインドするときclassなRectがいるから
         internal class Rect
         {
-            public double X { get; set; }
-            public double Y { get; set; }
-            public double Width { get; set; }
-            public double Height { get; set; }
+            public double X { get; set; } = double.NaN;
+            public double Y { get; set; } = double.NaN;
+            public double Width { get; set; } = double.NaN;
+            public double Height { get; set; } = double.NaN;
         }
-        private Rect windowPosition;
+        private Rect windowPosition = new Rect();
         public Rect WindowPosition
         {
             get { return windowPosition; }
@@ -97,12 +97,6 @@ namespace TVTComment.ViewModels
         public ShellViewModel(Model.TVTComment model)
         {
             this.model = model;
-            
-            var rect = (System.Drawing.RectangleF)model.Settings["MainWindowPosition"];
-            WindowPosition = new Rect { X = rect.X, Y = rect.Y, Width = rect.Width, Height = rect.Height };
-            
-            ChatListColumnInfos = ((ListViewColumnViewModel[])model.Settings["ChatListViewColumnSettings"])?.Select(x=>new Views.AttachedProperties.GridViewColumnSettingsBinder.ColumnInfo(x.Id,x.Width)).ToArray();
-            OnPropertyChanged(null);
 
             Window mainWindow = Application.Current.MainWindow;
             mainWindow.MouseLeftButtonDown += (_, __) => { mainWindow.DragMove(); };
@@ -132,6 +126,16 @@ namespace TVTComment.ViewModels
                 CloseApplication();
                 return;
             }
+
+            Model.Serialization.WindowPositionEntity rect = model.Settings.View.MainWindowPosition;
+            WindowPosition = new Rect
+            {
+                X = rect.X, Y = rect.Y, Width = rect.Width, Height = rect.Height,
+            };
+
+            ChatListColumnInfos = model.Settings.View.ChatListViewColumns?.Select(
+                x => new Views.AttachedProperties.GridViewColumnSettingsBinder.ColumnInfo(x.Id, x.Width)
+            ).ToArray();
 
             ChangeChannelCommand = new DelegateCommand<Model.ChannelInfo>(channel => { if (channel != null) model.ChannelInformationModule.SetCurrentChannel(channel); });
             AddChatCollectServiceCommand = new DelegateCommand<ShellContents.ChatCollectServiceAddListItemViewModel>(async x => { if (x != null) await addChatCollectService(x); },
@@ -250,7 +254,7 @@ namespace TVTComment.ViewModels
             if (disposed)
                 return;
 
-            if(model.CommandModule!=null)
+            if (model.CommandModule != null)
                 model.CommandModule.ShowWindowCommandInvoked -= commandModule_ShowWindowCommandInvoked;
             if (model.ChatCollectServiceModule != null)
             {
@@ -258,8 +262,22 @@ namespace TVTComment.ViewModels
                 model.ChatCollectServiceModule.ErrorOccurredInChatPosting -= model_ErrorOccurredInChatPosting;
                 model.ChatCollectServiceModule.ErrorOccurredInChatCollecting -= model_ErrorOccurredInChatCollecting;
             }
-            model.Settings["MainWindowPosition"] = new System.Drawing.RectangleF((float)WindowPosition.X, (float)WindowPosition.Y, (float)WindowPosition.Width, (float)WindowPosition.Height);
-            model.Settings["ChatListViewColumnSettings"] = ChatListColumnInfos.Select(x=>new ListViewColumnViewModel { Id = x.Id, Width = x.Width }).ToArray();
+
+            if(model.Settings != null)
+            {
+                model.Settings.View.MainWindowPosition = new Model.Serialization.WindowPositionEntity()
+                {
+                    X = WindowPosition.X,
+                    Y = WindowPosition.Y,
+                    Width = WindowPosition.Width,
+                    Height = WindowPosition.Height,
+                };
+
+                model.Settings.View.ChatListViewColumns = ChatListColumnInfos?.Select(
+                    x => new ListViewColumnViewModel { Id = x.Id, Width = x.Width }
+                ).ToArray();
+            }
+
             model.Dispose();
             model.ApplicationClose -= CloseApplication;
             disposables.Dispose();

@@ -14,7 +14,7 @@ namespace TVTComment.Model
     /// </summary>
     class DefaultChatCollectServiceModule
     {
-        private Properties.Settings settings;
+        private TVTCommentSettings settings;
         private ChannelInformationModule channelInformationModule;
         private ChatCollectServiceModule collectServiceModule;
         private IEnumerable<ChatCollectServiceEntry.IChatCollectServiceEntry> serviceEntryList;
@@ -39,8 +39,10 @@ namespace TVTComment.Model
         /// </summary>
         public SynchronizationContext SynchronizationContext => channelInformationModule.SynchronizationContext;
 
-        public DefaultChatCollectServiceModule(Properties.Settings settings,ChannelInformationModule channelInformationModule, ChatCollectServiceModule collectServiceModule,
-            IEnumerable<ChatCollectServiceEntry.IChatCollectServiceEntry> serviceEntryList)
+        public DefaultChatCollectServiceModule(
+            TVTCommentSettings settings, ChannelInformationModule channelInformationModule,
+            ChatCollectServiceModule collectServiceModule, IEnumerable<ChatCollectServiceEntry.IChatCollectServiceEntry> serviceEntryList
+        )
         {
             this.settings = settings;
             this.channelInformationModule = channelInformationModule;
@@ -115,32 +117,20 @@ namespace TVTComment.Model
 
         private void saveSettings()
         {
-            settings.UseDefaultChatCollectService = IsEnabled.Value;
+            this.settings.UseDefaultChatCollectService = this.IsEnabled.Value;
 
-            settings.LiveDefaultChatCollectServices = new StringCollection();
-            settings.RecordDefaultChatCollectServices = new StringCollection();
-            Action<ObservableCollection<ChatCollectServiceEntry.IChatCollectServiceEntry>, StringCollection> save = (serviceEntries, saveData) =>
-               {
-                   foreach (string id in serviceEntries.Select(x => x.Id))
-                   {
-                       saveData.Add(id);
-                   }
-               };
-            save(LiveChatCollectService, settings.LiveDefaultChatCollectServices);
-            save(RecordChatCollectService, settings.RecordDefaultChatCollectServices);
+            this.settings.LiveDefaultChatCollectServices = this.LiveChatCollectService.Select(x => x.Id).ToArray();
+            this.settings.RecordDefaultChatCollectServices = this.RecordChatCollectService.Select(x => x.Id).ToArray();
         }
 
         private void loadSettings()
         {
-            IsEnabled.Value = settings.UseDefaultChatCollectService;
+            this.IsEnabled.Value = this.settings.UseDefaultChatCollectService;
 
-            Action<StringCollection, ObservableCollection<ChatCollectServiceEntry.IChatCollectServiceEntry>> load = (saveData, serviceEntries) =>
-               {
-                   foreach (ChatCollectServiceEntry.IChatCollectServiceEntry serviceEntry in saveData.Cast<string>().Select(id => serviceEntryList.Single(serviceEntry => serviceEntry.Id == id)))
-                       serviceEntries.Add(serviceEntry);
-               };
-            load(settings.LiveDefaultChatCollectServices ?? new StringCollection(), LiveChatCollectService);
-            load(settings.RecordDefaultChatCollectServices ?? new StringCollection(), RecordChatCollectService);
+            foreach (string id in this.settings.LiveDefaultChatCollectServices)
+                this.LiveChatCollectService.Add(serviceEntryList.Single(serviceEntry => serviceEntry.Id == id));
+            foreach (string id in this.settings.RecordDefaultChatCollectServices)
+                this.RecordChatCollectService.Add(serviceEntryList.Single(serviceEntry => serviceEntry.Id == id));
         }
 
         private static DateTime getDateTimeJstNow()

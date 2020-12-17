@@ -22,7 +22,7 @@ namespace TVTComment.Model
 
     class ChatModule:IDisposable
     {
-        private SettingsBase settings;
+        private TVTCommentSettings settings;
         private IPCModule ipc;
         private ChatCollectServiceModule collectServiceModule;
         private ChannelInformationModule channelInformationModule;
@@ -38,7 +38,10 @@ namespace TVTComment.Model
         private ObservableCollection<ChatModRuleEntry> chatModRules = new ObservableCollection<ChatModRuleEntry>();
         public ReadOnlyObservableCollection<ChatModRuleEntry> ChatModRules { get; }
 
-        public ChatModule(SettingsBase settings,IEnumerable<ChatService.IChatService> chatServices,ChatCollectServiceModule collectServiceModule,IPCModule ipc,ChannelInformationModule channelInformationModule)
+        public ChatModule(
+            TVTCommentSettings settings, IEnumerable<ChatService.IChatService> chatServices,
+            ChatCollectServiceModule collectServiceModule, IPCModule ipc, ChannelInformationModule channelInformationModule
+        )
         {
             Chats = new ReadOnlyObservableCollection<Chat>(chats);
             ChatModRules = new ReadOnlyObservableCollection<ChatModRuleEntry>(chatModRules);
@@ -127,9 +130,9 @@ namespace TVTComment.Model
 
         private void loadSettings()
         {
-            ChatPreserveCount.Value = (int)settings["ChatPreserveCount"];
-            ClearChatsOnChannelChange.Value = (bool)settings["ClearChatsOnChannelChange"];
-            var entities = (Serialization.ChatModRuleEntity[])settings["ChatModRules"] ?? new Serialization.ChatModRuleEntity[0];
+            ChatPreserveCount.Value = this.settings.ChatPreserveCount;
+            ClearChatsOnChannelChange.Value = this.settings.ClearChatsOnChannelChange;
+            var entities = this.settings.ChatModRules;
             foreach(var entity in entities)
             {
                 var entry = new ChatModRuleEntry { AppliedCount = entity.AppliedCount, LastAppliedTime = entity.LastAppliedTime };
@@ -169,9 +172,9 @@ namespace TVTComment.Model
 
         private void saveSettings()
         {
-            settings["ChatPreserveCount"] = ChatPreserveCount.Value;
-            settings["ClearChatsOnChannelChange"] = ClearChatsOnChannelChange.Value;
-            settings["ChatModRules"] = chatModRules.Select(x =>
+            this.settings.ChatPreserveCount = ChatPreserveCount.Value;
+            this.settings.ClearChatsOnChannelChange = ClearChatsOnChannelChange.Value;
+            this.settings.ChatModRules = chatModRules.Select(x =>
             {
                 var entity = new Serialization.ChatModRuleEntity {
                     TargetChatCollectServiceEntries =x.ChatModRule.TargetChatCollectServiceEntries.Select(entry=>entry.Id).ToArray(),

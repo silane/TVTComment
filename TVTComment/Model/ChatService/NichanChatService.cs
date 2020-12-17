@@ -1,14 +1,23 @@
 ﻿using ObservableUtils;
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Collections.ObjectModel;
-using System.Linq;
 using System.Configuration;
 using System.Drawing;
+using System.Linq;
 
 namespace TVTComment.Model.ChatService
 {
+    class NichanChatServiceSettings
+    {
+        public TimeSpan ThreadUpdateInterval { get; set; } = new TimeSpan(0, 0, 15);
+        public TimeSpan ThreadListUpdateInterval { get; set; } = new TimeSpan(0, 0, 1);
+        public Serialization.ColorEntity ChatColor { get; set; } = new Serialization.ColorEntity() { R = 255, G = 255, B = 255 };
+        public string HmKey { get; set; } = "";
+        public string AppKey { get; set; } = "";
+        public string UserId { get; set; } = "";
+        public string Password { get; set; } = "";
+    }
+
     class NichanChatService : IChatService
     {
         public class BoardInfo
@@ -27,13 +36,13 @@ namespace TVTComment.Model.ChatService
         public IReadOnlyList<IChatTrendServiceEntry> ChatTrendServiceEntries { get; }
         public IEnumerable<BoardInfo> BoardList { get; }
 
-        public TimeSpan ResCollectInterval => resCollectInterval.Value;
-        public TimeSpan ThreadSearchInterval => threadSearchInterval.Value;
-        public Color ChatColor => chatColor.Value;
-        public string HmKey => nichanApiClient.Value.HmKey;
-        public string AppKey => nichanApiClient.Value.AppKey;
-        public string UserId => nichanApiClient.Value.UserId;
-        public string Password => nichanApiClient.Value.Password;
+        public TimeSpan ResCollectInterval => this.resCollectInterval.Value;
+        public TimeSpan ThreadSearchInterval => this.threadSearchInterval.Value;
+        public Color ChatColor => this.chatColor.Value;
+        public string HmKey => this.nichanApiClient.Value.HmKey;
+        public string AppKey => this.nichanApiClient.Value.AppKey;
+        public string UserId => this.nichanApiClient.Value.UserId;
+        public string Password => this.nichanApiClient.Value.Password;
 
         //このChatServiceに行われた設定変更が子のChatServiceEntryに伝わるようにするためにObservableValueで包む
         private ObservableValue<TimeSpan> resCollectInterval=new ObservableValue<TimeSpan>();
@@ -44,10 +53,10 @@ namespace TVTComment.Model.ChatService
         private NichanUtils.BoardDatabase boardDatabase;
         private NichanUtils.ThreadResolver threadResolver;
 
-        private SettingsBase settings;
+        private NichanChatServiceSettings settings;
 
         public NichanChatService(
-            SettingsBase settings, ChannelDatabase channelDatabase,
+            NichanChatServiceSettings settings, ChannelDatabase channelDatabase,
             string threadSettingFilePath
         )
         {
@@ -57,12 +66,12 @@ namespace TVTComment.Model.ChatService
             boardDatabase = new NichanUtils.BoardDatabase(boardSetting.BoardEntries, boardSetting.ThreadMappingRuleEntries);
             threadResolver = new NichanUtils.ThreadResolver(channelDatabase, boardDatabase);
 
-            resCollectInterval.Value = (TimeSpan)settings["NichanResCollectInterval"];
-            threadSearchInterval.Value = (TimeSpan)settings["NichanThreadSearchInterval"];
-            chatColor.Value = (Color)(settings["NichanChatColor"] ?? Color.Empty);
+            this.resCollectInterval.Value = settings.ThreadUpdateInterval;
+            this.threadSearchInterval.Value = settings.ThreadListUpdateInterval;
+            this.chatColor.Value = Color.FromArgb(settings.ChatColor.R, settings.ChatColor.G, settings.ChatColor.B);
             this.nichanApiClient.Value = new Nichan.ApiClient(
-                (string)settings["NichanHMKey"], (string)settings["NichanAppKey"],
-                (string)settings["NichanUserID"], (string)settings["NichanPassword"]
+                settings.HmKey, settings.AppKey,
+                settings.UserId, settings.Password
             );
 
             ChatCollectServiceEntries = new ChatCollectServiceEntry.IChatCollectServiceEntry[] {
@@ -74,10 +83,10 @@ namespace TVTComment.Model.ChatService
             BoardList = boardDatabase.BoardList.Select(x => new BoardInfo(x.Title, x.Uri));
         }
 
-        public void SetIntervalValues(TimeSpan resCollectInterval,TimeSpan threadSearchInterval)
+        public void SetIntervalValues(TimeSpan resCollectInterval, TimeSpan threadSearchInterval)
         {
-            settings["NichanResCollectInterval"] = resCollectInterval;
-            settings["NichanThreadSearchInterval"] = threadSearchInterval;
+            this.settings.ThreadUpdateInterval = resCollectInterval;
+            this.settings.ThreadListUpdateInterval = threadSearchInterval;
 
             this.resCollectInterval.Value = resCollectInterval;
             this.threadSearchInterval.Value = threadSearchInterval;
@@ -85,7 +94,7 @@ namespace TVTComment.Model.ChatService
 
         public void SetChatColor(Color chatColor)
         {
-            settings["NichanChatColor"] = chatColor;
+            this.settings.ChatColor = new Serialization.ColorEntity() { R = chatColor.R, G = chatColor.G, B = chatColor.B };
             this.chatColor.Value = chatColor;
         }
 
@@ -93,10 +102,10 @@ namespace TVTComment.Model.ChatService
         {
             using (this.nichanApiClient.Value)
             {
-                settings["NichanHMKey"] = hmKey;
-                settings["NichanAppKey"] = appKey;
-                settings["NichanUserID"] = userId;
-                settings["NichanPassword"] = password;
+                this.settings.HmKey = hmKey;
+                this.settings.AppKey = appKey;
+                this.settings.UserId = userId;
+                this.settings.Password = password;
 
                 this.nichanApiClient.Value = new Nichan.ApiClient(hmKey, appKey, userId, password);
             }

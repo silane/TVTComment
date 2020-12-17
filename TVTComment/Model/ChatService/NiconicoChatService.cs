@@ -6,6 +6,12 @@ using System.Threading.Tasks;
 
 namespace TVTComment.Model.ChatService
 {
+    class NiconicoChatServiceSettings
+    {
+        public string UserId { get; set; } = "";
+        public string Password { get; set; } = "";
+    }
+
     class NiconicoChatService : IChatService
     {
         public string Name => "ニコニコ";
@@ -17,20 +23,20 @@ namespace TVTComment.Model.ChatService
         private ObservableValue<NiconicoUtils.NiconicoLoginSession> loginSession = new ObservableValue<NiconicoUtils.NiconicoLoginSession>();
 
         private NiconicoUtils.JkIdResolver jkIdResolver;
-        private SettingsBase settings;
+        private NiconicoChatServiceSettings settings;
 
         public string UserId
         {
-            get { return (string)settings["NiconicoUserId"]; }
+            get { return this.settings.UserId; }
         }
         public string UserPassword
         {
-            get { return (string)settings["NiconicoPassword"]; }
+            get { return this.settings.Password; }
         }
         public bool IsLoggedin { get; private set; }
 
         public NiconicoChatService(
-            SettingsBase settings, ChannelDatabase channelDatabase,
+            NiconicoChatServiceSettings settings, ChannelDatabase channelDatabase,
             string jikkyouIdTableFilePath
         )
         {
@@ -62,10 +68,10 @@ namespace TVTComment.Model.ChatService
         /// <param name="userPassword">ニコニコのパスワード</param>
         /// <exception cref="ArgumentException"><paramref name="userId"/>または<paramref name="userPassword"/>がnull若しくはホワイトスペースだった時</exception>
         /// <exception cref="NiconicoUtils.NiconicoLoginSessionException">ログインに失敗した時</exception>
-        public async Task SetUser(string userId,string userPassword)
+        public async Task SetUser(string userId, string userPassword)
         {
             if (string.IsNullOrWhiteSpace(userId))
-                throw new ArgumentException($"{nameof(userId)} must not be null nor white space",nameof(userId));
+                throw new ArgumentException($"{nameof(userId)} must not be null nor white space", nameof(userId));
             if (string.IsNullOrWhiteSpace(userPassword))
                 throw new ArgumentException($"{nameof(userPassword)} must not be null nor white space", nameof(userPassword));
 
@@ -74,16 +80,16 @@ namespace TVTComment.Model.ChatService
             await tmpSession.Login().ConfigureAwait(false);
 
             //成功したら設定、セッションを置き換える
-            IsLoggedin = true;
-            settings["NiconicoUserId"] = userId;
-            settings["NiconicoPassword"] = userPassword;
+            this.IsLoggedin = true;
+            this.settings.UserId = userId;
+            this.settings.Password = userPassword;
             try
             {
-                await (loginSession.Value?.Logout() ?? Task.CompletedTask);
+                await (this.loginSession.Value?.Logout() ?? Task.CompletedTask);
             }
             catch(NiconicoUtils.NiconicoLoginSessionException)
             { }
-            loginSession.Value = tmpSession;
+            this.loginSession.Value = tmpSession;
         }
 
         public void Dispose(){ }

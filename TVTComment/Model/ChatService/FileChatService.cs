@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace TVTComment.Model.ChatService
 {
@@ -14,7 +9,7 @@ namespace TVTComment.Model.ChatService
         public IReadOnlyList<ChatCollectServiceEntry.IChatCollectServiceEntry> ChatCollectServiceEntries { get; }
         public IReadOnlyList<IChatTrendServiceEntry> ChatTrendServiceEntries { get; } = new IChatTrendServiceEntry[0];
 
-        public FileChatService(SettingsBase settings)
+        public FileChatService()
         {
             ChatCollectServiceEntries = new ChatCollectServiceEntry.IChatCollectServiceEntry[1] { new ChatCollectServiceEntry.FileChatCollectServiceEntry(this) };
         }

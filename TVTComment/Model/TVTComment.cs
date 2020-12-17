@@ -50,8 +50,10 @@ namespace TVTComment.Model
         /// 返事を待っている期間だけresetになる
         /// </summary>
         private ManualResetEventSlim closingResetEvent = new ManualResetEventSlim(true);
+        private readonly SettingFileReaderWriter<TVTCommentSettings> settingReaderWriter;
 
-        public SettingsBase Settings => Properties.Settings.Default;
+        public TVTCommentSettings Settings { get; private set; }
+        //public SettingsBase Settings => Properties.Settings.Default;
         public ReadOnlyCollection<ChatService.IChatService> ChatServices { get; private set; }
         public ObservableValue<byte> ChatOpacity { get; private set; }
         public ObservableCollection<string> ChatPostMailTextExamples { get; } = new ObservableCollection<string>();
@@ -64,6 +66,10 @@ namespace TVTComment.Model
         public TVTComment()
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+            string baseDir = Path.GetDirectoryName(getExePath());
+            this.settingReaderWriter = new SettingFileReaderWriter<TVTCommentSettings>(Path.Combine(baseDir, "settings"), true);
+
             State = TVTCommentState.NotInitialized;
         }
 
@@ -82,12 +88,21 @@ namespace TVTComment.Model
             if (State != TVTCommentState.NotInitialized)
                 throw new InvalidOperationException("This object is already initialized");
 
-            string baseDir = Path.GetDirectoryName(System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName);
+            try
+            {
+                this.Settings = await this.settingReaderWriter.Read();
+            }
+            catch(FormatException)
+            {
+                this.Settings = new TVTCommentSettings();
+            }
+
+            string baseDir = Path.GetDirectoryName(getExePath());
             this.channelDatabase = new ChannelDatabase(Path.Combine(baseDir, "channels.txt"));
             this.ChatServices = new ReadOnlyCollection<ChatService.IChatService>(new ChatService.IChatService[] {
-                new ChatService.NiconicoChatService(Settings, this.channelDatabase,Path.Combine(baseDir, "niconicojikkyouids.txt")),
-                new ChatService.NichanChatService(Settings, this.channelDatabase,Path.Combine(baseDir,"2chthreads.txt")),
-                new ChatService.FileChatService(Settings)
+                new ChatService.NiconicoChatService(Settings.Niconico, this.channelDatabase, Path.Combine(baseDir, "niconicojikkyouids.txt")),
+                new ChatService.NichanChatService(Settings.Nichan, this.channelDatabase, Path.Combine(baseDir, "2chthreads.txt")),
+                new ChatService.FileChatService()
             });
 
             var chatCollectServiceEntryIds = this.ChatServices.SelectMany(x => x.ChatCollectServiceEntries).Select(x => x.Id);
@@ -116,23 +131,30 @@ namespace TVTComment.Model
             ChannelInformationModule = new ChannelInformationModule(ipcModule);
             ChatCollectServiceModule = new ChatCollectServiceModule(ChannelInformationModule);
             ChatTrendServiceModule = new ChatTrendServiceModule(SynchronizationContext.Current);
-            ChatModule = new ChatModule(Properties.Settings.Default,ChatServices,ChatCollectServiceModule, ipcModule,ChannelInformationModule);
-            DefaultChatCollectServiceModule = new DefaultChatCollectServiceModule(Properties.Settings.Default,ChannelInformationModule, ChatCollectServiceModule,ChatServices.SelectMany(x=>x.ChatCollectServiceEntries));
-            CommandModule = new CommandModule(ipcModule, SynchronizationContext.Current);
-            ChatCollectServiceCreationPresetModule = new ChatCollectServiceCreationPresetModule(Properties.Settings.Default, ChatServices.SelectMany(x => x.ChatCollectServiceEntries));
+            ChatModule = new ChatModule(
+                this.Settings, ChatServices,ChatCollectServiceModule, ipcModule,ChannelInformationModule
+            );
+            DefaultChatCollectServiceModule = new DefaultChatCollectServiceModule(
+                this.Settings, ChannelInformationModule, ChatCollectServiceModule,ChatServices.SelectMany(x=>x.ChatCollectServiceEntries)
+            );
+            CommandModule = new CommandModule(
+                ipcModule, SynchronizationContext.Current
+            );
+            ChatCollectServiceCreationPresetModule = new ChatCollectServiceCreationPresetModule(
+                this.Settings, ChatServices.SelectMany(x => x.ChatCollectServiceEntries)
+            );
 
             //コメント透過度設定処理
-            ChatOpacity = new ObservableValue<byte>((byte)Properties.Settings.Default["ChatOpacity"]);
+            ChatOpacity = new ObservableValue<byte>(this.Settings.ChatOpacity);
             ChatOpacity.Subscribe(async opacity =>
             {
-                Properties.Settings.Default["ChatOpacity"] = opacity;
+                this.Settings.ChatOpacity = opacity;
                 await ipcModule.Send(new IPC.IPCMessage.SetChatOpacityIPCMessage { Opacity = opacity });
             });
 
             //メール欄例設定
-            var chatPostMailTextExamples = (StringCollection)Properties.Settings.Default["ChatPostMailTextExamples"];
-            if(chatPostMailTextExamples!=null)
-                ChatPostMailTextExamples.AddRange(chatPostMailTextExamples.Cast<string>());
+            var chatPostMailTextExamples = this.Settings.ChatPostMailTextExamples;
+            ChatPostMailTextExamples.AddRange(chatPostMailTextExamples);
             
             ipcModule.StartReceiving();
             State = TVTCommentState.Working;
@@ -207,9 +229,7 @@ namespace TVTComment.Model
             }
 
             //メール欄例保存
-            var stringCollection = new StringCollection();
-            stringCollection.AddRange(ChatPostMailTextExamples.ToArray());
-            Properties.Settings.Default["ChatPostMailTextExamples"] = stringCollection;
+            this.Settings.ChatPostMailTextExamples = this.ChatPostMailTextExamples.ToArray();
 
             //各種SubModule破棄
             CommandModule?.Dispose();
@@ -225,8 +245,15 @@ namespace TVTComment.Model
                 ipcModule.Dispose();
             }
 
-            Properties.Settings.Default.Save();
+            // 設定保存。asyncだがawaitせずに例外は無視。
+            this.settingReaderWriter.Write(this.Settings).Wait(5000);
+
             State = TVTCommentState.Disposed;
+        }
+
+        private static string getExePath()
+        {
+            return System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName;
         }
     }
 }
