@@ -88,13 +88,27 @@ namespace TVTComment.Model
             if (State != TVTCommentState.NotInitialized)
                 throw new InvalidOperationException("This object is already initialized");
 
-            try
+            // プラグインの無効化→有効化を短時間で行うと
+            // 設定ファイルがアクセス中でIOExceptionが飛ぶので時間を空けて試す
+            for (int i = 1; ; ++i)
             {
-                this.Settings = await this.settingReaderWriter.Read();
-            }
-            catch(FormatException)
-            {
-                this.Settings = new TVTCommentSettings();
+                try
+                {
+                    this.Settings = await this.settingReaderWriter.Read();
+                    break;
+                }
+                catch (FormatException)
+                {
+                    this.Settings = new TVTCommentSettings();
+                    break;
+                }
+                catch (IOException)
+                {
+                    const int retryCount = 6;
+                    if(i >= retryCount)
+                        throw;
+                }
+                await Task.Delay(500);
             }
 
             string baseDir = Path.GetDirectoryName(getExePath());
