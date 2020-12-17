@@ -46,11 +46,11 @@ namespace TVTComment.Model.ChatCollectService
         private string liveId = "";
         private NiconicoUtils.NiconicoCommentXmlParser parser = new NiconicoUtils.NiconicoCommentXmlParser(true);
         private NetworkStream socketStream;
-        private NiconicoUtils.NiconicoCommentXmlParser.ThreadXmlTag lastThreadTag;
         private HttpClient httpClient;
         private CancellationTokenSource cancel = new CancellationTokenSource();
         private Task chatCollectTask;
         private DateTime lastHeartbeatTime = DateTime.MinValue;
+        private NiconicoUtils.NicoLiveCommentSender commentSender;
         private static readonly Encoding utf8Encoding = new UTF8Encoding(false);
 
         public NiconicoLiveChatCollectService(
@@ -68,6 +68,8 @@ namespace TVTComment.Model.ChatCollectService
             handler.CookieContainer.Add(session.Cookie);
             this.httpClient = new HttpClient(handler);
             this.httpClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", ua);
+
+            this.commentSender = new NiconicoUtils.NicoLiveCommentSender(session);
 
             this.chatCollectTask = this.collectChat(this.cancel.Token);
         }
@@ -108,12 +110,9 @@ namespace TVTComment.Model.ChatCollectService
                 {
                     var tag = parser.Pop();
                     var chatTag = tag as NiconicoUtils.NiconicoCommentXmlParser.ChatXmlTag;
-                    var threadTag = tag as NiconicoUtils.NiconicoCommentXmlParser.ThreadXmlTag;
                     var leaveThreadTag = tag as NiconicoUtils.NiconicoCommentXmlParser.LeaveThreadXmlTag;
                     if (chatTag != null)
                         ret.Add(chatTag.Chat.Chat);
-                    else if (threadTag != null)
-                        lastThreadTag = threadTag;
                     else if (leaveThreadTag != null)
                         cancel.Cancel();
                 }
@@ -216,49 +215,34 @@ namespace TVTComment.Model.ChatCollectService
 
         public async Task PostChat(BasicChatPostObject chatPostObject)
         {
-            if (!this.CanPost)
-                throw new NotSupportedException("Posting is not supprted on this ChatCollectService");
-
-            if (this.lastThreadTag == null || this.liveId == "")
+            if (this.liveId == "")
                 throw new ChatPostException("コメントが投稿できる状態にありません。しばらく待ってから再試行してください。");
 
-            // vposは10msec単位 サーバ時刻を基準に計算
-            int vpos = (int)(lastThreadTag.ServerTime - lastThreadTag.Thread) * 100 + (int)((getDateTimeJstNow() - lastThreadTag.ReceivedTime).Value.TotalMilliseconds) / 10;
-
-            string mail = (chatPostObject as ChatPostObject)?.Mail ?? "";
-
-            var options = new JsonSerializerOptions
-            {
-                Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
-            };
-
-            var response = await this.httpClient.PostAsync(
-                $"https://api.cas.nicovideo.jp/v1/services/live/programs/{this.liveId}/comments",
-                new StringContent(JsonSerializer.Serialize(new Dictionary<string, string> {
-                    { "message", chatPostObject.Text },
-                    { "command", mail },
-                    { "vpos", vpos.ToString() },
-                }, options), Encoding.UTF8, "application/json")
-            );
-            string responseBody = await response.Content.ReadAsStringAsync();
-            using var responseBodyJson = JsonDocument.Parse(responseBody);
-            int status;
             try
             {
-                status = responseBodyJson.RootElement.GetProperty("meta").GetProperty("status").GetInt32();
+                await this.commentSender.Send(this.liveId, chatPostObject.Text, (chatPostObject as ChatPostObject)?.Mail ?? "");
             }
-            catch(Exception e) when(e is InvalidOperationException || e is KeyNotFoundException)
+            catch (NiconicoUtils.NetworkNicoLiveCommentSenderException e)
             {
-                throw new ChatPostException($"サーバーから予期しない形式の返信がありました:\n\n{responseBody}");
+                throw new ChatPostException($"サーバーに接続できませんでした", e);
             }
-            if (status != 200)
+            catch (NiconicoUtils.InvalidPlayerStatusNicoLiveCommentSenderException e)
             {
-                throw new ChatPostException($"サーバーからエラーが返されました:\n\n{responseBody}");
+                throw new ChatPostException($"サーバーから無効な PlayerStatus が返されました\n\n{e.PlayerStatus}", e);
+            }
+            catch(NiconicoUtils.ResponseFormatNicoLiveCommentSenderException e)
+            {
+                throw new ChatPostException($"サーバーから予期しない形式の応答がありました\n\n{e.Response}", e);
+            }
+            catch(NiconicoUtils.ResponseErrorNicoLiveCommentSenderException e)
+            {
+                throw new ChatPostException($"サーバーからエラーが返されました", e);
             }
         }
 
         public void Dispose()
         {
+            using (this.commentSender)
             using (this.httpClient)
             {
                 cancel.Cancel();
