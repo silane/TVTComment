@@ -19,20 +19,34 @@ namespace TVTComment.ViewModels
 {
     class ShellViewModel : BindableBase, IDisposable
     {
-        //バインドするときclassなRectがいるから
-        internal class Rect
+        internal class Rect : BindableBase
         {
-            public double X { get; set; } = double.NaN;
-            public double Y { get; set; } = double.NaN;
-            public double Width { get; set; } = double.NaN;
-            public double Height { get; set; } = double.NaN;
+            private double x = double.NaN, y = double.NaN;
+            private double width = double.NaN, height = double.NaN;
+
+            public double X
+            {
+                get { return this.x; }
+                set { SetProperty(ref this.x, value); }
+            }
+            public double Y
+            {
+                get { return this.y; }
+                set { SetProperty(ref this.y, value); }
+            }
+            public double Width
+            {
+                get { return this.width; }
+                set { SetProperty(ref this.width, value); }
+            }
+            public double Height
+            {
+                get { return this.height; }
+                set { SetProperty(ref this.height, value); }
+            }
         }
         private Rect windowPosition = new Rect();
-        public Rect WindowPosition
-        {
-            get { return windowPosition; }
-            set { SetProperty(ref windowPosition, value); }
-        }
+        public Rect WindowPosition => this.windowPosition;
 
         private Model.ChannelInfo selectedChannel;
         public Model.ChannelInfo SelectedChannel
@@ -128,10 +142,10 @@ namespace TVTComment.ViewModels
             }
 
             Model.Serialization.WindowPositionEntity rect = model.Settings.View.MainWindowPosition;
-            WindowPosition = new Rect
-            {
-                X = rect.X, Y = rect.Y, Width = rect.Width, Height = rect.Height,
-            };
+            this.WindowPosition.X = rect.X;
+            this.WindowPosition.Y = rect.Y;
+            this.WindowPosition.Width = rect.Width;
+            this.WindowPosition.Height = rect.Height;
 
             ChatListColumnInfos = model.Settings.View.ChatListViewColumns?.Select(
                 x => new Views.AttachedProperties.GridViewColumnSettingsBinder.ColumnInfo(x.Id, x.Width)
