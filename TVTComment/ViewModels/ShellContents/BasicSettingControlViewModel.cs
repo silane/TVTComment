@@ -2,14 +2,16 @@
 using Prism.Commands;
 using System;
 using System.ComponentModel;
+using System.Reactive.Disposables;
 using System.Reflection;
 using System.Threading.Tasks;
 
 namespace TVTComment.ViewModels.ShellContents
 {
-    class BasicSettingControlViewModel:IDisposable,INotifyPropertyChanged
+    class BasicSettingControlViewModel : IDisposable, INotifyPropertyChanged
     {
-        private Model.TVTComment model;
+        private readonly Model.TVTComment model;
+        private readonly CompositeDisposable compositeDisposable = new CompositeDisposable();
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -42,6 +44,10 @@ namespace TVTComment.ViewModels.ShellContents
             WindowOpacity.Value = model.Settings.View.WindowOpacity;
             WindowFontSize.Value = model.Settings.View.WindowFontSize;
 
+            compositeDisposable.Add(WindowTopmost.Subscribe(x => model.Settings.View.WindowTopmost = x));
+            compositeDisposable.Add(WindowOpacity.Subscribe(x => model.Settings.View.WindowOpacity = x));
+            compositeDisposable.Add(WindowFontSize.Subscribe(x => model.Settings.View.WindowFontSize = x));
+
             //256段階でスライダーを動かすと大量にSetChatOpacityIPCMessageが発生してしまうため16段階にする
             ChatOpacity = model.ChatOpacity.MakeLinkedObservableValue(x => (byte)(x / 16), x => (byte)(x * 16));
             ClearChatsOnChannelChange = model.ChatModule.ClearChatsOnChannelChange;
@@ -56,9 +62,8 @@ namespace TVTComment.ViewModels.ShellContents
 
         public void Dispose()
         {
-            model.Settings.View.WindowTopmost = WindowTopmost.Value;
-            model.Settings.View.WindowOpacity= WindowOpacity.Value;
-            model.Settings.View.WindowFontSize = WindowFontSize.Value;
+            // アプリケーションが終了するとき（それ以外ないが）は現状呼ばれない
+            this.compositeDisposable.Dispose();
         }
     }
 }
