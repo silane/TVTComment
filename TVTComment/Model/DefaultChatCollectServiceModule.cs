@@ -128,9 +128,17 @@ namespace TVTComment.Model
             this.IsEnabled.Value = this.settings.UseDefaultChatCollectService;
 
             foreach (string id in this.settings.LiveDefaultChatCollectServices)
-                this.LiveChatCollectService.Add(serviceEntryList.Single(serviceEntry => serviceEntry.Id == id));
+            {
+                var serviceEntry = serviceEntryList.SingleOrDefault(x => x.Id == id);
+                if(serviceEntry != null)
+                    this.LiveChatCollectService.Add(serviceEntry);
+            }
             foreach (string id in this.settings.RecordDefaultChatCollectServices)
-                this.RecordChatCollectService.Add(serviceEntryList.Single(serviceEntry => serviceEntry.Id == id));
+            {
+                var serviceEntry = serviceEntryList.SingleOrDefault(x => x.Id == id);
+                if (serviceEntry != null)
+                    this.LiveChatCollectService.Add(serviceEntry);
+            }
         }
 
         private static DateTime getDateTimeJstNow()

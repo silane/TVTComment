@@ -132,36 +132,39 @@ namespace TVTComment.Model
         {
             ChatPreserveCount.Value = this.settings.ChatPreserveCount;
             ClearChatsOnChannelChange.Value = this.settings.ClearChatsOnChannelChange;
+            var chatCollectServiceEntries = chatServices.SelectMany(x => x.ChatCollectServiceEntries).ToArray();
             var entities = this.settings.ChatModRules;
             foreach(var entity in entities)
             {
                 var entry = new ChatModRuleEntry { AppliedCount = entity.AppliedCount, LastAppliedTime = entity.LastAppliedTime };
-                var targetService = entity.TargetChatCollectServiceEntries.Select(entryName => chatServices.SelectMany(x=>x.ChatCollectServiceEntries).Single(x=>x.Id == entryName));
+                var targetServices = entity.TargetChatCollectServiceEntries.Select(
+                    entryName => chatCollectServiceEntries.SingleOrDefault(x => x.Id == entryName)
+                ).Where(x => x != null);
                 switch (entity.Type)
                 {
                     case "WordNg":
-                        entry.ChatModRule=new ChatModRules.WordNgChatModRule(targetService, entity.Expression);
+                        entry.ChatModRule=new ChatModRules.WordNgChatModRule(targetServices, entity.Expression);
                         break;
                     case "UserNg":
-                        entry.ChatModRule = new ChatModRules.UserNgChatModRule(targetService, entity.Expression);
+                        entry.ChatModRule = new ChatModRules.UserNgChatModRule(targetServices, entity.Expression);
                         break;
                     case "IroKomeNg":
-                        entry.ChatModRule = new ChatModRules.IroKomeNgChatModRule(targetService);
+                        entry.ChatModRule = new ChatModRules.IroKomeNgChatModRule(targetServices);
                         break;
                     case "JyougeKomeNg":
-                        entry.ChatModRule = new ChatModRules.JyougeKomeNgChatModRule(targetService);
+                        entry.ChatModRule = new ChatModRules.JyougeKomeNgChatModRule(targetServices);
                         break;
                     case "JyougeIroKomeNg":
-                        entry.ChatModRule = new ChatModRules.JyougeIroKomeNgChatModRule(targetService);
+                        entry.ChatModRule = new ChatModRules.JyougeIroKomeNgChatModRule(targetServices);
                         break;
                     case "RandomizeColor":
-                        entry.ChatModRule = new ChatModRules.RandomizeColorChatModRule(targetService);
+                        entry.ChatModRule = new ChatModRules.RandomizeColorChatModRule(targetServices);
                         break;
                     case "SmallOnMultiLine":
                         int lineCount;
                         if(!int.TryParse(entity.Expression, out lineCount))
                             lineCount=2;
-                        entry.ChatModRule = new ChatModRules.SmallOnMultiLineChatModRule(targetService,lineCount);
+                        entry.ChatModRule = new ChatModRules.SmallOnMultiLineChatModRule(targetServices,lineCount);
                         break;
                     default:
                         continue;
