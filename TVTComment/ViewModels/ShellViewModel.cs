@@ -81,6 +81,7 @@ namespace TVTComment.ViewModels
         public ObservableValue<string> WindowTitle { get; } = new ObservableValue<string>("TVTComment");
         public ObservableValue<double> WindowOpacity => BasicSettingControlViewModel?.WindowOpacity;
         public ObservableValue<bool> WindowTopmost => BasicSettingControlViewModel?.WindowTopmost;
+        public ObservableValue<double> WindowFontSize => BasicSettingControlViewModel?.WindowFontSize;
 
         public Views.AttachedProperties.GridViewColumnSettingsBinder.ColumnInfo[] ChatListColumnInfos { set; get; } = new Views.AttachedProperties.GridViewColumnSettingsBinder.ColumnInfo[0];
 

@@ -17,7 +17,9 @@
         Title="{Binding WindowTitle.Value}"
         Top="{Binding WindowPosition.X,Mode=TwoWay}" Left="{Binding WindowPosition.Y,Mode=TwoWay}"
         Height="{Binding WindowPosition.Height,Mode=TwoWay}" Width="{Binding WindowPosition.Width,Mode=TwoWay}"
-        Topmost="{Binding WindowTopmost.Value,Mode=TwoWay}" WindowStyle="None" ShowActivated="True" AllowsTransparency="True" ResizeMode="CanResize">
+        Topmost="{Binding WindowTopmost.Value,Mode=TwoWay}" WindowStyle="None"
+        ShowActivated="True" AllowsTransparency="True" ResizeMode="CanResize"
+        TextElement.FontSize="{Binding WindowFontSize.Value}">
     <WindowChrome.WindowChrome>
         <WindowChrome 
          CaptionHeight="20"
@@ -156,7 +158,13 @@
             </TabItem>
 
             <TabItem Header="ログ">
-                <ListView ItemsSource="{Binding Path=Chats,Mode=OneWay}" attachedproperties:GridViewColumnSettingsBinder.Binding="{Binding ChatListColumnInfos,Mode=TwoWay}" AlternationCount="2" HorizontalContentAlignment="Center" VirtualizingPanel.ScrollUnit="Pixel">
+                <ListView
+                    ItemsSource="{Binding Path=Chats,Mode=OneWay}"
+                    attachedproperties:GridViewColumnSettingsBinder.Binding="{Binding ChatListColumnInfos,Mode=TwoWay}"
+                    AlternationCount="2"
+                    HorizontalContentAlignment="Center"
+                    VirtualizingPanel.ScrollUnit="Pixel"
+                >
                     <ListView.View>
                         <GridView>
                             <GridViewColumn Header="時刻" attachedproperties:GridViewColumnSettingsBinder.ColumnId="time" DisplayMemberBinding="{Binding Time,StringFormat=HH:mm:ss}"/>
@@ -275,7 +283,7 @@
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <TextBlock>
-                                    <Run Text="{Binding Path=Title,Mode=OneWay}" FontSize="13"/>
+                                    <Run Text="{Binding Path=Title,Mode=OneWay}"/>
                                     <Run Text="    "/>
                                     <Run Text="{Binding Path=Subtitle,Mode=OneWay}" Foreground="Gray"/>
                                     <TextBlock.InputBindings>

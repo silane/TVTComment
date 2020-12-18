@@ -23,12 +23,15 @@
             <TextBlock Text="{Binding ElementName=ChatOpacitySlider,Path=Value}" DockPanel.Dock="Left"/>
             <Slider Name="ChatOpacitySlider" Value="{Binding Path=ChatOpacity.Value}" Minimum="0" Maximum="15" IsSnapToTickEnabled="True" TickPlacement="BottomRight" VerticalAlignment="Center"/>
         </DockPanel>
+
         <DockPanel>
             <Label DockPanel.Dock="Left">ウィンドウ透過度</Label>
             <TextBlock Text="{Binding ElementName=WindowOpacitySlider,Path=Value,StringFormat={}{0:N1}}" DockPanel.Dock="Left"/>
             <Slider Name="WindowOpacitySlider" Value="{Binding WindowOpacity.Value}" Minimum="0.3" Maximum="1" LargeChange="0.1" SmallChange="0.1" IsSnapToTickEnabled="True" TickPlacement="BottomRight" VerticalAlignment="Center" TickFrequency="0.1"/>
         </DockPanel>
+
         <CheckBox IsChecked="{Binding WindowTopmost.Value,Mode=TwoWay}" VerticalAlignment="Center">最前面表示</CheckBox>
+
         <DockPanel>
             <Label>コメント表示時刻調整</Label>
             <TextBlock Text="{Binding ChatCollectTimeAdjustment.Value}" VerticalAlignment="Center"/>
@@ -61,6 +64,16 @@
         </DockPanel>
 
         <CheckBox IsChecked="{Binding ClearChatsOnChannelChange.Value}" VerticalAlignment="Center" HorizontalAlignment="Left">チャンネル変更時にログをクリアする</CheckBox>
+
+        <DockPanel>
+            <Label DockPanel.Dock="Left">ウィンドウフォントサイズ</Label>
+            <Slider
+                Name="WindowFontSizeSlider"
+                Value="{Binding WindowFontSize.Value}"
+                Minimum="8" Maximum="20" LargeChange="1" SmallChange="1"
+                TickPlacement="BottomRight" VerticalAlignment="Center"/>
+        </DockPanel>
+
         <Button Content="その他設定">
             <i:Interaction.Triggers>
                 <i:EventTrigger EventName="Click">
@@ -68,6 +81,7 @@
                 </i:EventTrigger>
             </i:Interaction.Triggers>
         </Button>
+
         <TextBlock>
             バージョン: <Run Text="{Binding Version, Mode=OneTime}"/>
         </TextBlock>

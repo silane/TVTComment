@@ -19,6 +19,7 @@ namespace TVTComment.ViewModels.ShellContents
         public ObservableValue<bool> WindowTopmost { get; } = new ObservableValue<bool>(false);
         public ObservableValue<TimeSpan> ChatCollectTimeAdjustment { get; private set; }
         public ObservableValue<bool> ClearChatsOnChannelChange { get; private set; }
+        public ObservableValue<double> WindowFontSize { get; } = new ObservableValue<double>(1.2);
 
         public DelegateCommand<int?> SetChatCollectTimeAdjustment { get; private set; }
         public DelegateCommand<int?> AddChatCollectTimeAdjustment { get; private set; }
@@ -39,6 +40,7 @@ namespace TVTComment.ViewModels.ShellContents
 
             WindowTopmost.Value = model.Settings.View.WindowTopmost;
             WindowOpacity.Value = model.Settings.View.WindowOpacity;
+            WindowFontSize.Value = model.Settings.View.WindowFontSize;
 
             //256段階でスライダーを動かすと大量にSetChatOpacityIPCMessageが発生してしまうため16段階にする
             ChatOpacity = model.ChatOpacity.MakeLinkedObservableValue(x => (byte)(x / 16), x => (byte)(x * 16));
@@ -56,6 +58,7 @@ namespace TVTComment.ViewModels.ShellContents
         {
             model.Settings.View.WindowTopmost = WindowTopmost.Value;
             model.Settings.View.WindowOpacity= WindowOpacity.Value;
+            model.Settings.View.WindowFontSize = WindowFontSize.Value;
         }
     }
 }
