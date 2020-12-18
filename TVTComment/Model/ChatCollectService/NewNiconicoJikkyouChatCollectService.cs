@@ -27,25 +27,38 @@ namespace TVTComment.Model.ChatCollectService
             public ChatReceivingException(string message) : base(message) { }
             public ChatReceivingException(string message, Exception inner) : base(message, inner) { }
         }
+        private class LiveClosedChatReceivingException : ChatReceivingException
+        {
+            public LiveClosedChatReceivingException() : base("放送終了後です")
+            { }
+        }
+        private class LiveNotFoundChatReceivingException : ChatReceivingException
+        {
+            public LiveNotFoundChatReceivingException() : base("生放送が見つかりません")
+            { }
+        }
 
         public string Name => "新ニコニコ実況";
         public string GetInformationText()
         {
-            return $"生放送ID: {(this.originalLiveId == "" ? "[対応する生放送IDがありません]" : this.originalLiveId)}";
-
+            string originalLiveId = this.originalLiveId;
+            string ret = $"生放送ID: {(originalLiveId == "" ? "[対応する生放送IDがありません]" : originalLiveId)}";
+            if (originalLiveId != "")
+                ret += $"\n状態: {(this.notOnAir ? "放送していません" : "放送中")}";
+            return ret;
         }
         public ChatCollectServiceEntry.IChatCollectServiceEntry ServiceEntry { get; }
         public bool CanPost => true;
 
         private readonly NiconicoUtils.LiveIdResolver liveIdResolver;
-        private readonly NiconicoUtils.NiconicoLoginSession niconicoLoginSession;
         private readonly HttpClient httpClient;
         private readonly NiconicoUtils.NicoLiveCommentReceiver commentReceiver;
         private readonly NiconicoUtils.NicoLiveCommentSender commentSender;
         private readonly ConcurrentQueue<NiconicoUtils.NiconicoCommentXmlTag> commentTagQueue = new ConcurrentQueue<NiconicoUtils.NiconicoCommentXmlTag>();
 
-        private string originalLiveId;
-        private string liveId;
+        private string originalLiveId = "";
+        private string liveId = "";
+        private bool notOnAir = false;
         private Task chatCollectTask = null;
         private CancellationTokenSource cancellationTokenSource = null;
         private DateTime lastHeartbeatTime = DateTime.MinValue;
@@ -58,7 +71,6 @@ namespace TVTComment.Model.ChatCollectService
         {
             this.ServiceEntry = serviceEntry;
             this.liveIdResolver = liveIdResolver;
-            this.niconicoLoginSession = niconicoLoginSession;
 
             var assembly = Assembly.GetExecutingAssembly().GetName();
             var ua = assembly.Name + "/" + assembly.Version.ToString(3);
@@ -77,7 +89,13 @@ namespace TVTComment.Model.ChatCollectService
             if (this.chatCollectTask?.IsFaulted ?? false)
             {
                 //非同期部分で例外発生
-                throw new ChatCollectException($"コメント取得でエラーが発生: {chatCollectTask.Exception}", chatCollectTask.Exception);
+                var e = this.chatCollectTask.Exception.InnerExceptions.Count == 1
+                        ? this.chatCollectTask.Exception.InnerExceptions[0] : this.chatCollectTask.Exception;
+                // 有志のコミュニティチャンネルで生放送がされてない場合にエラー扱いされると使いづらいので
+                if (e is LiveClosedChatReceivingException || e is LiveNotFoundChatReceivingException)
+                    this.notOnAir = true;
+                else
+                    throw new ChatCollectException($"コメント取得でエラーが発生: {e}", chatCollectTask.Exception);
             }
 
             string originalLiveId = this.liveIdResolver.Resolve(channel.NetworkId, channel.ServiceId);
@@ -99,6 +117,7 @@ namespace TVTComment.Model.ChatCollectService
                 }
                 this.originalLiveId = originalLiveId;
                 this.commentTagQueue.Clear();
+                this.notOnAir = false;
 
                 if(this.originalLiveId != "")
                 {
@@ -150,7 +169,9 @@ namespace TVTComment.Model.ChatCollectService
                 if (playerStatus.Element("error")?.Element("code")?.Value == "comingsoon")
                     throw new ChatReceivingException("放送開始前です");
                 if (playerStatus.Element("error")?.Element("code")?.Value == "closed")
-                    throw new ChatReceivingException("放送終了後です");
+                    throw new LiveClosedChatReceivingException(); // 呼び出し側で特別な処理をするので別の例外を投げて区別する
+                if (playerStatus.Element("error")?.Element("code")?.Value == "notfound")
+                    throw new LiveNotFoundChatReceivingException(); // 呼び出し側で特別な処理をするので別の例外を投げて区別する
                 throw new ChatReceivingException("コメントサーバーから予期しないPlayerStatusが返されました:\n" + playerStatusStr);
             }
 
