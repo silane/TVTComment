@@ -76,7 +76,7 @@
             <settingswindowcontents:ChatCollectServiceCreationPresetSettingControl DataContext="{Binding ChatCollectServiceCreationPresetSettingControlViewModel}"/>
         </TabItem>-->
         <TabItem Header="ニコニコ実況">
-            <Grid local:Grid.Shape="*:auto,auto,*,*">
+            <Grid local:Grid.Shape="*:auto,auto,*">
                 <TextBlock Text="設定後は現在使用中のコメント元をいったん無効にして再度有効にする必要があります" TextWrapping="Wrap" Grid.Row="0"/>
 
 
@@ -95,10 +95,7 @@
                         </StackPanel>
                     </Grid>
                 </GroupBox>
-                <GroupBox Header="実況ID設定" Grid.Row="2">
-                    <TextBlock>設定はniconicojikkyouids.txtから行ってください<LineBreak/>設定変更はプラグイン再起動後に適用されます</TextBlock>
-                </GroupBox>
-                <GroupBox Header="新実況生放送ID設定" Grid.Row="3">
+                <GroupBox Header="新実況生放送ID設定" Grid.Row="2">
                     <TextBlock>設定はniconicoliveids.txtから行ってください<LineBreak/>設定変更はプラグイン再起動後に適用されます</TextBlock>
                 </GroupBox>
             </Grid>
@@ -137,7 +134,6 @@
                 </GroupBox>
                 <GroupBox Header="5chAPI設定" Grid.Row="2">
                     <StackPanel>
-                        <TextBlock>「2chDAT」コメント元で使用</TextBlock>
                         <Grid local:Grid.Shape="auto,*:auto,auto">
                             <Label Content="HMKey" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="0"/>
                             <TextBox Text="{Binding NichanHmKey.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="0"/>

@@ -75,7 +75,6 @@ namespace TVTComment.Model.ChatService
             );
 
             ChatCollectServiceEntries = new ChatCollectServiceEntry.IChatCollectServiceEntry[] {
-                new ChatCollectServiceEntry.HTMLNichanChatCollectServiceEntry(this, chatColor, resCollectInterval, threadSearchInterval, threadResolver),
                 new ChatCollectServiceEntry.DATNichanChatCollectServiceEntry(this, chatColor, resCollectInterval, threadSearchInterval, threadResolver, nichanApiClient),
             };
             ChatTrendServiceEntries = new IChatTrendServiceEntry[0];
