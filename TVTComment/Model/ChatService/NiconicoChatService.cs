@@ -23,6 +23,7 @@ namespace TVTComment.Model.ChatService
         private ObservableValue<NiconicoUtils.NiconicoLoginSession> loginSession = new ObservableValue<NiconicoUtils.NiconicoLoginSession>();
 
         private NiconicoUtils.JkIdResolver jkIdResolver;
+        private NiconicoUtils.LiveIdResolver liveIdResolver;
         private NiconicoChatServiceSettings settings;
 
         public string UserId
@@ -37,11 +38,12 @@ namespace TVTComment.Model.ChatService
 
         public NiconicoChatService(
             NiconicoChatServiceSettings settings, ChannelDatabase channelDatabase,
-            string jikkyouIdTableFilePath
+            string jikkyouIdTableFilePath, string liveIdTableFilePath
         )
         {
             this.settings = settings;
             this.jkIdResolver = new NiconicoUtils.JkIdResolver(channelDatabase, new NiconicoUtils.JkIdTable(jikkyouIdTableFilePath));
+            this.liveIdResolver = new NiconicoUtils.LiveIdResolver(channelDatabase, new NiconicoUtils.LiveIdTable(liveIdTableFilePath));
 
             try
             {
@@ -52,12 +54,13 @@ namespace TVTComment.Model.ChatService
             when (e.InnerExceptions.Count == 1 && e.InnerExceptions[0] is NiconicoUtils.NiconicoLoginSessionException)
             { }
 
-            ChatCollectServiceEntries = new ChatCollectServiceEntry.IChatCollectServiceEntry[3] {
+            ChatCollectServiceEntries = new ChatCollectServiceEntry.IChatCollectServiceEntry[] {
                 new ChatCollectServiceEntry.NiconicoChatCollectServiceEntry(this, this.jkIdResolver, this.loginSession),
                 new ChatCollectServiceEntry.NiconicoLogChatCollectServiceEntry(this, this.jkIdResolver, this.loginSession),
+                new ChatCollectServiceEntry.NewNiconicoJikkyouChatCollectServiceEntry(this, this.liveIdResolver, this.loginSession),
                 new ChatCollectServiceEntry.NiconicoLiveChatCollectServiceEntry(this, this.loginSession),
             };
-            ChatTrendServiceEntries = new IChatTrendServiceEntry[1] { new NiconicoChatTrendServiceEntry(jkIdResolver) };
+            ChatTrendServiceEntries = new IChatTrendServiceEntry[] { new NiconicoChatTrendServiceEntry(jkIdResolver) };
         }
 
         /// <summary>
