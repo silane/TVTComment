@@ -116,6 +116,8 @@ namespace TVTComment.ViewModels
 
             Window mainWindow = Application.Current.MainWindow;
             mainWindow.MouseLeftButtonDown += (_, __) => { mainWindow.DragMove(); };
+            // 初期化が終わるまで最小化しておく
+            mainWindow.WindowState = WindowState.Minimized;
             
             model.ApplicationClose += CloseApplication;
         }
@@ -157,6 +159,10 @@ namespace TVTComment.ViewModels
             ).ToArray();
 
             this.SelectedTab.Value = model.Settings.View.MainWindowTab;
+
+            // ウィンドウの位置を復元したら最小化を解除
+            Window window = Application.Current.MainWindow;
+            window.WindowState = WindowState.Normal;
 
             // モデルのイベントハンドラを登録
             model.ChatCollectServiceModule.ErrorOccurredInChatCollecting += model_ErrorOccurredInChatCollecting;
