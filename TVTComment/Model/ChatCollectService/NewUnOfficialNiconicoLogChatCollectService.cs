@@ -66,7 +66,7 @@ namespace TVTComment.Model.ChatCollectService
             {
                 lock (chats)
                 {
-                    foreach (var chat in chats.Where(chat => time.AddSeconds(-6) <= chat.Chat.Time && chat.Chat.Time < time.AddSeconds(-5)).Select(chat => chat.Chat))
+                    foreach (var chat in chats.Where(chat => time <= chat.Chat.Time && chat.Chat.Time < time.AddSeconds(1)).Select(chat => chat.Chat))
                     {
                         ret.Add(chat);
                     }
