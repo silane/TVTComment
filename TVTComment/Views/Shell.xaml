@@ -32,6 +32,7 @@
         <converters:ColorToSolidColorBrushConverter x:Key="ColorConverter"/>
         <converters:InverseBoolConverter x:Key="InverseBoolConverter"/>
         <converters:BoolToStringConverter x:Key="BoolToStringConverter"/>
+        <converters:EnumToStringConverter x:Key="EnumToStringConverter"/>
     </Window.Resources>
 
     <Window.Triggers>
@@ -84,8 +85,10 @@
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
         <TextBlock Grid.Row="0" Text="{Binding WindowTitle.Value}" VerticalAlignment="Center" Margin="5"/>
-        <TabControl Grid.Row="1">
-            <TabItem Header="チャンネル">
+        <TabControl Grid.Row="1"
+                    SelectedValue="{Binding SelectedTab.Value, Converter={StaticResource EnumToStringConverter}}"
+                    SelectedValuePath="Name">
+            <TabItem Header="チャンネル" Name="Channel">
                 <TabControl>
                     <TabItem Header="リスト">
                         <ListView ItemsSource="{Binding Path=Channels}" HorizontalContentAlignment="Stretch">
@@ -157,7 +160,7 @@
                 </TabControl>
             </TabItem>
 
-            <TabItem Header="ログ">
+            <TabItem Header="ログ" Name="ChatLog">
                 <ListView
                     ItemsSource="{Binding Path=Chats,Mode=OneWay}"
                     attachedproperties:GridViewColumnSettingsBinder.Binding="{Binding ChatListColumnInfos,Mode=TwoWay}"
@@ -252,7 +255,7 @@
                 </ListView>
             </TabItem>
 
-            <TabItem Header="コメント元">
+            <TabItem Header="コメント元" Name="ChatSource">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="auto"/>
@@ -317,7 +320,7 @@
                     </ListBox>
                 </Grid>
             </TabItem>
-            <TabItem Header="設定">
+            <TabItem Header="設定" Name="Settings">
                 <contents:BasicSettingControl>
                     <i:Interaction.Behaviors>
                         <behaviors:UserControlDataContextBinderBehavior Binding="{Binding RelativeSource={RelativeSource AncestorType=Window},Path=DataContext.BasicSettingControlViewModel,Mode=OneWayToSource}"/>

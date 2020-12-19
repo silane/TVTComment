@@ -82,6 +82,7 @@ namespace TVTComment.ViewModels
         public ObservableValue<double> WindowOpacity => BasicSettingControlViewModel?.WindowOpacity;
         public ObservableValue<bool> WindowTopmost => BasicSettingControlViewModel?.WindowTopmost;
         public ObservableValue<double> WindowFontSize => BasicSettingControlViewModel?.WindowFontSize;
+        public ObservableValue<MainWindowTab> SelectedTab { get; } = new ObservableValue<MainWindowTab>();
 
         public Views.AttachedProperties.GridViewColumnSettingsBinder.ColumnInfo[] ChatListColumnInfos { set; get; } = new Views.AttachedProperties.GridViewColumnSettingsBinder.ColumnInfo[0];
 
@@ -154,6 +155,8 @@ namespace TVTComment.ViewModels
             ChatListColumnInfos = model.Settings.View.ChatListViewColumns?.Select(
                 x => new Views.AttachedProperties.GridViewColumnSettingsBinder.ColumnInfo(x.Id, x.Width)
             ).ToArray();
+
+            this.SelectedTab.Value = model.Settings.View.MainWindowTab;
 
             // モデルのイベントハンドラを登録
             model.ChatCollectServiceModule.ErrorOccurredInChatCollecting += model_ErrorOccurredInChatCollecting;
@@ -309,6 +312,8 @@ namespace TVTComment.ViewModels
                 model.Settings.View.ChatListViewColumns = ChatListColumnInfos?.Select(
                     x => new ListViewColumnViewModel { Id = x.Id, Width = x.Width }
                 ).ToArray();
+
+                model.Settings.View.MainWindowTab = this.SelectedTab.Value;
             }
 
             model.Dispose();

@@ -4,6 +4,11 @@ using System.Text;
 
 namespace TVTComment.ViewModels
 {
+    enum MainWindowTab
+    {
+        Channel, ChatLog, ChatSource, Settings,
+    }
+
     class ViewSettings
     {
         public bool WindowTopmost { get; set; } = false;
@@ -12,5 +17,6 @@ namespace TVTComment.ViewModels
         public Model.Serialization.WindowPositionEntity NgSettingWindowPosition { get; set; } = new Model.Serialization.WindowPositionEntity();
         public ListViewColumnViewModel[] ChatListViewColumns { get; set; } = null;
         public double WindowFontSize { get; set; } = 12.0;
+        public MainWindowTab MainWindowTab { get; set; } = MainWindowTab.Channel;
     }
 }
