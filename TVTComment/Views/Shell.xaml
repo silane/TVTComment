@@ -294,10 +294,12 @@
                         </ListBox.ItemTemplate>
                     </ListBox>
                     <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center">
-                        <Button Content="追加↓" Command="{Binding Path=AddChatCollectServiceCommand}" CommandParameter="{Binding Path=SelectedItem,ElementName=ChatCollectServiceAddListBox}" 
-                                IsEnabled="{Binding UseDefaultChatCollectService.Value,Converter={StaticResource InverseBoolConverter}}"/>
-                        <Button Content="削除↑" Command="{Binding Path=RemoveChatCollectServiceCommand}" CommandParameter="{Binding Path=SelectedItem.Service,ElementName=CollectServiceListBox}" 
-                                IsEnabled="{Binding UseDefaultChatCollectService.Value,Converter={StaticResource InverseBoolConverter}}"/>
+                        <Button Command="{Binding Path=AddChatCollectServiceCommand}"
+                                CommandParameter="{Binding Path=SelectedItem,ElementName=ChatCollectServiceAddListBox}"
+                                IsEnabled="{Binding UserDefaultChatCollectService.Value, Converter={StaticResource InverseBoolConverter}}">追加↓</Button>
+                        <Button Command="{Binding Path=RemoveChatCollectServiceCommand}"
+                                CommandParameter="{Binding Path=SelectedItem.Service,ElementName=CollectServiceListBox}"
+                                IsEnabled="{Binding UserDefaultChatCollectService.Value, Converter={StaticResource InverseBoolConverter}}">削除↑</Button>
                     </StackPanel>
                     <ListBox Name="CollectServiceListBox" ItemsSource="{Binding Path=ChatCollectServices}" HorizontalContentAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Auto" VirtualizingPanel.ScrollUnit="Pixel" Grid.Row="4">
                         <ListBox.ItemTemplate>

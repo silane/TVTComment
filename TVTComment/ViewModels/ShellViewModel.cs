@@ -86,8 +86,8 @@ namespace TVTComment.ViewModels
         public Views.AttachedProperties.GridViewColumnSettingsBinder.ColumnInfo[] ChatListColumnInfos { set; get; } = new Views.AttachedProperties.GridViewColumnSettingsBinder.ColumnInfo[0];
 
         public ICommand ChangeChannelCommand { get; private set; }
-        public ICommand AddChatCollectServiceCommand { get; private set; }
-        public ICommand RemoveChatCollectServiceCommand { get; private set; }
+        public DelegateCommand<ShellContents.ChatCollectServiceAddListItemViewModel> AddChatCollectServiceCommand { get; private set; }
+        public DelegateCommand<Model.ChatCollectService.IChatCollectService> RemoveChatCollectServiceCommand { get; private set; }
         public ICommand ClearChatsCommand { get; private set; }
         public ICommand AddWordNgCommand { get; private set; }
         public ICommand AddUserNgCommand { get; private set; }
@@ -123,6 +123,8 @@ namespace TVTComment.ViewModels
         {
             if (initialized) return;
             initialized = true;
+
+            // モデルの初期化
             try
             {
                 await model.Initialize();
@@ -142,6 +144,7 @@ namespace TVTComment.ViewModels
                 return;
             }
 
+            // 表示関係の設定復元
             Model.Serialization.WindowPositionEntity rect = model.Settings.View.MainWindowPosition;
             this.WindowPosition.X = rect.X;
             this.WindowPosition.Y = rect.Y;
@@ -152,11 +155,44 @@ namespace TVTComment.ViewModels
                 x => new Views.AttachedProperties.GridViewColumnSettingsBinder.ColumnInfo(x.Id, x.Width)
             ).ToArray();
 
+            // モデルのイベントハンドラを登録
+            model.ChatCollectServiceModule.ErrorOccurredInChatCollecting += model_ErrorOccurredInChatCollecting;
+            model.ChatCollectServiceModule.ErrorOccurredInChatPosting += model_ErrorOccurredInChatPosting;
+            model.ChatCollectServiceModule.ErrorOccurredInServiceCreation += model_ErrorOccurredAtChatCollectServiceCreation;
+
+            // モデルのプロパティを結びつける
+            CurrentPlayTime = model.ChannelInformationModule.CurrentTime;
+            CurrentChannel = model.ChannelInformationModule.CurrentChannel;
+            CurrentEvent = model.ChannelInformationModule.CurrentEvent;
+
+            disposables.Add(CurrentPlayTime.Subscribe(_ => updateWindowTitle()));
+            disposables.Add(CurrentChannel.Subscribe(_ => updateWindowTitle()));
+            disposables.Add(CurrentEvent.Subscribe(_ => updateWindowTitle()));
+
+            // 旧ニコニコ実況が廃止されたので現状常にnull
+            // 今後対応するときのためにとって置いてる
+            forceValueData = new ReadOnlyObservableValue<Model.IForceValueData>(Observable.Return<Model.IForceValueData>(null));
+
+            UseDefaultChatCollectService = model.DefaultChatCollectServiceModule.IsEnabled;
+
+            model.CommandModule.ShowWindowCommandInvoked += commandModule_ShowWindowCommandInvoked;
+
+            // コマンド生成
             ChangeChannelCommand = new DelegateCommand<Model.ChannelInfo>(channel => { if (channel != null) model.ChannelInformationModule.SetCurrentChannel(channel); });
-            AddChatCollectServiceCommand = new DelegateCommand<ShellContents.ChatCollectServiceAddListItemViewModel>(async x => { if (x != null) await addChatCollectService(x); },
-                (serviceEntry) => !UseDefaultChatCollectService.Value).ObservesProperty(() => UseDefaultChatCollectService);
-            RemoveChatCollectServiceCommand = new DelegateCommand<Model.ChatCollectService.IChatCollectService>(service => { if (service != null) model.ChatCollectServiceModule.RemoveService(service); },
-                (serviceEntry) => !UseDefaultChatCollectService.Value).ObservesProperty(() => UseDefaultChatCollectService);
+
+            AddChatCollectServiceCommand = new DelegateCommand<ShellContents.ChatCollectServiceAddListItemViewModel>(
+                async x => { if (x != null) await addChatCollectService(x); },
+                _ => !UseDefaultChatCollectService.Value
+            );
+            RemoveChatCollectServiceCommand = new DelegateCommand<Model.ChatCollectService.IChatCollectService>(
+                service => { if (service != null) model.ChatCollectServiceModule.RemoveService(service); },
+                _ => !UseDefaultChatCollectService.Value
+            );
+            UseDefaultChatCollectService.Subscribe(x => {
+                AddChatCollectServiceCommand.RaiseCanExecuteChanged();
+                RemoveChatCollectServiceCommand.RaiseCanExecuteChanged();
+            });
+
             ClearChatsCommand = new DelegateCommand(() => model.ChatModule.ClearChats());
             AddWordNgCommand = new DelegateCommand<Model.Chat>(chat =>
             {
@@ -178,26 +214,6 @@ namespace TVTComment.ViewModels
                 if (chat == null) return;
                 Clipboard.SetText(chat.UserId);
             });
-
-            model.ChatCollectServiceModule.ErrorOccurredInChatCollecting += model_ErrorOccurredInChatCollecting;
-            model.ChatCollectServiceModule.ErrorOccurredInChatPosting += model_ErrorOccurredInChatPosting;
-            model.ChatCollectServiceModule.ErrorOccurredInServiceCreation += model_ErrorOccurredAtChatCollectServiceCreation;
-
-            CurrentPlayTime = model.ChannelInformationModule.CurrentTime;
-            CurrentChannel = model.ChannelInformationModule.CurrentChannel;
-            CurrentEvent = model.ChannelInformationModule.CurrentEvent;
-
-            disposables.Add(CurrentPlayTime.Subscribe(_ => updateWindowTitle()));
-            disposables.Add(CurrentChannel.Subscribe(_ => updateWindowTitle()));
-            disposables.Add(CurrentEvent.Subscribe(_ => updateWindowTitle()));
-
-            // 旧ニコニコ実況が廃止されたので現状常にnull
-            // 今後対応するときのためにとって置いてる
-            forceValueData = new ReadOnlyObservableValue<Model.IForceValueData>(Observable.Return<Model.IForceValueData>(null));
-
-            UseDefaultChatCollectService = model.DefaultChatCollectServiceModule.IsEnabled;
-
-            model.CommandModule.ShowWindowCommandInvoked += commandModule_ShowWindowCommandInvoked;
 
             OnPropertyChanged(null);
         }
