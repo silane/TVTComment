@@ -39,6 +39,7 @@ namespace TVTComment.Model
                                  JsonNumberHandling.AllowReadingFromString
             };
             this.jsonSerializerOptions.Converters.Add(new TimeSpanConverter());
+            this.jsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
         }
 
         public async Task<SettingT> Read()
