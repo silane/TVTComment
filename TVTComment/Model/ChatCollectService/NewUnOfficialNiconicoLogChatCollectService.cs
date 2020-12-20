@@ -41,7 +41,7 @@ namespace TVTComment.Model.ChatCollectService
                 return $"現在の実況ID: [対応なし]";
         }
 
-        public NewUnOfficialNiconicoLogChatCollectService(ChatCollectServiceEntry.IChatCollectServiceEntry serviceEntry,NiconicoUtils.JkIdResolver jkIdResolver):base(new TimeSpan(0,0,10))
+        public NewUnOfficialNiconicoLogChatCollectService(ChatCollectServiceEntry.IChatCollectServiceEntry serviceEntry, NiconicoUtils.JkIdResolver jkIdResolver) : base(new TimeSpan(0, 0, 10))
         {
             this.ServiceEntry = serviceEntry;
             this.jkIdResolver = jkIdResolver;
@@ -55,14 +55,14 @@ namespace TVTComment.Model.ChatCollectService
 
             int jkId = jkIdResolver.Resolve(channel.NetworkId, channel.ServiceId);
 
-            if(jkId==0)
+            if (jkId == 0)
             {
                 //対応するjkidがなかった
                 lastJkId = 0;
                 return ret;
             }
-            
-            if(lastJkId== jkId )
+
+            if (lastJkId == jkId)
             {
                 lock (chats)
                 {
@@ -73,48 +73,57 @@ namespace TVTComment.Model.ChatCollectService
                 }
             }
 
-            //10秒に一回かチャンネルが変わったら取得
-            if ((time - lastGetTime).Duration().TotalSeconds < 3585 && lastJkId == jkId)
-                return ret;//取得しないなら帰る
-
             //取得処理
-            if (chatCollectTask!=null && !chatCollectTask.IsCompleted)
+            if (chatCollectTask != null && !chatCollectTask.IsCompleted)
                 return ret;//まだ前回の取得が終わってないなら帰る(普通は終わってるはず)
 
             try
             {
                 chatCollectTask?.Wait();
             }
-            catch(AggregateException e)when(e.InnerException is ServerErrorException)
+            catch (AggregateException e) when (e.InnerException is ServerErrorException)
             {
                 throw new ChatCollectException("非公式ニコニコ実況過去ログAPIからエラーが返されました。", e);
             }
-            catch(AggregateException e)when(e.InnerException is HttpRequestException)
+            catch (AggregateException e) when (e.InnerException is HttpRequestException)
             {
                 throw new ChatCollectException("非公式ニコニコ実況過去ログAPIとの通信でエラーが発生しました。", e);
             }
 
-            //シークとかしてなければ前回取得分以降のコメ取得、そうでなければ250個分取得
             lock (chats)
             {
-                if (chats.Count() > 0 && (time - lastGetTime).Duration().TotalSeconds < 3600 && lastJkId == jkId)
-                {
-                    chatCollectTask = collectChat(jkId, time.AddSeconds(1), time.AddSeconds(3600));
-                }
-                else
+                //チャンネル変更もしくは取得済みコメントが0の場合履歴をクリアして取得
+                if (lastJkId != jkId || chats.Count <= 0)
                 {
                     chats.Clear();
                     chatCollectTask = collectChat(jkId, time.AddSeconds(1), time.AddSeconds(3600));
+                    lastJkId = jkId;
+                    lastGetTime = time;
+                }
+                //1時間後にシークした場合　普通に追加で取得
+                else if (3600 < (time - lastGetTime).Seconds)
+                {
+                    chatCollectTask = collectChat(jkId, time.AddSeconds(1), time.AddSeconds(3600));
+                    lastJkId = jkId;
+                    lastGetTime = time;
+                }
+                //過去にシーク　履歴の一番古い情報より前にシークされてた場合はクリアして取得
+                else if ((time - lastGetTime).Seconds < 0 )
+                {
+                    var isOlder = time < chats.OrderBy(ch => ch.Chat.Time).First().Chat.Time;
+                    if (isOlder)
+                    {
+                        chats.Clear();
+                        chatCollectTask = collectChat(jkId, time.AddSeconds(1), time.AddSeconds(3600));
+                        lastJkId = jkId;
+                        lastGetTime = time;
+                    }
                 }
             }
-
-            lastJkId = jkId;
-            lastGetTime = time;
-
             return ret;
         }
 
-        private async Task collectChat(int jkId,DateTime startTime,DateTime endTime)
+        private async Task collectChat(int jkId, DateTime startTime, DateTime endTime)
         {
             string startTimeStr = new DateTimeOffset(startTime).ToUnixTimeSeconds().ToString();
             string endTimeStr = new DateTimeOffset(endTime).ToUnixTimeSeconds().ToString();
@@ -143,7 +152,7 @@ namespace TVTComment.Model.ChatCollectService
 
         public override void Dispose()
         {
-            using(this.client)
+            using (this.client)
             {
 
 
