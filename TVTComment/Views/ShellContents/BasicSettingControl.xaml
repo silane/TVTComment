@@ -86,7 +86,7 @@
             バージョン: <Run Text="{Binding Version, Mode=OneTime}"/>
         </TextBlock>
         <TextBlock>
-            © 2017 silane
+            © 2017 silane / © 2020 noriokun4649
         </TextBlock>
     </StackPanel>
 </UserControl>
