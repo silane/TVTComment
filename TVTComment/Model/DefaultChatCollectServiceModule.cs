@@ -137,7 +137,7 @@ namespace TVTComment.Model
             {
                 var serviceEntry = serviceEntryList.SingleOrDefault(x => x.Id == id);
                 if (serviceEntry != null)
-                    this.LiveChatCollectService.Add(serviceEntry);
+                    this.RecordChatCollectService.Add(serviceEntry);
             }
         }
 
