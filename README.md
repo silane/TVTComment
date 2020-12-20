@@ -1,3 +1,25 @@
+# TvtComment　過去ログ取得追加版
+
+TVTest ニコニコ & 5ch コメント表示プラグイン
+
+- 利用は自己責任で行ってください
+- このプラグインはニコニコのサーバや5chのサーバーと通信します。サーバに高負荷を与えるような利用や改変をしないでください。
+
+このプラグインは本家のTvtCommentに[非公式過去ログAPI](https://jikkyo.tsukumijima.net)から過去ログを取得する機能を追加した物です。
+
+## ライセンス
+本家同様MITライセンス
+
+## ソースコード
+[GitHub](https://github.com/noriokun4649/TVTComment)
+
+## 謝辞
+このソフトは[TvtComment](https://github.com/silane/TVTComment)から改造して作られました。また過去ログの取得は[非公式過去ログAPI](https://jikkyo.tsukumijima.net)より取得しております。
+これら2つを作られた作者に感謝いたします。silane氏及びtsukumijima氏ありがとうございます。
+
+## 編集者
+noriokun4649
+
 # TvtComment
 
 TVTest ニコニコ & 5ch コメント表示プラグイン
@@ -5,6 +27,7 @@ TVTest ニコニコ & 5ch コメント表示プラグイン
 - 利用は自己責任で行ってください
 - このプラグインはニコニコのサーバや5chのサーバーと通信します。サーバに高負荷を与えるような利用や改変をしないでください。
 
+このプラグインは本家のTvtCommentに[非公式過去ログAPI](https://jikkyo.tsukumijima.net)から過去ログを取得する機能を追加した物です。
 
 ## なにこれ？
 ニコニコや5chのコメントをTVTestの画面に流すプラグインです。
