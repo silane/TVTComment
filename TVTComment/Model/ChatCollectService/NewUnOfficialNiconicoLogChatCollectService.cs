@@ -125,7 +125,7 @@ namespace TVTComment.Model.ChatCollectService
         private async Task collectChat(int jkId, DateTime startTime, DateTime endTime)
         {
             string startTimeStr = new DateTimeOffset(startTime).ToUnixTimeSeconds().ToString();
-            string endTimeStr = new DateTimeOffset(endTime > GetNowTime() ? GetNowTime() : endTime).ToUnixTimeSeconds().ToString();
+            string endTimeStr = new DateTimeOffset(endTime > GetNowTime() ? GetNowTime().AddSeconds(-10) : endTime).ToUnixTimeSeconds().ToString();
             string queryStr = await client.GetStringAsync($"https://jikkyo.tsukumijima.net/api/kakolog/jk{jkId}?starttime={startTimeStr}&endtime={endTimeStr}&format=xml").ConfigureAwait(false);
             if (queryStr.Contains("<error>"))
             {
