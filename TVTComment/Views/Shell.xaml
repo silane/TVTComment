@@ -32,6 +32,7 @@
         <converters:ColorToSolidColorBrushConverter x:Key="ColorConverter"/>
         <converters:InverseBoolConverter x:Key="InverseBoolConverter"/>
         <converters:BoolToStringConverter x:Key="BoolToStringConverter"/>
+        <converters:EnumToStringConverter x:Key="EnumToStringConverter"/>
     </Window.Resources>
 
     <Window.Triggers>
@@ -77,149 +78,152 @@
         </prism:InteractionRequestTrigger>
     </i:Interaction.Triggers>
 
-    <Grid Margin="4">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="28"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="auto"/>
-        </Grid.RowDefinitions>
-        <TextBlock Grid.Row="0" Text="{Binding WindowTitle.Value}" VerticalAlignment="Center" Margin="5"/>
-        <TabControl Grid.Row="1">
-            <TabItem Header="チャンネル">
-                <TabControl>
-                    <TabItem Header="リスト">
-                        <ListView ItemsSource="{Binding Path=Channels}" HorizontalContentAlignment="Stretch">
-                            <ListView.Resources>
-                                <Storyboard x:Key="WatchingAnimation">
-                                    <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0.8" To="0.2" RepeatBehavior="Forever" Duration="0:0:1"/>
-                                </Storyboard>
-                                <ContextMenu x:Key="ItemContextMenu">
-                                    <MenuItem Header="選局" Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ListView},Path=DataContext.ChangeChannelCommand}"
+    <Border BorderThickness="0.5" BorderBrush="Black">
+        <Grid Margin="4" >
+            <Grid.RowDefinitions>
+                <RowDefinition Height="28"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="auto"/>
+            </Grid.RowDefinitions>
+            <TextBlock Grid.Row="0" Text="{Binding WindowTitle.Value}" VerticalAlignment="Center" Margin="5"/>
+            <TabControl Grid.Row="1"
+                    SelectedValue="{Binding SelectedTab.Value, Converter={StaticResource EnumToStringConverter}}"
+                    SelectedValuePath="Name">
+                <TabItem Header="チャンネル" Name="Channel">
+                    <TabControl>
+                        <TabItem Header="リスト">
+                            <ListView ItemsSource="{Binding Path=Channels}" HorizontalContentAlignment="Stretch">
+                                <ListView.Resources>
+                                    <Storyboard x:Key="WatchingAnimation">
+                                        <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0.8" To="0.2" RepeatBehavior="Forever" Duration="0:0:1"/>
+                                    </Storyboard>
+                                    <ContextMenu x:Key="ItemContextMenu">
+                                        <MenuItem Header="選局" Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ListView},Path=DataContext.ChangeChannelCommand}"
                                   CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ContextMenu},Path=PlacementTarget.Content.Channel}"/>
-                                    <MenuItem Header="詳細">
-                                        <i:Interaction.Triggers>
-                                            <i:EventTrigger EventName="Click">
-                                                <behaviors:ShowWindowAction AllowMultipleWindowToShow="True" CenterOverAssociatedWindow="True">
-                                                </behaviors:ShowWindowAction>
-                                            </i:EventTrigger>
-                                        </i:Interaction.Triggers>
-                                    </MenuItem>
-                                </ContextMenu>
-                            </ListView.Resources>
+                                        <MenuItem Header="詳細">
+                                            <i:Interaction.Triggers>
+                                                <i:EventTrigger EventName="Click">
+                                                    <behaviors:ShowWindowAction AllowMultipleWindowToShow="True" CenterOverAssociatedWindow="True">
+                                                    </behaviors:ShowWindowAction>
+                                                </i:EventTrigger>
+                                            </i:Interaction.Triggers>
+                                        </MenuItem>
+                                    </ContextMenu>
+                                </ListView.Resources>
 
-                            <ListView.ItemContainerStyle>
-                                <Style TargetType="ListViewItem">
-                                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                                    <Setter Property="VerticalContentAlignment" Value="Stretch"/>
-                                    <Setter Property="acb:CommandBehavior.Event" Value="MouseDoubleClick"/>
-                                    <Setter Property="acb:CommandBehavior.Command" Value="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListView},Path=DataContext.ChangeChannelCommand}"/>
-                                    <Setter Property="acb:CommandBehavior.CommandParameter" Value="{Binding Path=Channel}"/>
-                                    <Setter Property="ContextMenu" Value="{StaticResource ItemContextMenu}"/>
-                                </Style>
-                            </ListView.ItemContainerStyle>
-                            <ListView.View>
-                                <GridView>
-                                    <GridViewColumn Header="選局中">
-                                        <GridViewColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <Viewbox Width="22" Height="22">
-                                                    <Canvas Width="22" Height="22">
-                                                        <Path Data="M4.93,4.93C3.12,6.74 2,9.24 2,12C2,14.76 3.12,17.26 4.93,19.07L6.34,17.66C4.89,16.22 4,14.22 4,12C4,9.79 4.89,7.78 6.34,6.34L4.93,4.93M19.07,4.93L17.66,6.34C19.11,7.78 20,9.79 20,12C20,14.22 19.11,16.22 17.66,17.66L19.07,19.07C20.88,17.26 22,14.76 22,12C22,9.24 20.88,6.74 19.07,4.93M7.76,7.76C6.67,8.85 6,10.35 6,12C6,13.65 6.67,15.15 7.76,16.24L9.17,14.83C8.45,14.11 8,13.11 8,12C8,10.89 8.45,9.89 9.17,9.17L7.76,7.76M16.24,7.76L14.83,9.17C15.55,9.89 16,10.89 16,12C16,13.11 15.55,14.11 14.83,14.83L16.24,16.24C17.33,15.15 18,13.65 18,12C18,10.35 17.33,8.85 16.24,7.76M12,10A2,2 0 0,0 10,12A2,2 0 0,0 12,14A2,2 0 0,0 14,12A2,2 0 0,0 12,10Z" Fill="Black" />
-                                                    </Canvas>
-                                                    <Viewbox.Triggers>
-                                                        <EventTrigger RoutedEvent="Viewbox.Loaded">
-                                                            <BeginStoryboard Storyboard="{StaticResource ResourceKey=WatchingAnimation}"/>
-                                                        </EventTrigger>
-                                                    </Viewbox.Triggers>
-                                                    <Viewbox.Style>
-                                                        <Style TargetType="Viewbox">
-                                                            <Setter Property="Visibility" Value="Hidden"/>
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding Watching}" Value="True">
-                                                                    <Setter Property="Visibility" Value="Visible"/>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </Viewbox.Style>
-                                                </Viewbox>
-                                            </DataTemplate>
-                                        </GridViewColumn.CellTemplate>
-                                    </GridViewColumn>
-                                    <GridViewColumn Header="チャンネル" DisplayMemberBinding="{Binding Path=Channel.ChannelName}" Width="auto"/>
-                                    <GridViewColumn Header="勢い" DisplayMemberBinding="{Binding Path=ForceValue}" Width="40"/>
-                                </GridView>
-                            </ListView.View>
-                        </ListView>
-                    </TabItem>
-                    <TabItem Header="現在">
-                        <local:ChannelInfoViewer ChannelInfo="{Binding CurrentChannel.Value}" EventInfo="{Binding CurrentEvent.Value}"/>
-                    </TabItem>
-                </TabControl>
-            </TabItem>
+                                <ListView.ItemContainerStyle>
+                                    <Style TargetType="ListViewItem">
+                                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                        <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+                                        <Setter Property="acb:CommandBehavior.Event" Value="MouseDoubleClick"/>
+                                        <Setter Property="acb:CommandBehavior.Command" Value="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=ListView},Path=DataContext.ChangeChannelCommand}"/>
+                                        <Setter Property="acb:CommandBehavior.CommandParameter" Value="{Binding Path=Channel}"/>
+                                        <Setter Property="ContextMenu" Value="{StaticResource ItemContextMenu}"/>
+                                    </Style>
+                                </ListView.ItemContainerStyle>
+                                <ListView.View>
+                                    <GridView>
+                                        <GridViewColumn Header="選局中">
+                                            <GridViewColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Viewbox Width="22" Height="22">
+                                                        <Canvas Width="22" Height="22">
+                                                            <Path Data="M4.93,4.93C3.12,6.74 2,9.24 2,12C2,14.76 3.12,17.26 4.93,19.07L6.34,17.66C4.89,16.22 4,14.22 4,12C4,9.79 4.89,7.78 6.34,6.34L4.93,4.93M19.07,4.93L17.66,6.34C19.11,7.78 20,9.79 20,12C20,14.22 19.11,16.22 17.66,17.66L19.07,19.07C20.88,17.26 22,14.76 22,12C22,9.24 20.88,6.74 19.07,4.93M7.76,7.76C6.67,8.85 6,10.35 6,12C6,13.65 6.67,15.15 7.76,16.24L9.17,14.83C8.45,14.11 8,13.11 8,12C8,10.89 8.45,9.89 9.17,9.17L7.76,7.76M16.24,7.76L14.83,9.17C15.55,9.89 16,10.89 16,12C16,13.11 15.55,14.11 14.83,14.83L16.24,16.24C17.33,15.15 18,13.65 18,12C18,10.35 17.33,8.85 16.24,7.76M12,10A2,2 0 0,0 10,12A2,2 0 0,0 12,14A2,2 0 0,0 14,12A2,2 0 0,0 12,10Z" Fill="Black" />
+                                                        </Canvas>
+                                                        <Viewbox.Triggers>
+                                                            <EventTrigger RoutedEvent="Viewbox.Loaded">
+                                                                <BeginStoryboard Storyboard="{StaticResource ResourceKey=WatchingAnimation}"/>
+                                                            </EventTrigger>
+                                                        </Viewbox.Triggers>
+                                                        <Viewbox.Style>
+                                                            <Style TargetType="Viewbox">
+                                                                <Setter Property="Visibility" Value="Hidden"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Watching}" Value="True">
+                                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Viewbox.Style>
+                                                    </Viewbox>
+                                                </DataTemplate>
+                                            </GridViewColumn.CellTemplate>
+                                        </GridViewColumn>
+                                        <GridViewColumn Header="チャンネル" DisplayMemberBinding="{Binding Path=Channel.ChannelName}" Width="auto"/>
+                                        <GridViewColumn Header="勢い" DisplayMemberBinding="{Binding Path=ForceValue}" Width="40"/>
+                                    </GridView>
+                                </ListView.View>
+                            </ListView>
+                        </TabItem>
+                        <TabItem Header="現在">
+                            <local:ChannelInfoViewer ChannelInfo="{Binding CurrentChannel.Value}" EventInfo="{Binding CurrentEvent.Value}"/>
+                        </TabItem>
+                    </TabControl>
+                </TabItem>
 
-            <TabItem Header="ログ">
-                <ListView
+                <TabItem Header="ログ" Name="ChatLog">
+                    <ListView
                     ItemsSource="{Binding Path=Chats,Mode=OneWay}"
                     attachedproperties:GridViewColumnSettingsBinder.Binding="{Binding ChatListColumnInfos,Mode=TwoWay}"
                     AlternationCount="2"
                     HorizontalContentAlignment="Center"
                     VirtualizingPanel.ScrollUnit="Pixel"
                 >
-                    <ListView.View>
-                        <GridView>
-                            <GridViewColumn Header="時刻" attachedproperties:GridViewColumnSettingsBinder.ColumnId="time" DisplayMemberBinding="{Binding Time,StringFormat=HH:mm:ss}"/>
-                            <GridViewColumn Header="コメント" attachedproperties:GridViewColumnSettingsBinder.ColumnId="text">
-                                <GridViewColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <TextBlock TextWrapping="Wrap">
-                                            <TextBlock.Style>
-                                                <Style TargetType="TextBlock">
-                                                    <Setter Property="Text" Value="{Binding Text}"/>
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding Ng}" Value="True">
-                                                            <Setter Property="Text" Value="###### NG ######"/>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </TextBlock.Style>
-                                        </TextBlock>
-                                    </DataTemplate>
-                                </GridViewColumn.CellTemplate>
-                            </GridViewColumn>
-                            <GridViewColumn Header="ソース" attachedproperties:GridViewColumnSettingsBinder.ColumnId="source" DisplayMemberBinding="{Binding SourceService.Name}"/>
-                            <GridViewColumn Header="ユーザー" attachedproperties:GridViewColumnSettingsBinder.ColumnId="user" DisplayMemberBinding="{Binding UserId}"/>
-                            <GridViewColumn Header="コメ番" attachedproperties:GridViewColumnSettingsBinder.ColumnId="number" DisplayMemberBinding="{Binding Number}"/>
-                        </GridView>
-                    </ListView.View>
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="時刻" attachedproperties:GridViewColumnSettingsBinder.ColumnId="time" DisplayMemberBinding="{Binding Time,StringFormat=HH:mm:ss}"/>
+                                <GridViewColumn Header="コメント" attachedproperties:GridViewColumnSettingsBinder.ColumnId="text">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock TextWrapping="Wrap">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Text" Value="{Binding Text}"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Ng}" Value="True">
+                                                                <Setter Property="Text" Value="###### NG ######"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                                <GridViewColumn Header="ソース" attachedproperties:GridViewColumnSettingsBinder.ColumnId="source" DisplayMemberBinding="{Binding SourceService.Name}"/>
+                                <GridViewColumn Header="ユーザー" attachedproperties:GridViewColumnSettingsBinder.ColumnId="user" DisplayMemberBinding="{Binding UserId}"/>
+                                <GridViewColumn Header="コメ番" attachedproperties:GridViewColumnSettingsBinder.ColumnId="number" DisplayMemberBinding="{Binding Number}"/>
+                            </GridView>
+                        </ListView.View>
 
-                    <ListView.Resources>
-                        <ContextMenu x:Key="ItemContextMenu">
-                            <MenuItem Header="コメントをコピー" Command="{Binding DataContext.CopyCommentCommand,RelativeSource={RelativeSource AncestorType=ListView}}" CommandParameter="{Binding SelectedItem,RelativeSource={RelativeSource AncestorType=ListView}}"/>
-                            <MenuItem Header="ユーザーをコピー" Command="{Binding DataContext.CopyUserCommand,RelativeSource={RelativeSource AncestorType=ListView}}" CommandParameter="{Binding SelectedItem,RelativeSource={RelativeSource AncestorType=ListView}}"/>
-                            <Separator/>
-                            <MenuItem Header="コメントをNG" Command="{Binding DataContext.AddWordNgCommand,RelativeSource={RelativeSource AncestorType=ListView}}" CommandParameter="{Binding SelectedItem,RelativeSource={RelativeSource AncestorType=ListView}}"/>
-                            <MenuItem Header="ユーザーをNG" Command="{Binding DataContext.AddUserNgCommand,RelativeSource={RelativeSource AncestorType=ListView}}" CommandParameter="{Binding SelectedItem,RelativeSource={RelativeSource AncestorType=ListView}}"/>
-                            <Separator/>
-                            <MenuItem Header="詳細">
-                                <i:Interaction.Triggers>
-                                    <i:EventTrigger EventName="Click">
-                                        <behaviors:ShowWindowAction WindowType="local:ChatDetailViewerWindow" WindowDataContext="{Binding SelectedItem,RelativeSource={RelativeSource AncestorType=ListView}}" AllowMultipleWindowToShow="True" CenterOverAssociatedWindow="True">
-                                        </behaviors:ShowWindowAction>
-                                    </i:EventTrigger>
-                                </i:Interaction.Triggers>
-                            </MenuItem>
-                            <Separator/>
-                            <MenuItem Header="リストクリア" Command="{Binding DataContext.ClearChatsCommand,RelativeSource={RelativeSource AncestorType=ListView}}"/>
-                        </ContextMenu>
-                    </ListView.Resources>
-                    <ListView.ItemContainerStyle>
-                        <Style TargetType="ListViewItem">
-                            <Setter Property="BorderBrush" Value="Gray"/>
-                            <Setter Property="BorderThickness" Value="0,1,0,0"/>
-                            <Setter Property="ContextMenu" Value="{StaticResource ItemContextMenu}"/>
-                            <Setter Property="ToolTip">
-                                <Setter.Value>
-                                    <TextBlock>
+                        <ListView.Resources>
+                            <ContextMenu x:Key="ItemContextMenu">
+                                <MenuItem Header="コメントをコピー" Command="{Binding DataContext.CopyCommentCommand,RelativeSource={RelativeSource AncestorType=ListView}}" CommandParameter="{Binding SelectedItem,RelativeSource={RelativeSource AncestorType=ListView}}"/>
+                                <MenuItem Header="ユーザーをコピー" Command="{Binding DataContext.CopyUserCommand,RelativeSource={RelativeSource AncestorType=ListView}}" CommandParameter="{Binding SelectedItem,RelativeSource={RelativeSource AncestorType=ListView}}"/>
+                                <Separator/>
+                                <MenuItem Header="コメントをNG" Command="{Binding DataContext.AddWordNgCommand,RelativeSource={RelativeSource AncestorType=ListView}}" CommandParameter="{Binding SelectedItem,RelativeSource={RelativeSource AncestorType=ListView}}"/>
+                                <MenuItem Header="ユーザーをNG" Command="{Binding DataContext.AddUserNgCommand,RelativeSource={RelativeSource AncestorType=ListView}}" CommandParameter="{Binding SelectedItem,RelativeSource={RelativeSource AncestorType=ListView}}"/>
+                                <Separator/>
+                                <MenuItem Header="詳細">
+                                    <i:Interaction.Triggers>
+                                        <i:EventTrigger EventName="Click">
+                                            <behaviors:ShowWindowAction WindowType="local:ChatDetailViewerWindow" WindowDataContext="{Binding SelectedItem,RelativeSource={RelativeSource AncestorType=ListView}}" AllowMultipleWindowToShow="True" CenterOverAssociatedWindow="True">
+                                            </behaviors:ShowWindowAction>
+                                        </i:EventTrigger>
+                                    </i:Interaction.Triggers>
+                                </MenuItem>
+                                <Separator/>
+                                <MenuItem Header="リストクリア" Command="{Binding DataContext.ClearChatsCommand,RelativeSource={RelativeSource AncestorType=ListView}}"/>
+                            </ContextMenu>
+                        </ListView.Resources>
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Setter Property="BorderBrush" Value="Gray"/>
+                                <Setter Property="BorderThickness" Value="0,1,0,0"/>
+                                <Setter Property="ContextMenu" Value="{StaticResource ItemContextMenu}"/>
+                                <Setter Property="ToolTip">
+                                    <Setter.Value>
+                                        <TextBlock>
                                         コメント: <Run Text="{Binding Text,Mode=OneTime}"/><LineBreak/>
                                         時刻: <Run Text="{Binding Time,Mode=OneTime,StringFormat=yyyy/MM/dd(ddd) HH:mm:ss}"/><LineBreak/>
                                         ソース: <Run Text="{Binding SourceService.Name,Mode=OneTime}"/><LineBreak/>
@@ -229,107 +233,108 @@
                                         大きさ: <Run Text="{Binding Size,Mode=OneTime}"/><LineBreak/>
                                         コメ番: <Run Text="{Binding Number,Mode=OneTime}"/><LineBreak/>
                                         NG: <Run Text="{Binding Ng,Mode=OneTime}"/>
-                                    </TextBlock>
-                                </Setter.Value>
-                            </Setter>
-                        </Style>
-                    </ListView.ItemContainerStyle>
-                    <ListView.ContextMenu>
-                        <ContextMenu>
-                            <MenuItem Header="リストクリア" Command="{Binding ClearChatsCommand}"/>
-                        </ContextMenu>
-                    </ListView.ContextMenu>
+                                        </TextBlock>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                        <ListView.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="リストクリア" Command="{Binding ClearChatsCommand}"/>
+                            </ContextMenu>
+                        </ListView.ContextMenu>
 
-                    <i:Interaction.Behaviors>
-                        <behaviors:StickToScrollBottomBehavior/>
-                    </i:Interaction.Behaviors>
-                    <!--TODO: 選択されてなくても表示されるしヘッダ部分をダブルクリックしても表示される-->
-                    <i:Interaction.Triggers>
-                        <i:EventTrigger EventName="MouseDoubleClick">
-                            <behaviors:ShowWindowAction WindowType="local:ChatDetailViewerWindow" WindowDataContext="{Binding SelectedItem,RelativeSource={RelativeSource AncestorType=ListView}}" AllowMultipleWindowToShow="True" CenterOverAssociatedWindow="True"/>
-                        </i:EventTrigger>
-                    </i:Interaction.Triggers>
-                </ListView>
-            </TabItem>
+                        <i:Interaction.Behaviors>
+                            <behaviors:StickToScrollBottomBehavior/>
+                        </i:Interaction.Behaviors>
+                        <!--TODO: 選択されてなくても表示されるしヘッダ部分をダブルクリックしても表示される-->
+                        <i:Interaction.Triggers>
+                            <i:EventTrigger EventName="MouseDoubleClick">
+                                <behaviors:ShowWindowAction WindowType="local:ChatDetailViewerWindow" WindowDataContext="{Binding SelectedItem,RelativeSource={RelativeSource AncestorType=ListView}}" AllowMultipleWindowToShow="True" CenterOverAssociatedWindow="True"/>
+                            </i:EventTrigger>
+                        </i:Interaction.Triggers>
+                    </ListView>
+                </TabItem>
 
-            <TabItem Header="コメント元">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="auto"/>
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="auto"/>
-                        <RowDefinition Height="auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-                    <Grid.Resources>
-                        <CollectionViewSource x:Key="CollectionViewSource" Source="{Binding Path=ChatCollectServiceAddList}">
-                            <CollectionViewSource.GroupDescriptions>
-                                <PropertyGroupDescription PropertyName="IsPreset"/>
-                            </CollectionViewSource.GroupDescriptions>
-                        </CollectionViewSource>
-                    </Grid.Resources>
+                <TabItem Header="コメント元" Name="ChatSource">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Grid.Resources>
+                            <CollectionViewSource x:Key="CollectionViewSource" Source="{Binding Path=ChatCollectServiceAddList}">
+                                <CollectionViewSource.GroupDescriptions>
+                                    <PropertyGroupDescription PropertyName="IsPreset"/>
+                                </CollectionViewSource.GroupDescriptions>
+                            </CollectionViewSource>
+                        </Grid.Resources>
 
-                    <CheckBox IsChecked="{Binding UseDefaultChatCollectService.Value}" Grid.Row="0">自動選択する</CheckBox>
-                    <ListBox Name="ChatCollectServiceAddListBox" ItemsSource="{Binding Source={StaticResource CollectionViewSource}}" IsEnabled="{Binding UseDefaultChatCollectService.Value,Converter={StaticResource InverseBoolConverter}}" HorizontalContentAlignment="Stretch" Grid.Row="1">
-                        <ListBox.GroupStyle>
-                            <GroupStyle>
-                                <GroupStyle.HeaderTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding Name,Converter={StaticResource BoolToStringConverter},ConverterParameter=プリセット|マニュアル設定}"/>
-                                    </DataTemplate>
-                                </GroupStyle.HeaderTemplate>
-                            </GroupStyle>
-                        </ListBox.GroupStyle>
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock>
+                        <CheckBox IsChecked="{Binding UseDefaultChatCollectService.Value}" Grid.Row="0">自動選択する</CheckBox>
+                        <ListBox Name="ChatCollectServiceAddListBox" ItemsSource="{Binding Source={StaticResource CollectionViewSource}}" IsEnabled="{Binding UseDefaultChatCollectService.Value,Converter={StaticResource InverseBoolConverter}}" HorizontalContentAlignment="Stretch" Grid.Row="1">
+                            <ListBox.GroupStyle>
+                                <GroupStyle>
+                                    <GroupStyle.HeaderTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Name,Converter={StaticResource BoolToStringConverter},ConverterParameter=プリセット|マニュアル設定}"/>
+                                        </DataTemplate>
+                                    </GroupStyle.HeaderTemplate>
+                                </GroupStyle>
+                            </ListBox.GroupStyle>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock>
                                     <Run Text="{Binding Path=Title,Mode=OneWay}"/>
                                     <Run Text="    "/>
                                     <Run Text="{Binding Path=Subtitle,Mode=OneWay}" Foreground="Gray"/>
-                                    <TextBlock.InputBindings>
-                                        <MouseBinding Gesture="LeftDoubleClick" Command="{Binding Path=DataContext.AddChatCollectServiceCommand,RelativeSource={RelativeSource FindAncestor,AncestorType={x:Type ListBox}}}" CommandParameter="{Binding Path=SelectedItem,ElementName=ChatCollectServiceAddListBox}"/>
-                                    </TextBlock.InputBindings>
-                                </TextBlock>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-                    <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center">
-                        <Button Command="{Binding Path=AddChatCollectServiceCommand}"
+                                        <TextBlock.InputBindings>
+                                            <MouseBinding Gesture="LeftDoubleClick" Command="{Binding Path=DataContext.AddChatCollectServiceCommand,RelativeSource={RelativeSource FindAncestor,AncestorType={x:Type ListBox}}}" CommandParameter="{Binding Path=SelectedItem,ElementName=ChatCollectServiceAddListBox}"/>
+                                        </TextBlock.InputBindings>
+                                    </TextBlock>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center">
+                            <Button Command="{Binding Path=AddChatCollectServiceCommand}"
                                 CommandParameter="{Binding Path=SelectedItem,ElementName=ChatCollectServiceAddListBox}"
                                 IsEnabled="{Binding UserDefaultChatCollectService.Value, Converter={StaticResource InverseBoolConverter}}">追加↓</Button>
-                        <Button Command="{Binding Path=RemoveChatCollectServiceCommand}"
+                            <Button Command="{Binding Path=RemoveChatCollectServiceCommand}"
                                 CommandParameter="{Binding Path=SelectedItem.Service,ElementName=CollectServiceListBox}"
                                 IsEnabled="{Binding UserDefaultChatCollectService.Value, Converter={StaticResource InverseBoolConverter}}">削除↑</Button>
-                    </StackPanel>
-                    <ListBox Name="CollectServiceListBox" ItemsSource="{Binding Path=ChatCollectServices}" HorizontalContentAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Auto" VirtualizingPanel.ScrollUnit="Pixel" Grid.Row="4">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <StackPanel Orientation="Vertical">
-                                    <TextBlock Text="{Binding Path=Service.Name}" FontWeight="Bold"/>
-                                    <TextBlock Text="{Binding Path=InformationText}"/>
+                        </StackPanel>
+                        <ListBox Name="CollectServiceListBox" ItemsSource="{Binding Path=ChatCollectServices}" HorizontalContentAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Auto" VirtualizingPanel.ScrollUnit="Pixel" Grid.Row="4">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Vertical">
+                                        <TextBlock Text="{Binding Path=Service.Name}" FontWeight="Bold"/>
+                                        <TextBlock Text="{Binding Path=InformationText}"/>
 
-                                    <StackPanel.InputBindings>
-                                        <MouseBinding Gesture="LeftDoubleClick" Command="{Binding Path=DataContext.RemoveChatCollectServiceCommand,RelativeSource={RelativeSource FindAncestor,AncestorType={x:Type ListBox}}}" CommandParameter="{Binding Path=SelectedItem.Service,ElementName=CollectServiceListBox}"/>
-                                    </StackPanel.InputBindings>
-                                </StackPanel>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-                </Grid>
-            </TabItem>
-            <TabItem Header="設定">
-                <contents:BasicSettingControl>
-                    <i:Interaction.Behaviors>
-                        <behaviors:UserControlDataContextBinderBehavior Binding="{Binding RelativeSource={RelativeSource AncestorType=Window},Path=DataContext.BasicSettingControlViewModel,Mode=OneWayToSource}"/>
-                    </i:Interaction.Behaviors>
-                </contents:BasicSettingControl>
-            </TabItem>
-        </TabControl>
+                                        <StackPanel.InputBindings>
+                                            <MouseBinding Gesture="LeftDoubleClick" Command="{Binding Path=DataContext.RemoveChatCollectServiceCommand,RelativeSource={RelativeSource FindAncestor,AncestorType={x:Type ListBox}}}" CommandParameter="{Binding Path=SelectedItem.Service,ElementName=CollectServiceListBox}"/>
+                                        </StackPanel.InputBindings>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Grid>
+                </TabItem>
+                <TabItem Header="設定" Name="Settings">
+                    <contents:BasicSettingControl>
+                        <i:Interaction.Behaviors>
+                            <behaviors:UserControlDataContextBinderBehavior Binding="{Binding RelativeSource={RelativeSource AncestorType=Window},Path=DataContext.BasicSettingControlViewModel,Mode=OneWayToSource}"/>
+                        </i:Interaction.Behaviors>
+                    </contents:BasicSettingControl>
+                </TabItem>
+            </TabControl>
 
-        <contents:ChatPostControl Grid.Row="2">
-            <!--<i:Interaction.Behaviors>
+            <contents:ChatPostControl Grid.Row="2">
+                <!--<i:Interaction.Behaviors>
                 <behaviors:UserControlDataContextBinderBehavior Binding="{Binding RelativeSource={RelativeSource AncestorType=Window},Path=DataContext.ChatPostControlViewModel,Mode=OneWayToSource}"/>
             </i:Interaction.Behaviors>-->
-        </contents:ChatPostControl>
-    </Grid>
+            </contents:ChatPostControl>
+        </Grid>
+    </Border>
 </Window>
