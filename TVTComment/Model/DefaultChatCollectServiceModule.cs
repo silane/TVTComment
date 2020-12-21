@@ -54,21 +54,23 @@ namespace TVTComment.Model
             disposables.Add(LiveChatCollectService.ObserveCollectionChanged(newServiceEntry =>
             {
                 if (IsEnabled.Value && !latestIsRecord.GetValueOrDefault(true))
-                    collectServiceModule.AddService(newServiceEntry, null);
+                    if(collectServiceModule.RegisteredServices.All(x => x.ServiceEntry != newServiceEntry))
+                        collectServiceModule.AddService(newServiceEntry, null);
             }, oldServiceEntry =>
-             {
-                 if (IsEnabled.Value && !latestIsRecord.GetValueOrDefault(true))
-                     foreach (var service in collectServiceModule.RegisteredServices.Where(x => x.ServiceEntry == oldServiceEntry))
-                         collectServiceModule.RemoveService(service);
-             }, () =>
-             {
-                 if (IsEnabled.Value && !latestIsRecord.GetValueOrDefault(true))
-                     collectServiceModule.ClearServices();
-             }));
+            {
+                if (IsEnabled.Value && !latestIsRecord.GetValueOrDefault(true))
+                    foreach (var service in collectServiceModule.RegisteredServices.Where(x => x.ServiceEntry == oldServiceEntry))
+                        collectServiceModule.RemoveService(service);
+            }, () =>
+            {
+                if (IsEnabled.Value && !latestIsRecord.GetValueOrDefault(true))
+                    collectServiceModule.ClearServices();
+            }));
             disposables.Add(RecordChatCollectService.ObserveCollectionChanged(newServiceEntry =>
             {
                 if (IsEnabled.Value && latestIsRecord.GetValueOrDefault(false))
-                    collectServiceModule.AddService(newServiceEntry, null);
+                    if (collectServiceModule.RegisteredServices.All(x => x.ServiceEntry != newServiceEntry))
+                        collectServiceModule.AddService(newServiceEntry, null);
             }, oldServiceEntry =>
             {
                 if (IsEnabled.Value && latestIsRecord.GetValueOrDefault(false))
