@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
 using System.Windows;
+using System.Xml;
+using System.Xml.Serialization;
 
 namespace TVTComment.Model.ChatCollectService
 {
@@ -83,7 +87,7 @@ namespace TVTComment.Model.ChatCollectService
             }
             catch (AggregateException e) when (e.InnerException is ServerErrorException)
             {
-                throw new ChatCollectException("非公式ニコニコ実況過去ログAPIからエラーが返されました。", e);
+                throw new ChatCollectException($"非公式ニコニコ実況過去ログAPIからエラーが返されました。\nエラー内容：{e.InnerException.Message}", e);
             }
             catch (AggregateException e) when (e.InnerException is HttpRequestException)
             {
@@ -128,9 +132,10 @@ namespace TVTComment.Model.ChatCollectService
             string startTimeStr = new DateTimeOffset(startTime).ToUnixTimeSeconds().ToString();
             string endTimeStr = new DateTimeOffset(endTime).ToUnixTimeSeconds().ToString();
             string queryStr = await client.GetStringAsync($"https://jikkyo.tsukumijima.net/api/kakolog/jk{jkId}?starttime={startTimeStr}&endtime={endTimeStr}&format=xml").ConfigureAwait(false);
-            var query = HttpUtility.ParseQueryString(queryStr);
-            if (query.AllKeys.Contains("error"))
-                throw new ServerErrorException();
+            if (queryStr.Contains("<error>"))
+            {
+                throw new ServerErrorException(Regex.Match(queryStr, "<error>(.*)</error>").Groups[1].Value);
+            }
             NiconicoUtils.NiconicoCommentXmlParser parser = new NiconicoUtils.NiconicoCommentXmlParser(false);
             parser.Push(queryStr);
             lock (chats)
