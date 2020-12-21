@@ -82,7 +82,7 @@ namespace TVTComment.Model.ChatCollectService
             }
             catch (AggregateException e) when (e.InnerException is ServerErrorException)
             {
-                throw new ChatCollectException($"非公式ニコニコ実況過去ログAPIからエラーが返されました。\nエラー内容：{e.InnerException.Message}\nTips：「開始時刻または終了時刻が不正です。」の場合、非公式過去ログAPIが新ニコニコ実況分の過去ログに対応するまで取得できません。", e);
+                throw new ChatCollectException($"非公式ニコニコ実況過去ログAPIからエラーが返されました。\nエラー内容：{e.InnerException.Message}", e);
             }
             catch (AggregateException e) when (e.InnerException is HttpRequestException)
             {
@@ -125,7 +125,7 @@ namespace TVTComment.Model.ChatCollectService
         private async Task collectChat(int jkId, DateTime startTime, DateTime endTime)
         {
             string startTimeStr = new DateTimeOffset(startTime).ToUnixTimeSeconds().ToString();
-            string endTimeStr = new DateTimeOffset(endTime).ToUnixTimeSeconds().ToString();
+            string endTimeStr = new DateTimeOffset(endTime > GetNowTime() ? GetNowTime() : endTime).ToUnixTimeSeconds().ToString();
             string queryStr = await client.GetStringAsync($"https://jikkyo.tsukumijima.net/api/kakolog/jk{jkId}?starttime={startTimeStr}&endtime={endTimeStr}&format=xml").ConfigureAwait(false);
             if (queryStr.Contains("<error>"))
             {
@@ -145,7 +145,6 @@ namespace TVTComment.Model.ChatCollectService
                                 NiconicoUtils.ChatNiconicoCommentXmlTagToChat.Convert(chatTag), chatTag.Vpos
                         ));
                     }
-
                 }
             }
         }
@@ -154,8 +153,6 @@ namespace TVTComment.Model.ChatCollectService
         {
             using (this.client)
             {
-
-
                 client.CancelPendingRequests();
                 try
                 {
@@ -163,6 +160,11 @@ namespace TVTComment.Model.ChatCollectService
                 }
                 catch (AggregateException e) when (e.InnerException is OperationCanceledException || e.InnerException is HttpRequestException || e.InnerException is ServerErrorException) { }
             }
+        }
+
+        private DateTime GetNowTime()
+        {
+            return DateTime.Now;
         }
     }
 }
