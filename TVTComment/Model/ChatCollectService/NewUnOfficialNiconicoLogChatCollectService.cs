@@ -87,7 +87,7 @@ namespace TVTComment.Model.ChatCollectService
             }
             catch (AggregateException e) when (e.InnerException is ServerErrorException)
             {
-                throw new ChatCollectException($"非公式ニコニコ実況過去ログAPIからエラーが返されました。\nエラー内容：{e.InnerException.Message}", e);
+                throw new ChatCollectException($"非公式ニコニコ実況過去ログAPIからエラーが返されました。\nエラー内容：{e.InnerException.Message}\nTips：「開始時刻または終了時刻が不正です。」の場合、非公式過去ログAPIが新ニコニコ実況分の過去ログに対応するまで取得できません。", e);
             }
             catch (AggregateException e) when (e.InnerException is HttpRequestException)
             {
