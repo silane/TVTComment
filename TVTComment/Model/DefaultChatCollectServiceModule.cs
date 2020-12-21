@@ -18,8 +18,9 @@ namespace TVTComment.Model
         private ChannelInformationModule channelInformationModule;
         private ChatCollectServiceModule collectServiceModule;
         private IEnumerable<ChatCollectServiceEntry.IChatCollectServiceEntry> serviceEntryList;
-        private CompositeDisposable disposables=new CompositeDisposable();
-        private bool? latestIsRecord = null;
+        private CompositeDisposable disposables = new CompositeDisposable();
+        private bool? lastIsRecord = null;
+        private bool lastIsEnabled = false;
 
         public ObservableValue<bool> IsEnabled { get; } = new ObservableValue<bool>();
         /// <summary>
@@ -53,32 +54,32 @@ namespace TVTComment.Model
             disposables.Add(channelInformationModule.CurrentTime.Subscribe(timeChanged));
             disposables.Add(LiveChatCollectService.ObserveCollectionChanged(newServiceEntry =>
             {
-                if (IsEnabled.Value && !latestIsRecord.GetValueOrDefault(true))
+                if (IsEnabled.Value && !lastIsRecord.GetValueOrDefault(true))
                     if(collectServiceModule.RegisteredServices.All(x => x.ServiceEntry != newServiceEntry))
                         collectServiceModule.AddService(newServiceEntry, null);
             }, oldServiceEntry =>
             {
-                if (IsEnabled.Value && !latestIsRecord.GetValueOrDefault(true))
+                if (IsEnabled.Value && !lastIsRecord.GetValueOrDefault(true))
                     foreach (var service in collectServiceModule.RegisteredServices.Where(x => x.ServiceEntry == oldServiceEntry))
                         collectServiceModule.RemoveService(service);
             }, () =>
             {
-                if (IsEnabled.Value && !latestIsRecord.GetValueOrDefault(true))
+                if (IsEnabled.Value && !lastIsRecord.GetValueOrDefault(true))
                     collectServiceModule.ClearServices();
             }));
             disposables.Add(RecordChatCollectService.ObserveCollectionChanged(newServiceEntry =>
             {
-                if (IsEnabled.Value && latestIsRecord.GetValueOrDefault(false))
+                if (IsEnabled.Value && lastIsRecord.GetValueOrDefault(false))
                     if (collectServiceModule.RegisteredServices.All(x => x.ServiceEntry != newServiceEntry))
                         collectServiceModule.AddService(newServiceEntry, null);
             }, oldServiceEntry =>
             {
-                if (IsEnabled.Value && latestIsRecord.GetValueOrDefault(false))
+                if (IsEnabled.Value && lastIsRecord.GetValueOrDefault(false))
                     foreach (var service in collectServiceModule.RegisteredServices.Where(x => x.ServiceEntry == oldServiceEntry))
                         collectServiceModule.RemoveService(service);
             }, () =>
             {
-                if (IsEnabled.Value && latestIsRecord.GetValueOrDefault(false))
+                if (IsEnabled.Value && lastIsRecord.GetValueOrDefault(false))
                     collectServiceModule.ClearServices();
             }));
 
@@ -87,14 +88,20 @@ namespace TVTComment.Model
 
         private void timeChanged(DateTime? time)
         {
-            if (!IsEnabled.Value || !time.HasValue)
+            if (!time.HasValue)
                 return;
 
+            bool isEnabled = this.IsEnabled.Value;
             bool isRecord = (getDateTimeJstNow() - time.Value).TotalMinutes > 3;
-            if (isRecord==latestIsRecord)
-                return;
+            if (this.lastIsEnabled == isEnabled && isRecord == this.lastIsRecord)
+                return; // 有効・無効、リアルタイム・録画、いずれも変化がなければ何もしない
 
-            latestIsRecord = isRecord;
+            this.lastIsEnabled = isEnabled;
+            this.lastIsRecord = isRecord;
+
+            if (!isEnabled)
+                return; // 無効の場合は何もしない
+
             if(isRecord)
             {
                 //録画
