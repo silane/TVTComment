@@ -25,6 +25,8 @@ namespace TVTComment.Model.ChatCollectService
         private int lastJkId = 0;
         private DateTime lastGetTime;
 
+        private int getTimeOffset = 600;
+
         private ConcurrentQueue<NiconicoUtils.ChatAndVpos> chats = new ConcurrentQueue<NiconicoUtils.ChatAndVpos>();
         private Task chatCollectTask;
         private HttpClient client;
@@ -91,32 +93,20 @@ namespace TVTComment.Model.ChatCollectService
 
             lock (chats)
             {
-                //チャンネル変更もしくは取得済みコメントが0の場合履歴をクリアして取得
-                if (lastJkId != jkId || chats.Count <= 0)
+                //チャンネル変更もしくは取得済みコメントが0もしくは過去にシークの場合履歴をクリアして取得
+                if (lastJkId != jkId || chats.Count <= 0 || (time - lastGetTime).TotalSeconds < 0)
                 {
                     chats.Clear();
-                    chatCollectTask = collectChat(jkId, time.AddSeconds(1), time.AddSeconds(3600));
+                    chatCollectTask = collectChat(jkId, time.AddSeconds(1), time.AddSeconds(getTimeOffset));
                     lastJkId = jkId;
                     lastGetTime = time;
                 }
-                //1時間後にシークした場合　普通に追加で取得
-                else if (3600 < (time - lastGetTime).Seconds)
+                //getTimeOffset秒-10秒後にシークした場合　普通に追加で取得
+                else if (getTimeOffset - 10 < (time - lastGetTime).TotalSeconds)
                 {
-                    chatCollectTask = collectChat(jkId, time.AddSeconds(1), time.AddSeconds(3600));
+                    chatCollectTask = collectChat(jkId, time.AddSeconds(1), time.AddSeconds(getTimeOffset));
                     lastJkId = jkId;
                     lastGetTime = time;
-                }
-                //過去にシーク　履歴の一番古い情報より前にシークされてた場合はクリアして取得
-                else if ((time - lastGetTime).Seconds < 0 )
-                {
-                    var isOlder = time < chats.OrderBy(ch => ch.Chat.Time).First().Chat.Time;
-                    if (isOlder)
-                    {
-                        chats.Clear();
-                        chatCollectTask = collectChat(jkId, time.AddSeconds(1), time.AddSeconds(3600));
-                        lastJkId = jkId;
-                        lastGetTime = time;
-                    }
                 }
             }
             return ret;
