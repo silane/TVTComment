@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace TVTComment.Model.ChatCollectService
 {
-    abstract class OnceASecondChatCollectService:IChatCollectService
+    abstract class OnceASecondChatCollectService : IChatCollectService
     {
         protected readonly TimeSpan continuousCallLimit;
         protected DateTime lastTime;
@@ -16,20 +14,22 @@ namespace TVTComment.Model.ChatCollectService
             this.continuousCallLimit = continuousCallLimit;
         }
 
-        public IEnumerable<Chat> GetChats(ChannelInfo channel,DateTime time)
+        public IEnumerable<Chat> GetChats(ChannelInfo channel, DateTime time)
         {
             List<Chat> ret = new List<Chat>();
-            //指定時間以上間隔があくと処理しない(シークした？)
-            if (lastTime-time<continuousCallLimit && time-lastTime<continuousCallLimit)
+            if(this.lastTime <= time && time < this.lastTime + this.continuousCallLimit)
             {
-                for(; lastTime<=time;lastTime = lastTime.AddSeconds(1))
+                for(DateTime t = this.lastTime.AddSeconds(1); t <= time; t = t.AddSeconds(1))
                 {
-                    ret.AddRange(GetOnceASecond(channel, time));
+                    ret.AddRange(this.GetOnceASecond(channel, t));
+                    this.lastTime = t;
                 }
             }
             else
             {
-                lastTime = time;
+                //過去に戻るか指定時間以上間隔があいてる（シークした？）
+                ret.AddRange(this.GetOnceASecond(channel, time));
+                this.lastTime = time;
             }
             return ret;
         }
