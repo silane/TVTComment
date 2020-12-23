@@ -140,7 +140,8 @@ namespace TVTComment.Model.NiconicoUtils
         private static ChatNiconicoCommentXmlTag getChatXmlTag(string str)
         {
             string text = HttpUtility.HtmlDecode(reChat.Match(str).Groups[2].Value);
-            long thread = long.Parse(reThread.Match(str).Groups[1].Value);
+            long thread;
+            long.TryParse(reThread.Match(str).Groups[1].Value, out thread);
             long date = long.Parse(reDate.Match(str).Groups[1].Value);
             int dateUsec = int.Parse(reDateUsec.Match(str).Groups[1].Value);
 
