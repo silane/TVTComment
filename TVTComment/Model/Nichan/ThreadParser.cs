@@ -6,6 +6,7 @@ using System.Xml.Linq;
 using System.Xml.XPath;
 using Sgml;
 using System.Web;
+using System.IO;
 
 namespace Nichan
 {
@@ -157,17 +158,35 @@ namespace Nichan
                 return new Type2ThreadParser();
         }
 
+        public static Thread ParseFromStream(TextReader reader)
+        {
+            using var sgmlReader = new SgmlReader { DocType = "HTML", IgnoreDtd = false, InputStream = reader };
+            sgmlReader.WhitespaceHandling = WhitespaceHandling.None;
+            sgmlReader.CaseFolding = CaseFolding.ToLower;
+            var doc = XDocument.Load(sgmlReader);
+
+            Thread ret;
+            try
+            {
+                ret = GetThreadParser(doc).Parse(doc);
+            }
+            catch(InternalParseException e)
+            {
+                throw new ParseException(null, e);
+            }
+            return ret;
+        }
+
         public static Thread ParseFromUri(string uri)
         {
             XDocument doc;
-            //var doc = new HtmlDocument();
-            
-            using (var sgml = new SgmlReader { DocType="HTML",IgnoreDtd = false ,Href=uri})
+            using (var sgml = new SgmlReader { DocType = "HTML", IgnoreDtd = false, Href = uri })
             {
                 sgml.WhitespaceHandling = WhitespaceHandling.None;
-                sgml.CaseFolding = Sgml.CaseFolding.ToLower;
+                sgml.CaseFolding = CaseFolding.ToLower;
                 doc = XDocument.Load(sgml);
             }
+
             Thread ret;
             try
             {
