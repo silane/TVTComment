@@ -143,9 +143,11 @@ namespace TVTComment.Model.NiconicoUtils
             long thread;
             long.TryParse(reThread.Match(str).Groups[1].Value, out thread);
             long date = long.Parse(reDate.Match(str).Groups[1].Value);
-            int dateUsec = int.Parse(reDateUsec.Match(str).Groups[1].Value);
 
-            Match match = reMail.Match(str);
+            Match match = reDateUsec.Match(str);
+            int dateUsec = match.Success ? int.Parse(match.Groups[1].Value) : 0;
+
+            match = reMail.Match(str);
             string mail = match.Success ? HttpUtility.HtmlDecode(match.Groups[1].Value) : "";
 
             string userId = reUserID.Match(str).Groups[1].Value;
