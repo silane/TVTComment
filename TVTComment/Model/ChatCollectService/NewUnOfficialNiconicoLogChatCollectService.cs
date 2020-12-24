@@ -104,7 +104,7 @@ namespace TVTComment.Model.ChatCollectService
                 //getTimeOffset秒-10秒後にシークした場合　普通に追加で取得
                 else if (getTimeOffset - 10 < (time - lastGetTime).TotalSeconds)
                 {
-                    chatCollectTask = collectChat(jkId, time.AddSeconds(1), time.AddSeconds(getTimeOffset));
+                    chatCollectTask = collectChat(jkId, time.AddSeconds(10), time.AddSeconds(getTimeOffset));
                     lastJkId = jkId;
                     lastGetTime = time;
                 }
