@@ -1,14 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Drawing;
+using System.IO;
 using System.Linq;
-using System.Text;
+using System.Net;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using System.Drawing;
-using System.Net;
-using System.Diagnostics;
 
 namespace TVTComment.Model.ChatCollectService
 {
@@ -253,6 +254,8 @@ namespace TVTComment.Model.ChatCollectService
     {
         protected override string TypeName => "2chHTML";
 
+        private static readonly HttpClient httpClient = new HttpClient();
+
         public HTMLNichanChatCollectService(
             ChatCollectServiceEntry.IChatCollectServiceEntry serviceEntry,
             Color chatColor,
@@ -265,14 +268,32 @@ namespace TVTComment.Model.ChatCollectService
 
         protected override async Task<Nichan.Thread> GetThread(string url)
         {
+            string response;
             try
             {
-                return Nichan.ThreadParser.ParseFromUri(url);
+                response = await httpClient.GetStringAsync(url).ConfigureAwait(false);
             }
-            catch(WebException e)
+            catch (HttpRequestException e)
             {
-                throw new ChatCollectException($"サーバーとの通信でエラーが発生しました\n\n{e}", e);
+                if (e.StatusCode == null)
+                    throw new ChatCollectException($"サーバーとの通信でエラーが発生しました\nURL: {url}", e);
+                else
+                    throw new ChatCollectException($"サーバーからエラーが返されました\nURL: {url}\nHTTPステータスコード: {e.StatusCode}", e);
             }
+
+            using var textReader = new StringReader(response);
+            Nichan.Thread thread;
+            try
+            {
+                thread = Nichan.ThreadParser.ParseFromStream(textReader);
+            }
+            catch(Nichan.ThreadParserException e)
+            {
+                throw new ChatCollectException($"対応していないHTMLのドキュメント構造です\nURL: {url}", e);
+            }
+            thread.Uri = new Uri(url);
+
+            return thread;
         }
     }
 

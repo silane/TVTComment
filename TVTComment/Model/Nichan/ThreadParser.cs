@@ -178,24 +178,5 @@ namespace Nichan
             Thread ret = GetThreadParser(doc).Parse(doc);
             return ret;
         }
-
-        /// <summary>
-        /// URIの示すスレッドのHTMLをダウンロードし、スレッドを解析
-        /// </summary>
-        /// <exception cref="ThreadParserException">解析エラーの場合</exception>
-        public static Thread ParseFromUri(string uri)
-        {
-            XDocument doc;
-            using (var sgml = new SgmlReader { DocType = "HTML", IgnoreDtd = false, Href = uri })
-            {
-                sgml.WhitespaceHandling = WhitespaceHandling.None;
-                sgml.CaseFolding = CaseFolding.ToLower;
-                doc = XDocument.Load(sgml);
-            }
-
-            Thread ret = GetThreadParser(doc).Parse(doc);
-            ret.Uri = new Uri(uri);
-            return ret;
-        }
     }
 }
