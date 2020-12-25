@@ -11,6 +11,12 @@ using System.Text;
 
 namespace Nichan
 {
+    class BoardParserException : NichanException
+    {
+        public BoardParserException() : base() { }
+        public BoardParserException(string message, Exception inner) : base(message, inner) { }
+    }
+
     /// <summary>
     /// 2chの板を解析するパーサ
     /// </summary>
@@ -43,24 +49,26 @@ namespace Nichan
                 return ret;
             }catch(NullReferenceException e)
             {
-                throw new InternalParseException(null,e);
+                throw new BoardParserException(null, e);
             }
             catch(ArgumentOutOfRangeException e)
             {
-                throw new InternalParseException(null, e);
+                throw new BoardParserException(null, e);
             }
         }
     }
 
     public static class BoardParser
     {
-        private static HttpClient httpClient = new HttpClient();
-
         private static IBoardParser GetBoardParser(XDocument doc)
         {
             return new Type1BoardParser();
         }
 
+        /// <summary>
+        /// URIの示す板のHTMLをダウンロードし、板を解析
+        /// </summary>
+        /// <exception cref="BoardParserException">解析エラーの場合</exception>
         public static Board ParseFromUri(string uri)
         {
             HttpWebRequest request = WebRequest.CreateHttp(uri);
@@ -77,15 +85,7 @@ namespace Nichan
                     doc = XDocument.Load(sgml);
                 }
             }
-            Board ret;
-            try
-            {
-                ret = GetBoardParser(doc).Parse(doc, resolvedUri);
-            }
-            catch(InternalParseException e)
-            {
-                throw new ParseException(resolvedUri, e);
-            }
+            Board ret = GetBoardParser(doc).Parse(doc, resolvedUri);
             ret.Uri = resolvedUri;
             return ret;
         }
