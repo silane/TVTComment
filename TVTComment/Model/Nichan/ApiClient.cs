@@ -11,15 +11,11 @@ using System.Threading.Tasks;
 
 namespace Nichan
 {
-    [System.Serializable]
-    public class ApiClientException : Exception
+    public class ApiClientException : NichanException
     {
         public ApiClientException() { }
         public ApiClientException(string message) : base(message) { }
         public ApiClientException(string message, Exception inner) : base(message, inner) { }
-        protected ApiClientException(
-          System.Runtime.Serialization.SerializationInfo info,
-          System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     }
 
     /// <summary>

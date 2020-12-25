@@ -10,16 +10,11 @@ using System.Threading.Tasks;
 
 namespace Nichan
 {
-
-    [System.Serializable]
-    public class DatThreadLoaderException : Exception
+    public class DatThreadLoaderException : NichanException
     {
         public DatThreadLoaderException() { }
         public DatThreadLoaderException(string message) : base(message) { }
         public DatThreadLoaderException(string message, Exception inner) : base(message, inner) { }
-        protected DatThreadLoaderException(
-          System.Runtime.Serialization.SerializationInfo info,
-          System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     }
 
     public class DatFormatDatThreadLoaderException : DatThreadLoaderException

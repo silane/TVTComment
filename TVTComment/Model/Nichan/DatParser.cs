@@ -14,16 +14,11 @@ using System.Xml.XPath;
 
 namespace Nichan
 {
-
-    [Serializable]
-    public class DatParserException : Exception
+    public class DatParserException : NichanException
     {
         public DatParserException() { }
         public DatParserException(string message) : base(message) { }
         public DatParserException(string message, Exception inner) : base(message, inner) { }
-        protected DatParserException(
-          System.Runtime.Serialization.SerializationInfo info,
-          System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     }
 
     public class DatParser
