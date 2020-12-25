@@ -1,22 +1,37 @@
 ﻿using ObservableUtils;
 using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Drawing;
 using System.Linq;
+using System.Text.Json.Serialization;
 
 namespace TVTComment.Model.ChatService
 {
     class NichanChatServiceSettings
     {
+        public class GochanApiSettings
+        {
+            public string HmKey { get; set; } = "";
+            public string AppKey { get; set; } = "";
+            public string UserId { get; set; } = "";
+            public string Password { get; set; } = "";
+        }
+
         public TimeSpan ThreadUpdateInterval { get; set; } = new TimeSpan(0, 0, 15);
         public TimeSpan ThreadListUpdateInterval { get; set; } = new TimeSpan(0, 0, 1);
         public Serialization.ColorEntity ChatColor { get; set; } = new Serialization.ColorEntity() { R = 255, G = 255, B = 255 };
-        public string HmKey { get; set; } = "";
-        public string AppKey { get; set; } = "";
-        public string UserId { get; set; } = "";
-        public string Password { get; set; } = "";
         public TimeSpan PastCollectServiceBackTime { get; set; } = new TimeSpan(3, 0, 0);
+        public GochanApiSettings GochanApi { get; set; } = new GochanApiSettings();
+
+        // 以下は旧設定移行用
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string HmKey { get; set; } = null;
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string AppKey { get; set; } = null;
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string UserId { get; set; } = null;
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string Password { get; set; } = null;
     }
 
     class NichanChatService : IChatService
@@ -64,7 +79,29 @@ namespace TVTComment.Model.ChatService
         )
         {
             this.settings = settings;
-            
+
+            // 設定構造変更に伴い設定値を移行
+            if (settings.HmKey != null)
+            {
+                settings.GochanApi.HmKey = settings.HmKey;
+                settings.HmKey = null;
+            }
+            if (settings.AppKey != null)
+            {
+                settings.GochanApi.AppKey = settings.AppKey;
+                settings.AppKey = null;
+            }
+            if (settings.UserId != null)
+            {
+                settings.GochanApi.UserId = settings.UserId;
+                settings.UserId = null;
+            }
+            if (settings.Password != null)
+            {
+                settings.GochanApi.Password = settings.Password;
+                settings.Password = null;
+            }
+
             var boardSetting = NichanUtils.ThreadSettingFileParser.Parse(threadSettingFilePath);
             boardDatabase = new NichanUtils.BoardDatabase(boardSetting.BoardEntries, boardSetting.ThreadMappingRuleEntries);
             threadResolver = new NichanUtils.ThreadResolver(channelDatabase, boardDatabase);
@@ -73,8 +110,8 @@ namespace TVTComment.Model.ChatService
             this.threadSearchInterval.Value = settings.ThreadListUpdateInterval;
             this.chatColor.Value = Color.FromArgb(settings.ChatColor.R, settings.ChatColor.G, settings.ChatColor.B);
             this.nichanApiClient.Value = new Nichan.ApiClient(
-                settings.HmKey, settings.AppKey,
-                settings.UserId, settings.Password,
+                settings.GochanApi.HmKey, settings.GochanApi.AppKey,
+                settings.GochanApi.UserId, settings.GochanApi.Password,
                 "", "JaneStyle/3.80", "Mozilla/5.0 (compatible; JaneStyle/3.80..)"
             );
             this.pastCollectServiceBackTime.Value = settings.PastCollectServiceBackTime;
@@ -107,10 +144,10 @@ namespace TVTComment.Model.ChatService
         {
             using (this.nichanApiClient.Value)
             {
-                this.settings.HmKey = hmKey;
-                this.settings.AppKey = appKey;
-                this.settings.UserId = userId;
-                this.settings.Password = password;
+                this.settings.GochanApi.HmKey = hmKey;
+                this.settings.GochanApi.AppKey = appKey;
+                this.settings.GochanApi.UserId = userId;
+                this.settings.GochanApi.Password = password;
 
                 this.nichanApiClient.Value = new Nichan.ApiClient(
                     hmKey, appKey, userId, password,
