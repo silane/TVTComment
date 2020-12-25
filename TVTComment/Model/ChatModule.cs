@@ -7,6 +7,7 @@ using System.Configuration;
 using System.Collections.Specialized;
 using ObservableUtils;
 using System.Reactive.Disposables;
+using System.Drawing;
 
 namespace TVTComment.Model
 {
@@ -166,6 +167,15 @@ namespace TVTComment.Model
                             lineCount=2;
                         entry.ChatModRule = new ChatModRules.SmallOnMultiLineChatModRule(targetServices,lineCount);
                         break;
+                    case "SetColor":
+                        string[] splited = entity.Expression.Split(',');
+                        byte[] components = splited.Length == 4
+                                            ? splited.Select(x => byte.TryParse(x, out byte num) ? num : (byte)255).ToArray()
+                                            : new byte[] { 255, 255, 255, 255 };
+                        entry.ChatModRule = new ChatModRules.SetColorChatModRule(
+                            targetServices, Color.FromArgb(components[0], components[1], components[2], components[3])
+                        );
+                        break;
                     default:
                         continue;
                 }
@@ -206,6 +216,12 @@ namespace TVTComment.Model
                 {
                     entity.Type = "SmallOnMultiLine";
                     entity.Expression = ((ChatModRules.SmallOnMultiLineChatModRule)x.ChatModRule).LineCount.ToString();
+                }
+                else if(x.ChatModRule is ChatModRules.SetColorChatModRule)
+                {
+                    entity.Type = "SetColor";
+                    Color color = ((ChatModRules.SetColorChatModRule)x.ChatModRule).Color;
+                    entity.Expression = $"{color.A},{color.R},{color.G},{color.B}";
                 }
                 else
                     throw new Exception();
