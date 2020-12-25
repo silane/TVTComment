@@ -14,6 +14,9 @@ namespace TVTComment.Model.ChatService
             public string AppKey { get; set; } = "";
             public string UserId { get; set; } = "";
             public string Password { get; set; } = "";
+            public string AuthUserAgent { get; set; } = "";
+            public string AuthX2chUA { get; set; } = "JaneStyle/3.80";
+            public string UserAgent { get; set; } = "Mozilla/5.0 (compatible; JaneStyle/3.80..)";
         }
 
         public TimeSpan ThreadUpdateInterval { get; set; } = new TimeSpan(0, 0, 15);
@@ -52,10 +55,13 @@ namespace TVTComment.Model.ChatService
 
         public TimeSpan ResCollectInterval => this.resCollectInterval.Value;
         public TimeSpan ThreadSearchInterval => this.threadSearchInterval.Value;
-        public string HmKey => this.nichanApiClient.Value.HmKey;
-        public string AppKey => this.nichanApiClient.Value.AppKey;
-        public string UserId => this.nichanApiClient.Value.UserId;
-        public string Password => this.nichanApiClient.Value.Password;
+        public string GochanApiHmKey => this.nichanApiClient.Value.HmKey;
+        public string GochanApiAppKey => this.nichanApiClient.Value.AppKey;
+        public string GochanApiUserId => this.nichanApiClient.Value.UserId;
+        public string GochanApiPassword => this.nichanApiClient.Value.Password;
+        public string GochanApiAuthUserAgent => this.nichanApiClient.Value.AuthUserAgent;
+        public string GochanApiAuthX2UA => this.nichanApiClient.Value.AuthX2chUA;
+        public string GochanApiUserAgent => this.nichanApiClient.Value.UserAgent;
         public TimeSpan PastCollectServiceBackTime => this.pastCollectServiceBackTime.Value;
 
         //このChatServiceに行われた設定変更が子のChatServiceEntryに伝わるようにするためにObservableValueで包む
@@ -107,7 +113,7 @@ namespace TVTComment.Model.ChatService
             this.nichanApiClient.Value = new Nichan.ApiClient(
                 settings.GochanApi.HmKey, settings.GochanApi.AppKey,
                 settings.GochanApi.UserId, settings.GochanApi.Password,
-                "", "JaneStyle/3.80", "Mozilla/5.0 (compatible; JaneStyle/3.80..)"
+                settings.GochanApi.AuthUserAgent, settings.GochanApi.AuthX2chUA, settings.GochanApi.UserAgent
             );
             this.pastCollectServiceBackTime.Value = settings.PastCollectServiceBackTime;
 
@@ -129,7 +135,10 @@ namespace TVTComment.Model.ChatService
             this.threadSearchInterval.Value = threadSearchInterval;
         }
 
-        public void SetApiParams(string hmKey, string appKey, string userId, string password)
+        public void SetApiParams(
+            string hmKey, string appKey, string userId, string password,
+            string authUserAgent, string authX2chUA, string userAgent
+        )
         {
             using (this.nichanApiClient.Value)
             {
@@ -137,10 +146,13 @@ namespace TVTComment.Model.ChatService
                 this.settings.GochanApi.AppKey = appKey;
                 this.settings.GochanApi.UserId = userId;
                 this.settings.GochanApi.Password = password;
+                this.settings.GochanApi.AuthUserAgent = authUserAgent;
+                this.settings.GochanApi.AuthX2chUA = authX2chUA;
+                this.settings.GochanApi.UserAgent = userAgent;
 
                 this.nichanApiClient.Value = new Nichan.ApiClient(
                     hmKey, appKey, userId, password,
-                    "", "JaneStyle/3.80", "Mozilla/5.0 (compatible; JaneStyle/3.80..)"
+                    authUserAgent, authX2chUA, userAgent
                 );
             }
         }
