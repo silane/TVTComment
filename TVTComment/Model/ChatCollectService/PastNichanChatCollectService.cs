@@ -33,11 +33,13 @@ namespace TVTComment.Model.ChatCollectService
 
         public PastNichanChatCollectService(
             ChatCollectServiceEntry.IChatCollectServiceEntry chatCollectServiceEntry,
-            NichanUtils.INichanBoardSelector boardSelector
+            NichanUtils.INichanBoardSelector boardSelector,
+            TimeSpan backTime
         ) : base(TimeSpan.FromSeconds(10))
         {
             this.ServiceEntry = chatCollectServiceEntry;
             this.boardSelector = boardSelector;
+            this.backTime = backTime;
         }
 
         protected override IEnumerable<Chat> GetOnceASecond(ChannelInfo channel, DateTime time)
@@ -140,7 +142,7 @@ namespace TVTComment.Model.ChatCollectService
         {
             if(!this.pastThreadListerCache.TryGetValue(board, out var threadLister))
             {
-                threadLister = new Nichan.PastThreadLister(board, oneOfTheServer, TimeSpan.FromHours(3));
+                threadLister = new Nichan.PastThreadLister(board, oneOfTheServer, this.backTime);
                 await threadLister.Initialize(cancellationToken);
                 this.pastThreadListerCache.Add(board, threadLister);
             }
@@ -222,5 +224,6 @@ namespace TVTComment.Model.ChatCollectService
         private DateTimeOffset lastCollectTime = DateTimeOffset.MinValue;
         private Task collectChatTask = null;
         private CancellationTokenSource collectChatTaskCancellation = null;
+        private readonly TimeSpan backTime;
     }
 }

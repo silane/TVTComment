@@ -23,6 +23,7 @@ namespace TVTComment.ViewModels
         public ObservableValue<System.Drawing.Color> NichanChatColor { get; } = new ObservableValue<System.Drawing.Color>();
         public ObservableValue<string> NichanHmKey { get; } = new ObservableValue<string>();
         public ObservableValue<string> NichanAppKey { get; } = new ObservableValue<string>();
+        public ObservableValue<string> NichanPastCollectServiceBackTime { get; } = new ObservableValue<string>();
 
         public Model.ChatService.NichanChatService.BoardInfo SelectedNichanBoard { get; set; }
 
@@ -77,6 +78,8 @@ namespace TVTComment.ViewModels
 
                       nichan.SetApiParams(NichanHmKey.Value, NichanAppKey.Value, nichan.UserId, nichan.Password);
 
+                      nichan.SetPastCollectServiceBackTime(TimeSpan.FromMinutes(double.Parse(NichanPastCollectServiceBackTime.Value)));
+
                       syncNichanSettings();
                   }
                   catch (Exception e) when (e is FormatException || e is OverflowException)
@@ -105,6 +108,7 @@ namespace TVTComment.ViewModels
             NichanChatColor.Value = nichan.ChatColor;
             NichanHmKey.Value = nichan.HmKey;
             NichanAppKey.Value = nichan.AppKey;
+            NichanPastCollectServiceBackTime.Value = nichan.PastCollectServiceBackTime.TotalMinutes.ToString();
         }
     }
 }

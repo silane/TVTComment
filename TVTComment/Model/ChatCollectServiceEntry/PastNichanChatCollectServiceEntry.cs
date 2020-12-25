@@ -1,6 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using ObservableUtils;
+using System;
 
 namespace TVTComment.Model.ChatCollectServiceEntry
 {
@@ -14,18 +13,26 @@ namespace TVTComment.Model.ChatCollectServiceEntry
 
         public bool CanUseDefaultCreationOption => true;
 
-        public PastNichanChatCollectServiceEntry(ChatService.NichanChatService chatService, NichanUtils.ThreadResolver threadResolver)
+        public PastNichanChatCollectServiceEntry(
+            ChatService.NichanChatService chatService,
+            NichanUtils.ThreadResolver threadResolver,
+            ObservableValue<TimeSpan> backTime
+        )
         {
             this.Owner = chatService;
             this.threadResolver = threadResolver;
+            this.backTime = backTime;
         }
 
         public ChatCollectService.IChatCollectService GetNewService(IChatCollectServiceCreationOption creationOption)
         {
             var boardSelector = new NichanUtils.AutoNichanBoardSelector(this.threadResolver);
-            return new ChatCollectService.PastNichanChatCollectService(this, boardSelector);
+            return new ChatCollectService.PastNichanChatCollectService(
+                this, boardSelector, this.backTime.Value
+            );
         }
 
         private readonly NichanUtils.ThreadResolver threadResolver;
+        private readonly ObservableValue<TimeSpan> backTime;
     }
 }

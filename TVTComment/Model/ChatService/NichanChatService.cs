@@ -16,6 +16,7 @@ namespace TVTComment.Model.ChatService
         public string AppKey { get; set; } = "";
         public string UserId { get; set; } = "";
         public string Password { get; set; } = "";
+        public TimeSpan PastCollectServiceBackTime { get; set; } = new TimeSpan(3, 0, 0);
     }
 
     class NichanChatService : IChatService
@@ -43,12 +44,14 @@ namespace TVTComment.Model.ChatService
         public string AppKey => this.nichanApiClient.Value.AppKey;
         public string UserId => this.nichanApiClient.Value.UserId;
         public string Password => this.nichanApiClient.Value.Password;
+        public TimeSpan PastCollectServiceBackTime => this.pastCollectServiceBackTime.Value;
 
         //このChatServiceに行われた設定変更が子のChatServiceEntryに伝わるようにするためにObservableValueで包む
         private ObservableValue<TimeSpan> resCollectInterval=new ObservableValue<TimeSpan>();
         private ObservableValue<TimeSpan> threadSearchInterval = new ObservableValue<TimeSpan>();
         private ObservableValue<Color> chatColor = new ObservableValue<Color>();
         private ObservableValue<Nichan.ApiClient> nichanApiClient = new ObservableValue<Nichan.ApiClient>();
+        private ObservableValue<TimeSpan> pastCollectServiceBackTime = new ObservableValue<TimeSpan>();
 
         private NichanUtils.BoardDatabase boardDatabase;
         private NichanUtils.ThreadResolver threadResolver;
@@ -73,10 +76,11 @@ namespace TVTComment.Model.ChatService
                 settings.HmKey, settings.AppKey,
                 settings.UserId, settings.Password
             );
+            this.pastCollectServiceBackTime.Value = settings.PastCollectServiceBackTime;
 
             ChatCollectServiceEntries = new ChatCollectServiceEntry.IChatCollectServiceEntry[] {
                 new ChatCollectServiceEntry.DATNichanChatCollectServiceEntry(this, chatColor, resCollectInterval, threadSearchInterval, threadResolver, nichanApiClient),
-                new ChatCollectServiceEntry.PastNichanChatCollectServiceEntry(this, threadResolver),
+                new ChatCollectServiceEntry.PastNichanChatCollectServiceEntry(this, threadResolver, pastCollectServiceBackTime),
             };
             ChatTrendServiceEntries = new IChatTrendServiceEntry[0];
 
@@ -109,6 +113,12 @@ namespace TVTComment.Model.ChatService
 
                 this.nichanApiClient.Value = new Nichan.ApiClient(hmKey, appKey, userId, password);
             }
+        }
+
+        public void SetPastCollectServiceBackTime(TimeSpan value)
+        {
+            this.settings.PastCollectServiceBackTime = value;
+            this.pastCollectServiceBackTime.Value = value;
         }
 
         public void Dispose()
