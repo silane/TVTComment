@@ -1,6 +1,5 @@
 ﻿using ObservableUtils;
 using System;
-using System.Drawing;
 
 namespace TVTComment.Model.ChatCollectServiceEntry
 {
@@ -51,15 +50,17 @@ namespace TVTComment.Model.ChatCollectServiceEntry
         public abstract string Description { get; }
         public bool CanUseDefaultCreationOption => true;
 
-        protected ObservableValue<Color> chatColor;
         protected ObservableValue<TimeSpan> resCollectInterval;
         protected ObservableValue<TimeSpan> threadSearchInterval;
         protected NichanUtils.ThreadResolver threadResolver;
 
-        public NichanChatCollectServiceEntry(ChatService.NichanChatService owner,ObservableValue<Color> chatColor,ObservableValue<TimeSpan> resCollectInterval,ObservableValue<TimeSpan> threadSearchInterval,NichanUtils.ThreadResolver threadResolver)
+        public NichanChatCollectServiceEntry(
+            ChatService.NichanChatService owner,
+            ObservableValue<TimeSpan> resCollectInterval, ObservableValue<TimeSpan> threadSearchInterval,
+            NichanUtils.ThreadResolver threadResolver
+        )
         {
             this.Owner = owner;
-            this.chatColor = chatColor;
             this.resCollectInterval = resCollectInterval;
             this.threadSearchInterval = threadSearchInterval;
             this.threadResolver = threadResolver;
@@ -101,18 +102,18 @@ namespace TVTComment.Model.ChatCollectServiceEntry
 
 
         public HTMLNichanChatCollectServiceEntry(
-            ChatService.NichanChatService owner, ObservableValue<Color> chatColor,
+            ChatService.NichanChatService owner,
             ObservableValue<TimeSpan> resCollectInterval,
             ObservableValue<TimeSpan> threadSearchInterval,
             NichanUtils.ThreadResolver threadResolver
-        ) : base(owner, chatColor, resCollectInterval, threadSearchInterval, threadResolver)
+        ) : base(owner, resCollectInterval, threadSearchInterval, threadResolver)
         {
         }
 
         protected override ChatCollectService.IChatCollectService getNichanChatCollectService(NichanUtils.INichanThreadSelector threadSelector)
         {
             return new ChatCollectService.HTMLNichanChatCollectService(
-                this, this.chatColor.Value, this.resCollectInterval.Value,
+                this, this.resCollectInterval.Value,
                 this.threadSearchInterval.Value, threadSelector
             );
         }
@@ -127,12 +128,12 @@ namespace TVTComment.Model.ChatCollectServiceEntry
         private ObservableValue<Nichan.ApiClient> apiClient;
 
         public DATNichanChatCollectServiceEntry(
-            ChatService.NichanChatService owner, ObservableValue<Color> chatColor,
+            ChatService.NichanChatService owner,
             ObservableValue<TimeSpan> resCollectInterval,
             ObservableValue<TimeSpan> threadSearchInterval,
             NichanUtils.ThreadResolver threadResolver,
             ObservableValue<Nichan.ApiClient> nichanApiClient
-        ) : base(owner, chatColor, resCollectInterval, threadSearchInterval, threadResolver)
+        ) : base(owner, resCollectInterval, threadSearchInterval, threadResolver)
         {
             this.apiClient = nichanApiClient;
         }
@@ -140,7 +141,7 @@ namespace TVTComment.Model.ChatCollectServiceEntry
         protected override ChatCollectService.IChatCollectService getNichanChatCollectService(NichanUtils.INichanThreadSelector threadSelector)
         {
             return new ChatCollectService.DATNichanChatCollectService(
-                this, this.chatColor.Value, this.resCollectInterval.Value,
+                this, this.resCollectInterval.Value,
                 this.threadSearchInterval.Value, threadSelector, this.apiClient.Value
             );
         }

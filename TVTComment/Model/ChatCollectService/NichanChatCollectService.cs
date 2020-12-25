@@ -65,7 +65,6 @@ namespace TVTComment.Model.ChatCollectService
             }
         }
 
-        protected readonly Color chatColor;
         protected readonly TimeSpan resCollectInterval, threadSearchInterval;
         protected readonly NichanUtils.INichanThreadSelector threadSelector;
 
@@ -96,10 +95,13 @@ namespace TVTComment.Model.ChatCollectService
         /// <param name="resCollectInterval">レスを集める間隔 1秒未満にしても1秒になる</param>
         /// <param name="threadSearchInterval">レスを集めるスレッドのリストを更新する間隔 <paramref name="resCollectInterval"/>未満にしても同じ間隔になる</param>
         /// <param name="threadSelector">レスを集めるスレッドを決める<seealso cref="NichanUtils.INichanThreadSelector"/></param>
-        public NichanChatCollectService(ChatCollectServiceEntry.IChatCollectServiceEntry serviceEntry,Color chatColor,TimeSpan resCollectInterval,TimeSpan threadSearchInterval,NichanUtils.INichanThreadSelector threadSelector):base(TimeSpan.FromSeconds(10))
+        public NichanChatCollectService(
+            ChatCollectServiceEntry.IChatCollectServiceEntry serviceEntry,
+            TimeSpan resCollectInterval, TimeSpan threadSearchInterval,
+            NichanUtils.INichanThreadSelector threadSelector
+        ):base(TimeSpan.FromSeconds(10))
         {
             ServiceEntry = serviceEntry;
-            this.chatColor = chatColor;
 
             if (resCollectInterval < TimeSpan.FromSeconds(1))
                 resCollectInterval = TimeSpan.FromSeconds(1);
@@ -162,8 +164,10 @@ namespace TVTComment.Model.ChatCollectService
                             {
                                 elem.ReplaceWith("\n");
                             }
-                            chats.Enqueue(new Chat(thread.Res[resIdx].Date.Value, thread.Res[resIdx].Text.Value, Chat.PositionType.Normal, Chat.SizeType.Normal,
-                                chatColor.IsEmpty ? Color.White : chatColor, thread.Res[resIdx].UserId, thread.Res[resIdx].Number));
+                            chats.Enqueue(new Chat(
+                                thread.Res[resIdx].Date.Value, thread.Res[resIdx].Text.Value, Chat.PositionType.Normal, Chat.SizeType.Normal,
+                                Color.White, thread.Res[resIdx].UserId, thread.Res[resIdx].Number
+                            ));
                         }
 
                         var pairValue = pair.Value;
@@ -258,11 +262,10 @@ namespace TVTComment.Model.ChatCollectService
 
         public HTMLNichanChatCollectService(
             ChatCollectServiceEntry.IChatCollectServiceEntry serviceEntry,
-            Color chatColor,
             TimeSpan resCollectInterval,
             TimeSpan threadSearchInterval,
             NichanUtils.INichanThreadSelector threadSelector
-        ) : base(serviceEntry, chatColor, resCollectInterval, threadSearchInterval, threadSelector)
+        ) : base(serviceEntry, resCollectInterval, threadSearchInterval, threadSelector)
         {
         }
 
@@ -303,12 +306,11 @@ namespace TVTComment.Model.ChatCollectService
 
         public DATNichanChatCollectService(
             ChatCollectServiceEntry.IChatCollectServiceEntry serviceEntry,
-            Color chatColor,
             TimeSpan resCollectInterval,
             TimeSpan threadSearchInterval,
             NichanUtils.INichanThreadSelector threadSelector,
             Nichan.ApiClient nichanApiClient
-        ) : base(serviceEntry, chatColor, resCollectInterval, threadSearchInterval, threadSelector)
+        ) : base(serviceEntry, resCollectInterval, threadSearchInterval, threadSelector)
         {
             this.apiClient = nichanApiClient;
         }

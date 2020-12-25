@@ -1,7 +1,6 @@
 ﻿using ObservableUtils;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using System.Text.Json.Serialization;
 
@@ -19,7 +18,6 @@ namespace TVTComment.Model.ChatService
 
         public TimeSpan ThreadUpdateInterval { get; set; } = new TimeSpan(0, 0, 15);
         public TimeSpan ThreadListUpdateInterval { get; set; } = new TimeSpan(0, 0, 1);
-        public Serialization.ColorEntity ChatColor { get; set; } = new Serialization.ColorEntity() { R = 255, G = 255, B = 255 };
         public TimeSpan PastCollectServiceBackTime { get; set; } = new TimeSpan(3, 0, 0);
         public GochanApiSettings GochanApi { get; set; } = new GochanApiSettings();
 
@@ -54,7 +52,6 @@ namespace TVTComment.Model.ChatService
 
         public TimeSpan ResCollectInterval => this.resCollectInterval.Value;
         public TimeSpan ThreadSearchInterval => this.threadSearchInterval.Value;
-        public Color ChatColor => this.chatColor.Value;
         public string HmKey => this.nichanApiClient.Value.HmKey;
         public string AppKey => this.nichanApiClient.Value.AppKey;
         public string UserId => this.nichanApiClient.Value.UserId;
@@ -64,7 +61,6 @@ namespace TVTComment.Model.ChatService
         //このChatServiceに行われた設定変更が子のChatServiceEntryに伝わるようにするためにObservableValueで包む
         private ObservableValue<TimeSpan> resCollectInterval=new ObservableValue<TimeSpan>();
         private ObservableValue<TimeSpan> threadSearchInterval = new ObservableValue<TimeSpan>();
-        private ObservableValue<Color> chatColor = new ObservableValue<Color>();
         private ObservableValue<Nichan.ApiClient> nichanApiClient = new ObservableValue<Nichan.ApiClient>();
         private ObservableValue<TimeSpan> pastCollectServiceBackTime = new ObservableValue<TimeSpan>();
 
@@ -108,7 +104,6 @@ namespace TVTComment.Model.ChatService
 
             this.resCollectInterval.Value = settings.ThreadUpdateInterval;
             this.threadSearchInterval.Value = settings.ThreadListUpdateInterval;
-            this.chatColor.Value = Color.FromArgb(settings.ChatColor.R, settings.ChatColor.G, settings.ChatColor.B);
             this.nichanApiClient.Value = new Nichan.ApiClient(
                 settings.GochanApi.HmKey, settings.GochanApi.AppKey,
                 settings.GochanApi.UserId, settings.GochanApi.Password,
@@ -117,7 +112,7 @@ namespace TVTComment.Model.ChatService
             this.pastCollectServiceBackTime.Value = settings.PastCollectServiceBackTime;
 
             ChatCollectServiceEntries = new ChatCollectServiceEntry.IChatCollectServiceEntry[] {
-                new ChatCollectServiceEntry.DATNichanChatCollectServiceEntry(this, chatColor, resCollectInterval, threadSearchInterval, threadResolver, nichanApiClient),
+                new ChatCollectServiceEntry.DATNichanChatCollectServiceEntry(this, resCollectInterval, threadSearchInterval, threadResolver, nichanApiClient),
                 new ChatCollectServiceEntry.PastNichanChatCollectServiceEntry(this, threadResolver, pastCollectServiceBackTime),
             };
             ChatTrendServiceEntries = new IChatTrendServiceEntry[0];
@@ -132,12 +127,6 @@ namespace TVTComment.Model.ChatService
 
             this.resCollectInterval.Value = resCollectInterval;
             this.threadSearchInterval.Value = threadSearchInterval;
-        }
-
-        public void SetChatColor(Color chatColor)
-        {
-            this.settings.ChatColor = new Serialization.ColorEntity() { R = chatColor.R, G = chatColor.G, B = chatColor.B };
-            this.chatColor.Value = chatColor;
         }
 
         public void SetApiParams(string hmKey, string appKey, string userId, string password)

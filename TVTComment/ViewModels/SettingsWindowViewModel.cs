@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Input;
+﻿using ObservableUtils;
 using Prism.Commands;
-using Prism.Mvvm;
 using Prism.Interactivity.InteractionRequest;
-using ObservableUtils;
+using Prism.Mvvm;
+using System;
+using System.Linq;
+using System.Windows.Input;
 
 namespace TVTComment.ViewModels
 {
@@ -20,7 +17,6 @@ namespace TVTComment.ViewModels
         public ObservableValue<string> NiconicoPassword { get; } = new ObservableValue<string>();
         public ObservableValue<string> NichanResCollectInterval { get; } = new ObservableValue<string>();
         public ObservableValue<string> NichanThreadSearchInterval { get; } = new ObservableValue<string>();
-        public ObservableValue<System.Drawing.Color> NichanChatColor { get; } = new ObservableValue<System.Drawing.Color>();
         public ObservableValue<string> NichanHmKey { get; } = new ObservableValue<string>();
         public ObservableValue<string> NichanAppKey { get; } = new ObservableValue<string>();
         public ObservableValue<string> NichanPastCollectServiceBackTime { get; } = new ObservableValue<string>();
@@ -74,8 +70,6 @@ namespace TVTComment.ViewModels
                           TimeSpan.FromSeconds(uint.Parse(NichanResCollectInterval.Value)),
                           TimeSpan.FromSeconds(uint.Parse(NichanThreadSearchInterval.Value)));
                       
-                      nichan.SetChatColor(NichanChatColor.Value);
-
                       nichan.SetApiParams(NichanHmKey.Value, NichanAppKey.Value, nichan.UserId, nichan.Password);
 
                       nichan.SetPastCollectServiceBackTime(TimeSpan.FromMinutes(double.Parse(NichanPastCollectServiceBackTime.Value)));
@@ -105,7 +99,6 @@ namespace TVTComment.ViewModels
         {
             NichanResCollectInterval.Value = nichan.ResCollectInterval.TotalSeconds.ToString();
             NichanThreadSearchInterval.Value = nichan.ThreadSearchInterval.TotalSeconds.ToString();
-            NichanChatColor.Value = nichan.ChatColor;
             NichanHmKey.Value = nichan.HmKey;
             NichanAppKey.Value = nichan.AppKey;
             NichanPastCollectServiceBackTime.Value = nichan.PastCollectServiceBackTime.TotalMinutes.ToString();
