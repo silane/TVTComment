@@ -50,6 +50,9 @@ namespace Nichan
         public string AppKey { get; }
         public string UserId { get; }
         public string Password { get; }
+        public string AuthUserAgent { get; }
+        public string AuthX2chUA { get; }
+        public string UserAgent { get; }
 
         private string sessionID = "";
 
@@ -59,12 +62,18 @@ namespace Nichan
             //}
         );
 
-        public ApiClient(string hmKey, string appKey, string userId = "", string password = "")
+        public ApiClient(
+            string hmKey, string appKey, string userId, string password,
+            string authUserAgent, string authX2chUA, string userAgent
+        )
         {
             this.HmKey = hmKey;
             this.AppKey = appKey;
             this.UserId = userId;
             this.Password = password;
+            this.AuthUserAgent = authUserAgent;
+            this.AuthX2chUA = authX2chUA;
+            this.UserAgent = userAgent;
         }
 
         private string getHash(string message)
@@ -84,8 +93,8 @@ namespace Nichan
             //string hb =this.getHash(message);
 
             var request = new HttpRequestMessage(HttpMethod.Post, "https://api.5ch.net/v1/auth/");
-            request.Headers.TryAddWithoutValidation("User-Agent", "");
-            request.Headers.TryAddWithoutValidation("X-2ch-UA", "JaneStyle/3.80");
+            request.Headers.TryAddWithoutValidation("User-Agent", this.AuthUserAgent);
+            request.Headers.TryAddWithoutValidation("X-2ch-UA", this.AuthX2chUA);
             request.Content = new FormUrlEncodedContent(new Dictionary<string, string> {
                 { "KY", this.AppKey }, { "ID", this.UserId}, { "PW", this.Password },
             });
@@ -137,7 +146,7 @@ namespace Nichan
             string hobo = this.getHash(message);
 
             var request = new HttpRequestMessage(HttpMethod.Post, $"https://api.5ch.net/v1/{server}/{board}/{threadId}");
-            request.Headers.TryAddWithoutValidation("User-Agent", "Mozilla/5.0 (compatible; JaneStyle/3.80..)");
+            request.Headers.TryAddWithoutValidation("User-Agent", this.UserAgent);
             request.Headers.TryAddWithoutValidation("Connection", "close");
             foreach(var (name, value) in additionalHeaders)
             {

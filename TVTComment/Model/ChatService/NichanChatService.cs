@@ -74,7 +74,8 @@ namespace TVTComment.Model.ChatService
             this.chatColor.Value = Color.FromArgb(settings.ChatColor.R, settings.ChatColor.G, settings.ChatColor.B);
             this.nichanApiClient.Value = new Nichan.ApiClient(
                 settings.HmKey, settings.AppKey,
-                settings.UserId, settings.Password
+                settings.UserId, settings.Password,
+                "", "JaneStyle/3.80", "Mozilla/5.0 (compatible; JaneStyle/3.80..)"
             );
             this.pastCollectServiceBackTime.Value = settings.PastCollectServiceBackTime;
 
@@ -111,7 +112,10 @@ namespace TVTComment.Model.ChatService
                 this.settings.UserId = userId;
                 this.settings.Password = password;
 
-                this.nichanApiClient.Value = new Nichan.ApiClient(hmKey, appKey, userId, password);
+                this.nichanApiClient.Value = new Nichan.ApiClient(
+                    hmKey, appKey, userId, password,
+                    "", "JaneStyle/3.80", "Mozilla/5.0 (compatible; JaneStyle/3.80..)"
+                );
             }
         }
 
