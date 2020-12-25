@@ -64,8 +64,10 @@ namespace TVTComment.Model.ChatCollectService
                 }
                 catch(AggregateException e)
                 {
+                    this.collectChatTask = null;
                     collectChatTaskExceptionHandler(e);
                 }
+                this.collectChatTask = null;
 
                 if (this.board != board)
                 {
@@ -100,8 +102,10 @@ namespace TVTComment.Model.ChatCollectService
                 }
                 catch(AggregateException e)
                 {
+                    this.collectChatTask = null;
                     collectChatTaskExceptionHandler(e);
                 }
+                this.collectChatTask = null;
             }
 
             bool leaped = time < this.lastTime || time > this.lastTime + this.continuousCallLimit;
@@ -135,6 +139,10 @@ namespace TVTComment.Model.ChatCollectService
             {
                 if (!e.InnerExceptions.All(x => x is OperationCanceledException))
                     throw;
+            }
+            finally
+            {
+                this.collectChatTask = null;
             }
         }
 
