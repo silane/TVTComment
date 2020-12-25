@@ -3,8 +3,6 @@ using Prism.Commands;
 using Prism.Interactivity.InteractionRequest;
 using Prism.Mvvm;
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive.Concurrency;
@@ -252,6 +250,8 @@ namespace TVTComment.ViewModels
                     model.ChatCollectServiceModule.AddService(item.ServiceEntry, new Model.ChatCollectServiceEntry.NiconicoLogChatCollectServiceEntry.ChatCollectServiceCreationOption());
                 else if (item.ServiceEntry is Model.ChatCollectServiceEntry.NewNiconicoJikkyouChatCollectServiceEntry)
                     model.ChatCollectServiceModule.AddService(item.ServiceEntry, new Model.ChatCollectServiceEntry.NewNiconicoJikkyouChatCollectServiceEntry.ChatCollectServiceCreationOption());
+                else if (item.ServiceEntry is Model.ChatCollectServiceEntry.PastNichanChatCollectServiceEntry)
+                    model.ChatCollectServiceModule.AddService(item.ServiceEntry, null);
                 else if (
                     item.ServiceEntry is Model.ChatCollectServiceEntry.NichanChatCollectServiceEntry ||
                     item.ServiceEntry is Model.ChatCollectServiceEntry.FileChatCollectServiceEntry ||
