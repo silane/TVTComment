@@ -48,6 +48,7 @@ namespace TVTComment.Model.ChatCollectService
             this.jkIdResolver = jkIdResolver;
             var handler = new HttpClientHandler();
             client = new HttpClient(handler);
+            client.Timeout = TimeSpan.FromSeconds(30);
         }
 
         protected override IEnumerable<Chat> GetOnceASecond(ChannelInfo channel, DateTime time)
@@ -89,6 +90,10 @@ namespace TVTComment.Model.ChatCollectService
             catch (AggregateException e) when (e.InnerException is HttpRequestException)
             {
                 throw new ChatCollectException("非公式ニコニコ実況過去ログAPIとの通信でエラーが発生しました。", e);
+            }
+            catch (AggregateException e) when (e.InnerException is TaskCanceledException)
+            {
+                throw new ChatCollectException($"非公式ニコニコ実況過去ログAPIとの通信がタイムアウトしました。\n非公式ニコニコ実況過去ログAPIがダウンしてるか、リクエストの処理に時間がかかっています。\n設定タイムアウト:{client.Timeout}秒", e);
             }
 
             lock (chats)
