@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using TVTComment.Model.ChatService;
 
 namespace TVTComment.Model.ChatCollectService
 {
@@ -25,7 +28,8 @@ namespace TVTComment.Model.ChatCollectService
         private int lastJkId = 0;
         private DateTime lastGetTime;
 
-        private int getTimeOffset = 600;
+        private readonly int getTimeOffset;
+        private readonly string getUnOfficialApiUri;
 
         private ConcurrentQueue<NiconicoUtils.ChatAndVpos> chats = new ConcurrentQueue<NiconicoUtils.ChatAndVpos>();
         private Task chatCollectTask;
@@ -42,13 +46,18 @@ namespace TVTComment.Model.ChatCollectService
                 return $"現在の実況ID: [対応なし]";
         }
 
-        public NewUnOfficialNiconicoLogChatCollectService(ChatCollectServiceEntry.IChatCollectServiceEntry serviceEntry, NiconicoUtils.JkIdResolver jkIdResolver) : base(new TimeSpan(0, 0, 10))
+        public NewUnOfficialNiconicoLogChatCollectService(ChatCollectServiceEntry.IChatCollectServiceEntry serviceEntry, NiconicoUtils.JkIdResolver jkIdResolver, NiconicoChatServiceSettings settings) : base(new TimeSpan(0, 0, 10))
         {
+            getTimeOffset = settings.UnOfficialNiconicoLog.UnOfficialApiGetInterval * 600;
             this.ServiceEntry = serviceEntry;
             this.jkIdResolver = jkIdResolver;
             var handler = new HttpClientHandler();
             client = new HttpClient(handler);
-            client.Timeout = TimeSpan.FromSeconds(30);
+            var timeOut = settings.UnOfficialNiconicoLog.UnOfficialApiTimeOut;
+            client.Timeout = TimeSpan.FromSeconds(timeOut);
+            var assembly = Assembly.GetExecutingAssembly().GetName();
+            client.DefaultRequestHeaders.Add("User-Agent", $"TvTComment/{assembly.Version.ToString(3)}");
+            getUnOfficialApiUri = settings.UnOfficialNiconicoLog.UnOfficialApiUri;
         }
 
         protected override IEnumerable<Chat> GetOnceASecond(ChannelInfo channel, DateTime time)
@@ -121,7 +130,8 @@ namespace TVTComment.Model.ChatCollectService
         {
             string startTimeStr = new DateTimeOffset(startTime).ToUnixTimeSeconds().ToString();
             string endTimeStr = new DateTimeOffset(endTime > GetNowTime() ? GetNowTime().AddSeconds(-10) : endTime).ToUnixTimeSeconds().ToString();
-            string queryStr = await client.GetStringAsync($"https://jikkyo.tsukumijima.net/api/kakolog/jk{jkId}?starttime={startTimeStr}&endtime={endTimeStr}&format=xml").ConfigureAwait(false);
+            var uri = getUnOfficialApiUri.Replace("{jkId}", jkId.ToString()).Replace("{start}", startTimeStr).Replace("{end}", endTimeStr);
+            string queryStr = await client.GetStringAsync(uri).ConfigureAwait(false);
             if (queryStr.Contains("<error>"))
             {
                 throw new ServerErrorException(Regex.Match(queryStr, "<error>(.*)</error>").Groups[1].Value);

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Threading.Tasks;
+using TVTComment.Model.NiconicoUtils;
 
 namespace TVTComment.Model.ChatService
 {
@@ -10,6 +11,7 @@ namespace TVTComment.Model.ChatService
     {
         public string UserId { get; set; } = "";
         public string Password { get; set; } = "";
+        public UnOfficialNiconicoLogSettings UnOfficialNiconicoLog { get; set; } = new UnOfficialNiconicoLogSettings();
     }
 
     class NiconicoChatService : IChatService
@@ -57,7 +59,7 @@ namespace TVTComment.Model.ChatService
             ChatCollectServiceEntries = new ChatCollectServiceEntry.IChatCollectServiceEntry[] {
                 new ChatCollectServiceEntry.NewNiconicoJikkyouChatCollectServiceEntry(this, this.liveIdResolver, this.loginSession),
                 new ChatCollectServiceEntry.NiconicoLiveChatCollectServiceEntry(this, this.loginSession),
-                new ChatCollectServiceEntry.NewUnOfficialNiconicoLogChatCollectServiceEntry(this, this.jkIdResolver)
+                new ChatCollectServiceEntry.NewUnOfficialNiconicoLogChatCollectServiceEntry(this, this.jkIdResolver,this.settings)
             };
             ChatTrendServiceEntries = new IChatTrendServiceEntry[0];
         }
