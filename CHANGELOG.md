@@ -108,3 +108,19 @@
 ## v1.6.10 (2020-12-25)
 - 過去ログにdate_usecレコードが必ず入っていると仮定しない。
     - 2017年8月頃より前の過去ログで正常に再生できなかった原因はこれ。
+
+## v1.6.11 (2020-12-27)
+- 設定の追加。settings.jsonのNiconicoブロック内に下記の設定が追加されました。
+    ```json
+    "UnOfficialNiconicoLog": {
+        "UnOfficialApiTimeOut": 30,
+        "UnOfficialApiGetInterval": 1,
+        "UnOfficialApiUri": "https://jikkyo.tsukumijima.net/api/kakolog/jk{jkId}?starttime={start}\u0026endtime={end}\u0026format=xml"
+    }
+    ```
+    | 項目 | 内容・説明  |
+    | ------------ | ------------ |
+    | UnOfficialApiTimeOut  |  タイムアウトを設定します。デフォルト:30 単位:秒 |
+    | UnOfficialApiGetInterval | 過去ログ取得のインターバルを設定します。 デフォルト:1 単位:10分 |
+    | UnOfficialApiUri  |  過去ログ取得APIのURIを設定します。 {jkId}は実況ID、{start}は開始のUnixtime、{end}は終了のUnixtimeに置き換えられてます。 |
+- User-Agentの設定。
