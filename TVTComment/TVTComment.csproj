@@ -7,7 +7,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
-    <Version>1.6.12</Version>
+    <Version>1.6.13</Version>
     <Copyright>© 2017 silane / © 2020 noriokun4649</Copyright>
     <Authors>silane edit by noriokun4649</Authors>
     <Company>silane</Company>
