@@ -45,5 +45,13 @@ namespace TVTComment.Model.NiconicoUtils
                 return this.liveIdTable.GetLiveId(channel);
             }
         }
+
+        /// <summary>
+        /// 生放送IDの一覧を返す
+        /// </summary>
+        public IEnumerable<string> GetLiveIdList()
+        {
+            return liveIdTable.GetLiveIdList();
+        }
     }
 }

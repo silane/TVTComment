@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace TVTComment.Model.NiconicoUtils
 {
@@ -72,6 +73,14 @@ namespace TVTComment.Model.NiconicoUtils
 
             this.tableCache.Add(channel, ret);
             return ret;
+        }
+
+        /// <summary>
+        /// 生放送IDの一覧を返す
+        /// </summary>
+        public IEnumerable<string> GetLiveIdList()
+        {
+            return rules.Select(x => x.Item3);
         }
     }
 }
