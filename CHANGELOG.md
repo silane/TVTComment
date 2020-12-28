@@ -136,4 +136,4 @@
 ## v1.6.14 (2020-12-29)
 - 勢い取得の実装をリファクタリング
 - IME変換時の不具合を回避するように
-    - どうやらIMEによっては変換時にUpdateSourceTrigger=PropertyChangedが反応してしまってバグるらしい。ATOK、Minecraft IMEで回避を確認。
+    - どうやらIMEによっては変換時にUpdateSourceTrigger=PropertyChangedが反応してしまってバグるらしい。ATOK、Microsoft IMEで回避を確認。
