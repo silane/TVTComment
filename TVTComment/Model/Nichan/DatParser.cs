@@ -56,21 +56,18 @@ namespace Nichan
                 this.ThreadTitle = reses[0][4];
             }
 
-            foreach(var row in reses)
+            using var sgmlReader = new SgmlReader() { DocType = "HTML", IgnoreDtd = false };
+            sgmlReader.WhitespaceHandling = WhitespaceHandling.All;
+            sgmlReader.CaseFolding = CaseFolding.ToLower;
+
+            foreach (var row in reses)
             {
                 int startIdx = row[2].IndexOf("ID:");
                 string userId = startIdx != -1 ? row[2][(startIdx + 3)..] : null;
 
-                XElement text;
-                using (StringReader reader = new StringReader($"<html><div>{row[3]}</div></html>"))
-                {
-                    using (var sgml = new SgmlReader { DocType = "HTML", IgnoreDtd = false, InputStream = reader })
-                    {
-                        sgml.WhitespaceHandling = WhitespaceHandling.All;
-                        sgml.CaseFolding = Sgml.CaseFolding.ToLower;
-                        text = XDocument.Load(sgml).XPathSelectElement("./html/div");
-                    }
-                }
+                using var reader = new StringReader($"<html><div>{row[3]}</div></html>");
+                sgmlReader.InputStream = reader;
+                XElement text = XDocument.Load(sgmlReader).XPathSelectElement("./html/div");
 
                 this.reses.Enqueue(new Res
                 {
