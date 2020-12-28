@@ -125,3 +125,6 @@
     | UnOfficialApiGetInterval | 過去ログ取得のインターバルを設定します。 デフォルト:1 単位:10分 |
     | UnOfficialApiUri  |  過去ログ取得APIのURIを設定します。 {jkId}は実況ID、{start}は開始のUnixtime、{end}は終了のUnixtimeに置き換えられてます。 |
 - User-Agentの設定。
+
+## v1.6.12 (2020-12-28)
+- 勢い実装　ソースコード汚い......
