@@ -164,33 +164,80 @@ namespace TVTComment.Model.ChatCollectService
 
             foreach(var newThread in newThreads)
             {
-                string response;
-                try
-                {
-                    response = await httpClient.GetStringAsync(newThread.Uri.ToString(), cancellationToken).ConfigureAwait(false);
-                }
-                catch (HttpRequestException e)
-                {
-                    if (e.StatusCode == null)
-                        throw new Nichan.NetworkException(newThread.Uri.ToString(), null, e);
-                    else
-                        throw new Nichan.HttpErrorResponseException((int)e.StatusCode.Value, null, newThread.Uri.ToString(), null, e);
-                }
-
-                using var textReader = new StringReader(response);
-                Nichan.Thread thread = Nichan.ThreadParser.ParseFromStream(textReader);
-                thread.Uri = newThread.Uri;
+                var (server, board_, threadId) = getServerBoardThreadFromThreadUrl(newThread.Uri.ToString());
+                Nichan.Thread thread = await getThread(server, board_, threadId, cancellationToken);
+                thread.Uri = newThread.Uri; // キャッシュにヒットするようにthreadListerの返したUriで記憶する
 
                 lock(this.threadList)
                     this.threadList.Add(thread);
             }
         }
 
-        private static readonly Regex reBoardUrl = new Regex(@"//(?<server>[^.]*)\.5ch\.net/(?<board>[^/]*)(^|/.*)");
+        private static readonly Regex reBoardUrl = new Regex(@"//(?<server>[^.]*)\.\dch\.(net|sc)/(?<board>[^/]*)(^|/.*)");
         private static (string server, string board) getServerAndBoardFromBoardUrl(string boardUrl)
         {
             Match match = reBoardUrl.Match(boardUrl);
             return (match.Groups["server"].Value, match.Groups["board"].Value);
+        }
+
+        private static readonly Regex reThreadUrl = new Regex(@"//(?<server>[^.]*)\.\dch\.(net|sc)/test/read\.cgi/(?<board>[^/]*)/(?<thread>\d*)($|/)");
+        private static (string server, string board, string thread) getServerBoardThreadFromThreadUrl(string threadUrl)
+        {
+            Match match = reThreadUrl.Match(threadUrl);
+            return (match.Groups["server"].Value, match.Groups["board"].Value, match.Groups["thread"].Value);
+        }
+
+        private static async Task<Nichan.Thread> getThread(string server, string board, string thread, CancellationToken cancellationToken)
+        {
+            Nichan.Thread ret;
+            // まず2ch.scのdatから取得する
+            string datUrl = $"http://{server}.2ch.sc/{board}/dat/{thread}.dat";
+            string datResponse = null;
+            try
+            {
+                datResponse = await httpClient.GetStringAsync(datUrl, cancellationToken).ConfigureAwait(false);
+            }
+            catch (HttpRequestException)
+            {
+            }
+
+            if (datResponse != null)
+            {
+                ret = new Nichan.Thread();
+                var datParser = new Nichan.DatParser();
+                datParser.Feed(datResponse);
+
+                ret.Uri = new Uri(datUrl);
+                ret.Title = datParser.ThreadTitle;
+                while (true)
+                {
+                    Nichan.Res res = datParser.PopRes();
+                    if (res == null) break;
+                    ret.Res.Add(res);
+                }
+                ret.ResCount = ret.Res.Count;
+                return ret;
+            }
+
+            // 2ch.scがダメだった場合、5ch.netのスクレイピング
+            string gochanUrl = $"http://{server}.5ch.net/test/read.cgi/{board}/{thread}/";
+            string response;
+            try
+            {
+                response = await httpClient.GetStringAsync(gochanUrl, cancellationToken).ConfigureAwait(false);
+            }
+            catch (HttpRequestException e)
+            {
+                if (e.StatusCode == null)
+                    throw new Nichan.NetworkException(gochanUrl, null, e);
+                else
+                    throw new Nichan.HttpErrorResponseException((int)e.StatusCode.Value, null, gochanUrl, null, e);
+            }
+
+            using var textReader = new StringReader(response);
+            ret = Nichan.ThreadParser.ParseFromStream(textReader);
+            ret.Uri = new Uri(gochanUrl);
+            return ret;
         }
 
         /// <summary>
@@ -228,10 +275,10 @@ namespace TVTComment.Model.ChatCollectService
         private readonly NichanUtils.INichanBoardSelector boardSelector;
         private readonly Dictionary<string, Nichan.PastThreadLister> pastThreadListerCache = new Dictionary<string, Nichan.PastThreadLister>();
         private readonly List<Nichan.Thread> threadList = new List<Nichan.Thread>();
+        private readonly TimeSpan backTime;
         private string board = "";
         private DateTimeOffset lastCollectTime = DateTimeOffset.MinValue;
         private Task collectChatTask = null;
         private CancellationTokenSource collectChatTaskCancellation = null;
-        private readonly TimeSpan backTime;
     }
 }
