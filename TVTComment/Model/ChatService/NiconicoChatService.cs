@@ -1,7 +1,6 @@
 ﻿using ObservableUtils;
 using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Threading.Tasks;
 using TVTComment.Model.NiconicoUtils;
 
@@ -61,7 +60,7 @@ namespace TVTComment.Model.ChatService
                 new ChatCollectServiceEntry.NiconicoLiveChatCollectServiceEntry(this, this.loginSession),
                 new ChatCollectServiceEntry.NewUnOfficialNiconicoLogChatCollectServiceEntry(this, this.jkIdResolver,this.settings)
             };
-            ChatTrendServiceEntries = new IChatTrendServiceEntry[0];
+            ChatTrendServiceEntries = new IChatTrendServiceEntry[] { new NewNiconicoChatTrendServiceEntry(liveIdResolver) };
         }
 
         /// <summary>

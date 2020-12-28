@@ -3,8 +3,6 @@ using Prism.Commands;
 using Prism.Interactivity.InteractionRequest;
 using Prism.Mvvm;
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive.Concurrency;
@@ -178,9 +176,10 @@ namespace TVTComment.ViewModels
             disposables.Add(CurrentChannel.Subscribe(_ => updateWindowTitle()));
             disposables.Add(CurrentEvent.Subscribe(_ => updateWindowTitle()));
 
-            // 旧ニコニコ実況が廃止されたので現状常にnull
-            // 今後対応するときのためにとって置いてる
-            forceValueData = new ReadOnlyObservableValue<Model.IForceValueData>(Observable.Return<Model.IForceValueData>(null));
+            //da
+            model.ChatTrendServiceModule.AddService(model.ChatServices.OfType<Model.ChatService.NiconicoChatService>().Single().ChatTrendServiceEntries[0]);
+            forceValueData = new ReadOnlyObservableValue<Model.IForceValueData>(Observable.FromEventPattern<Model.ChatTrendServiceModule.ForceValueUpdatedEventArgs>(
+                        h => model.ChatTrendServiceModule.ForceValueUpdated += h, h => model.ChatTrendServiceModule.ForceValueUpdated -= h).Select(y => y.EventArgs.ForceValueData));
 
             UseDefaultChatCollectService = model.DefaultChatCollectServiceModule.IsEnabled;
 
