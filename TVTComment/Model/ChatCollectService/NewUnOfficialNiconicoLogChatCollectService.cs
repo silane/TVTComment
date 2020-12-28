@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
@@ -107,8 +106,8 @@ namespace TVTComment.Model.ChatCollectService
 
             lock (chats)
             {
-                //チャンネル変更もしくは取得済みコメントが0もしくは過去にシークの場合履歴をクリアして取得
-                if (lastJkId != jkId || chats.Count <= 0 || (time - lastGetTime).TotalSeconds < 0)
+                //チャンネル変更もしくは過去にシークの場合履歴をクリアして取得
+                if (lastJkId != jkId || (time - lastGetTime).TotalSeconds < 0)
                 {
                     chats.Clear();
                     chatCollectTask = collectChat(jkId, time.AddSeconds(1), time.AddSeconds(getTimeOffset));
