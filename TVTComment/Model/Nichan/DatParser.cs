@@ -23,13 +23,22 @@ namespace Nichan
 
     public class DatParser
     {
+        public bool FromTheMiddle { get; }
         /// <summary>
         /// 解析結果のスレタイが入る。解析前の場合は<c>null</c>。
         /// </summary>
         public string ThreadTitle { get; private set; }
 
-        public DatParser()
+        public DatParser() : this(false)
         {
+        }
+
+        /// <param name="fromTheMiddle">
+        /// 真の場合、datデータを最初からでなく中途半端な位置から与えられても解析する。その場合スレタイの解析は行われないしレス番号は正しくない。
+        /// </param>
+        public DatParser(bool fromTheMiddle)
+        {
+            this.FromTheMiddle = fromTheMiddle;
             this.Reset();
         }
 
@@ -46,13 +55,26 @@ namespace Nichan
             var reses = rows[..^1].Select(x => x.Split("<>")).ToArray();
             this.buffer = rows[^1];
 
+            bool isFirstLine = this.isBeforeFirstLine && reses.Length > 0; // 真ならreses[0]は最初の行
+            if(isFirstLine)
+            {
+                this.isBeforeFirstLine = false;
+            }
+
+            if (isFirstLine && this.FromTheMiddle)
+            {
+                // 中途半端な位置から始まるデータの場合、最初の行は省く
+                reses = reses[1..];
+            }
+
             if (reses.Any(x => x.Length != 5))
             {
                 throw new DatParserException();
             }
 
-            if(this.ThreadTitle == null && reses.Length > 0)
+            if (isFirstLine && !this.FromTheMiddle)
             {
+                // 最初の行からスレタイを取得
                 this.ThreadTitle = reses[0][4];
             }
 
@@ -98,11 +120,13 @@ namespace Nichan
             this.buffer = "";
             this.reses.Clear();
             this.resNum = 0;
+            this.isBeforeFirstLine = true;
         }
 
         private string buffer;
         private Queue<Res> reses = new Queue<Res>();
         private int resNum;
+        private bool isBeforeFirstLine;
 
         private static readonly Regex reDate = new Regex(@"(\d+)/(\d+)/(\d+)[^ ]* (\d+):(\d+):(\d+)\.(\d+)");
         private static DateTime? getDate(string str)
