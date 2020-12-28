@@ -50,15 +50,15 @@ namespace TVTComment.Model.ChatTrendService
 
                 if (forces.Count <= 0)
                 {
-                    forces.Add(jk1Obj.data[0].socialGroupId, new int[] { 0, jk1Obj.data[0].commentCount });
-                    forces.Add(jk2Obj.data[0].socialGroupId, new int[] { 0, jk2Obj.data[0].commentCount });
-                    forces.Add(jk4Obj.data[0].socialGroupId, new int[] { 0, jk4Obj.data[0].commentCount });
-                    forces.Add(jk5Obj.data[0].socialGroupId, new int[] { 0, jk5Obj.data[0].commentCount });
-                    forces.Add(jk6Obj.data[0].socialGroupId, new int[] { 0, jk6Obj.data[0].commentCount });
-                    forces.Add(jk7Obj.data[0].socialGroupId, new int[] { 0, jk7Obj.data[0].commentCount });
-                    forces.Add(jk8Obj.data[0].socialGroupId, new int[] { 0, jk8Obj.data[0].commentCount });
-                    forces.Add(jk9Obj.data[0].socialGroupId, new int[] { 0, jk9Obj.data[0].commentCount });
-                    forces.Add(jk211Obj.data[0].socialGroupId, new int[] { 0, jk211Obj.data[0].commentCount });
+                    forces.Add(jk1Obj.data[0].socialGroupId, new int[] { jk1Obj.data[0].commentCount, jk1Obj.data[0].commentCount });
+                    forces.Add(jk2Obj.data[0].socialGroupId, new int[] { jk2Obj.data[0].commentCount, jk2Obj.data[0].commentCount });
+                    forces.Add(jk4Obj.data[0].socialGroupId, new int[] { jk4Obj.data[0].commentCount, jk4Obj.data[0].commentCount });
+                    forces.Add(jk5Obj.data[0].socialGroupId, new int[] { jk5Obj.data[0].commentCount, jk5Obj.data[0].commentCount });
+                    forces.Add(jk6Obj.data[0].socialGroupId, new int[] { jk6Obj.data[0].commentCount, jk6Obj.data[0].commentCount });
+                    forces.Add(jk7Obj.data[0].socialGroupId, new int[] { jk7Obj.data[0].commentCount, jk7Obj.data[0].commentCount });
+                    forces.Add(jk8Obj.data[0].socialGroupId, new int[] { jk8Obj.data[0].commentCount, jk8Obj.data[0].commentCount });
+                    forces.Add(jk9Obj.data[0].socialGroupId, new int[] { jk9Obj.data[0].commentCount, jk9Obj.data[0].commentCount });
+                    forces.Add(jk211Obj.data[0].socialGroupId, new int[] { jk211Obj.data[0].commentCount, jk211Obj.data[0].commentCount });
                 }
                 else
                 {
