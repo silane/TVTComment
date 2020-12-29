@@ -154,7 +154,7 @@ namespace TVTComment.Model
             {
                 sendLock.Release();
             }
-            Debug.WriteLine("Sent: "+message);
+            //Debug.WriteLine("Sent: "+message);
         }
 
         private async Task receiveLoop()
@@ -173,7 +173,7 @@ namespace TVTComment.Model
                     {
                         break;
                     }
-                    Debug.WriteLine("Received: " + msg);
+                    //Debug.WriteLine("Received: " + msg);
                     MessageReceivedSynchronizationContext.Post((state) =>
                     {
                         if (cancel!=null && !cancel.IsCancellationRequested)
@@ -181,7 +181,6 @@ namespace TVTComment.Model
                     }, null);
                 }
                 cancel = null;
-                //await dispose(IPCModuleDisposeReason.DisposeCalled).ConfigureAwait(false);
             }
             catch(EndOfStreamException)
             {

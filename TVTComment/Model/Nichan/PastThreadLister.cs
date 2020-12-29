@@ -83,6 +83,9 @@ namespace Nichan
                 (string server, string board, string threadId) = (match.Groups["server"].Value, match.Groups["board"].Value, match.Groups["thread"].Value);
                 string datUrl = $"http://{server}.2ch.sc/{board}/dat/{threadId}.dat";
                 string datResponse = null;
+
+                System.Diagnostics.Debug.WriteLine($"[PastThreadLister] HTTP Get {datUrl}");
+
                 try
                 {
                     datResponse = await httpClient.GetStringAsync(datUrl, cancellationToken).ConfigureAwait(false);
@@ -113,6 +116,9 @@ namespace Nichan
                 threadUrl += "l3";
 
                 string response;
+
+                System.Diagnostics.Debug.WriteLine($"[PastThreadLister] HTTP Get {threadUrl}");
+
                 try
                 {
                     response = await httpClient.GetStringAsync(threadUrl, cancellationToken).ConfigureAwait(false);

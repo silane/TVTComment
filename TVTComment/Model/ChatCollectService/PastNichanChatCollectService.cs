@@ -197,6 +197,9 @@ namespace TVTComment.Model.ChatCollectService
             // まず2ch.scのdatから取得する
             string datUrl = $"http://{server}.2ch.sc/{board}/dat/{thread}.dat";
             string datResponse = null;
+
+            System.Diagnostics.Debug.WriteLine($"[PastNichanChatCollectService] HTTP Get {datUrl}");
+
             try
             {
                 datResponse = await httpClient.GetStringAsync(datUrl, cancellationToken).ConfigureAwait(false);
@@ -226,6 +229,9 @@ namespace TVTComment.Model.ChatCollectService
             // 2ch.scがダメだった場合、5ch.netのスクレイピング
             string gochanUrl = $"http://{server}.5ch.net/test/read.cgi/{board}/{thread}/";
             string response;
+
+            System.Diagnostics.Debug.WriteLine($"[PastNichanChatCollectService] HTTP Get {gochanUrl}");
+
             try
             {
                 response = await httpClient.GetStringAsync(gochanUrl, cancellationToken).ConfigureAwait(false);

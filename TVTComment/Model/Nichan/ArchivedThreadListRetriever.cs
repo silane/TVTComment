@@ -165,6 +165,7 @@ namespace Nichan
 
         private static async Task<XDocument> getHtml(string url, CancellationToken cancellationToken)
         {
+            System.Diagnostics.Debug.WriteLine($"[ArchivedThreadListRetriever] HTTP Get {url}");
             string response;
             try
             {
