@@ -103,7 +103,7 @@
         <TabItem Header="2ch">
             <Grid local:Grid.Shape="*:auto,auto,auto,auto,*,auto">
                 <TextBlock TextWrapping="Wrap" Grid.Row="0">現在使用中のコメント元には変更は適用されません</TextBlock>
-                <GroupBox Header="一般設定" Grid.Row="1">
+                <GroupBox Header="「2chDAT」コメント元設定" Grid.Row="1">
                     <Grid local:Grid.Shape="auto,*:auto,auto">
                         <Label Content="レスの更新間隔(秒)" ToolTip="この間隔ごとにスレのHTMLがダウンロードされ、レスが更新されます" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="0"/>
                         <TextBox Text="{Binding NichanResCollectInterval.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="0"/>
