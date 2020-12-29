@@ -137,8 +137,12 @@ namespace TVTComment.Model.ChatCollectService
             }
             catch (AggregateException e)
             {
-                if (!e.InnerExceptions.All(x => x is OperationCanceledException))
-                    throw;
+                try
+                {
+                    collectChatTaskExceptionHandler(e);
+                }
+                catch(ChatCollectException)
+                { }
             }
             finally
             {
