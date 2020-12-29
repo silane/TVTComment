@@ -1,17 +1,15 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Input;
+﻿using ObservableUtils;
 using Prism.Commands;
 using Prism.Mvvm;
-using System.Reactive.Linq;
-using System.Reactive.Disposables;
-using ObservableUtils;
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Drawing;
+using System.Linq;
 using System.Reactive;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
+using System.Windows.Input;
 
 namespace TVTComment.ViewModels
 {
@@ -74,6 +72,7 @@ namespace TVTComment.ViewModels
         public Contents.ChatModRuleListItemViewModel SelectedRule { get; set; }
         public ReadOnlyObservableCollection<Contents.ChatModRuleListItemViewModel> Rules { get; private set; }
         public ObservableValue<int> SmallOnMultiLineRuleLineCount { get; } = new ObservableValue<int>(2);
+        public ObservableValue<Color> SetColorRuleColor { get; } = new ObservableValue<Color>(Color.FromArgb(255, 255, 255));
 
         public ICommand AddWordNgCommand { get; private set; }
         public ICommand AddUserNgCommand { get; private set; }
@@ -82,6 +81,7 @@ namespace TVTComment.ViewModels
         public ICommand AddJyougeIroKomeNgCommand { get; private set; }
         public ICommand AddRandomizeColorRuleCommand { get; private set; }
         public ICommand AddSmallOnMultiLineRuleCommand { get; private set; }
+        public ICommand AddSetColorRuleCommand { get; private set; }
         public ICommand RemoveRuleCommand { get; private set; }
 
         public NgSettingWindowViewModel(Model.TVTComment model)
@@ -136,6 +136,14 @@ namespace TVTComment.ViewModels
               {
                   model.ChatModule.AddChatModRule(new Model.ChatModRules.SmallOnMultiLineChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value),SmallOnMultiLineRuleLineCount.Value));
               });
+
+            AddSetColorRuleCommand = new DelegateCommand(() =>
+            {
+                model.ChatModule.AddChatModRule(new Model.ChatModRules.SetColorChatModRule(
+                    TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value),
+                    SetColorRuleColor.Value
+                ));
+            });
 
             RemoveRuleCommand = new DelegateCommand(() =>
               {

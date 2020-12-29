@@ -1,27 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TVTComment.Model.NichanUtils
+﻿namespace TVTComment.Model.NichanUtils
 {
     /// <summary>
-    /// ネットワークID・サービスIDと板URL・スレッドタイトルの対応付けを行う
+    /// <see cref="ChannelInfo"/>から対応する板URL・スレッドタイトルキーワードを得る
     /// </summary>
     class ThreadResolver
     {
-        ChannelDatabase channelDatabase;
-        BoardDatabase boardDatabase;
+        private readonly ChannelDatabase channelDatabase;
+        private readonly BoardDatabase boardDatabase;
         
-        public ThreadResolver(ChannelDatabase channelDatabase,BoardDatabase boardDatabase)
+        public ThreadResolver(ChannelDatabase channelDatabase, BoardDatabase boardDatabase)
         {
             this.channelDatabase = channelDatabase;
             this.boardDatabase = boardDatabase;
         }
 
-        public MatchingThread Resolve(ushort networkId, ushort serviceId)
+        public MatchingThread Resolve(ChannelInfo channelInfo)
         {
+            ushort networkId = channelInfo.NetworkId, serviceId = channelInfo.ServiceId;
             if (networkId == 0)
             {
                 //録画ファイルなどではネットワークIDが分からないのでサービスIDだけで検索

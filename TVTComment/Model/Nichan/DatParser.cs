@@ -14,27 +14,31 @@ using System.Xml.XPath;
 
 namespace Nichan
 {
-
-    [Serializable]
-    public class DatParserException : Exception
+    public class DatParserException : NichanException
     {
         public DatParserException() { }
         public DatParserException(string message) : base(message) { }
         public DatParserException(string message, Exception inner) : base(message, inner) { }
-        protected DatParserException(
-          System.Runtime.Serialization.SerializationInfo info,
-          System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     }
 
     public class DatParser
     {
+        public bool FromTheMiddle { get; }
         /// <summary>
         /// 解析結果のスレタイが入る。解析前の場合は<c>null</c>。
         /// </summary>
         public string ThreadTitle { get; private set; }
 
-        public DatParser()
+        public DatParser() : this(false)
         {
+        }
+
+        /// <param name="fromTheMiddle">
+        /// 真の場合、datデータを最初からでなく中途半端な位置から与えられても解析する。その場合スレタイの解析は行われないしレス番号は正しくない。
+        /// </param>
+        public DatParser(bool fromTheMiddle)
+        {
+            this.FromTheMiddle = fromTheMiddle;
             this.Reset();
         }
 
@@ -51,31 +55,41 @@ namespace Nichan
             var reses = rows[..^1].Select(x => x.Split("<>")).ToArray();
             this.buffer = rows[^1];
 
+            bool isFirstLine = this.isBeforeFirstLine && reses.Length > 0; // 真ならreses[0]は最初の行
+            if(isFirstLine)
+            {
+                this.isBeforeFirstLine = false;
+            }
+
+            if (isFirstLine && this.FromTheMiddle)
+            {
+                // 中途半端な位置から始まるデータの場合、最初の行は省く
+                reses = reses[1..];
+            }
+
             if (reses.Any(x => x.Length != 5))
             {
                 throw new DatParserException();
             }
 
-            if(this.ThreadTitle == null && reses.Length > 0)
+            if (isFirstLine && !this.FromTheMiddle)
             {
+                // 最初の行からスレタイを取得
                 this.ThreadTitle = reses[0][4];
             }
 
-            foreach(var row in reses)
+            using var sgmlReader = new SgmlReader() { DocType = "HTML", IgnoreDtd = false };
+            sgmlReader.WhitespaceHandling = WhitespaceHandling.All;
+            sgmlReader.CaseFolding = CaseFolding.ToLower;
+
+            foreach (var row in reses)
             {
                 int startIdx = row[2].IndexOf("ID:");
                 string userId = startIdx != -1 ? row[2][(startIdx + 3)..] : null;
 
-                XElement text;
-                using (StringReader reader = new StringReader($"<html><div>{row[3]}</div></html>"))
-                {
-                    using (var sgml = new SgmlReader { DocType = "HTML", IgnoreDtd = false, InputStream = reader })
-                    {
-                        sgml.WhitespaceHandling = WhitespaceHandling.All;
-                        sgml.CaseFolding = Sgml.CaseFolding.ToLower;
-                        text = XDocument.Load(sgml).XPathSelectElement("./html/div");
-                    }
-                }
+                using var reader = new StringReader($"<html><div>{row[3]}</div></html>");
+                sgmlReader.InputStream = reader;
+                XElement text = XDocument.Load(sgmlReader).XPathSelectElement("./html/div");
 
                 this.reses.Enqueue(new Res
                 {
@@ -106,11 +120,13 @@ namespace Nichan
             this.buffer = "";
             this.reses.Clear();
             this.resNum = 0;
+            this.isBeforeFirstLine = true;
         }
 
         private string buffer;
         private Queue<Res> reses = new Queue<Res>();
         private int resNum;
+        private bool isBeforeFirstLine;
 
         private static readonly Regex reDate = new Regex(@"(\d+)/(\d+)/(\d+)[^ ]* (\d+):(\d+):(\d+)\.(\d+)");
         private static DateTime? getDate(string str)

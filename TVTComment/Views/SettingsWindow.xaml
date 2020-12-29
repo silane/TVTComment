@@ -11,7 +11,7 @@
         xmlns:settingswindowcontents="clr-namespace:TVTComment.Views.SettingsWindowContents"
         mc:Ignorable="d"
         prism:ViewModelLocator.AutoWireViewModel="True"
-        Title="SettingWindow" Height="400" Width="400" WindowStyle="ToolWindow">
+        Title="SettingWindow" Height="500" Width="400" WindowStyle="ToolWindow">
 
     <Window.Resources>
         <converters:ColorToStringConverter x:Key="StringToColorConverter"/>
@@ -101,51 +101,46 @@
             </Grid>
         </TabItem>
         <TabItem Header="2ch">
-            <Grid local:Grid.Shape="*:auto,auto,auto,*,auto">
+            <Grid local:Grid.Shape="*:auto,auto,auto,auto,*,auto">
                 <TextBlock TextWrapping="Wrap" Grid.Row="0">現在使用中のコメント元には変更は適用されません</TextBlock>
-                <GroupBox Header="一般設定" Grid.Row="1">
-                    <Grid local:Grid.Shape="auto,*:auto,auto,auto">
+                <GroupBox Header="「2chDAT」コメント元設定" Grid.Row="1">
+                    <Grid local:Grid.Shape="auto,*:auto,auto">
                         <Label Content="レスの更新間隔(秒)" ToolTip="この間隔ごとにスレのHTMLがダウンロードされ、レスが更新されます" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="0"/>
                         <TextBox Text="{Binding NichanResCollectInterval.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="0"/>
                         <Label Content="収集スレッドの更新間隔(秒)" ToolTip="この間隔ごとに板のHTMLがダウンロードされ、収集対象のスレッドが変更されます" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="1"/>
                         <TextBox Text="{Binding NichanThreadSearchInterval.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="1"/>
-                        <Label Content="コメント色" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="2"/>
-                        <Button Grid.Column="1" Grid.Row="2" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch">
-                            <Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="10*"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="*"/>
-                                    <RowDefinition Height="10*"/>
-                                    <RowDefinition Height="*"/>
-                                </Grid.RowDefinitions>
-                                <Rectangle Grid.Column="1" Grid.Row="1" Fill="{Binding NichanChatColor.Value,Converter={StaticResource ColorConverter},Mode=OneWay}"/>
-                            </Grid>
-                            <i:Interaction.Triggers>
-                                <i:EventTrigger EventName="Click">
-                                    <behaviors:ShowColorDialogAction Color="{Binding NichanChatColor.Value,Mode=TwoWay}"/>
-                                </i:EventTrigger>
-                            </i:Interaction.Triggers>
-                        </Button>
                     </Grid>
                 </GroupBox>
                 <GroupBox Header="5chAPI設定" Grid.Row="2">
                     <StackPanel>
-                        <Grid local:Grid.Shape="auto,*:auto,auto">
+                        <TextBlock>「2chDAT」コメント元で使用</TextBlock>
+                        <Grid local:Grid.Shape="auto,*:auto,auto,auto,auto,auto">
                             <Label Content="HMKey" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="0"/>
-                            <TextBox Text="{Binding NichanHmKey.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="0"/>
+                            <TextBox Text="{Binding NichanApiHmKey.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="0"/>
                             <Label Content="AppKey" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="1"/>
-                            <TextBox Text="{Binding NichanAppKey.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="1"/>
+                            <TextBox Text="{Binding NichanApiAppKey.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="1"/>
+                            <Label Content="AuthUserAgent" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="2"/>
+                            <TextBox Text="{Binding NichanApiAuthUserAgent.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="2"/>
+                            <Label Content="AuthX2chUA" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="3"/>
+                            <TextBox Text="{Binding NichanApiAuthX2chUA.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="3"/>
+                            <Label Content="UserAgent" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="4"/>
+                            <TextBox Text="{Binding NichanApiUserAgent.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="4"/>
                         </Grid>
                     </StackPanel>
                 </GroupBox>
-                <GroupBox Header="板設定" Grid.Row="3">
+                <GroupBox Header="「2ch過去ログ」コメント元設定" Grid.Row="3">
+                    <StackPanel>
+                        <Grid local:Grid.Shape="auto,*:auto">
+                            <Label Content="さかのぼる時間(分)" ToolTip="放送時刻からこの時間だけ前の時刻以降に作成されたスレッドからレスを収集します" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="0"/>
+                            <TextBox Text="{Binding NichanPastCollectServiceBackTime.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="0"/>
+                        </Grid>
+                    </StackPanel>
+                </GroupBox>
+
+                <GroupBox Header="板設定" Grid.Row="4">
                     <TextBlock>設定は2chthreads.txtから行ってください<LineBreak/>設定変更はプラグイン再起動後に適用されます</TextBlock>
                 </GroupBox>
-                <Button Content="適用" Command="{Binding ApplyNichanSettingsCommand}" HorizontalAlignment="Right" Grid.Row="4"/>
+                <Button Content="適用" Command="{Binding ApplyNichanSettingsCommand}" HorizontalAlignment="Right" Grid.Row="5"/>
             </Grid>
         </TabItem>
     </TabControl>

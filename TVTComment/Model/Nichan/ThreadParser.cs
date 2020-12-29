@@ -6,9 +6,16 @@ using System.Xml.Linq;
 using System.Xml.XPath;
 using Sgml;
 using System.Web;
+using System.IO;
 
 namespace Nichan
 {
+    class ThreadParserException : NichanException
+    {
+        public ThreadParserException() : base() { }
+        public ThreadParserException(string message, Exception inner) : base(message, inner) { }
+    }
+
     /// <summary>
     /// 2chのスレッドを解析するパーサ
     /// </summary>
@@ -37,7 +44,7 @@ namespace Nichan
         {
             var ret = new Thread();
             ret.Title = HttpUtility.HtmlDecode( doc.XPathSelectElement(@"/html/body/h1[@class=""title""]")?.Value);
-            if (ret.Title == null) throw new InternalParseException();
+            if (ret.Title == null) throw new ThreadParserException();
             foreach(XElement elem in doc.XPathSelectElements(@"/html/body/div[@class=""thread""]/div[@class=""post""]"))
             {
                 var res = new Res();
@@ -76,7 +83,7 @@ namespace Nichan
         {
             var ret = new Thread();
             ret.Title = HttpUtility.HtmlDecode(doc.XPathSelectElement(@"/html/body/div/span/h1")?.Value);
-            if (ret.Title == null) throw new InternalParseException();
+            if (ret.Title == null) throw new ThreadParserException();
             
             foreach(XElement elem in doc.XPathSelectElements(@"/html/body/div/span/div/dl[@class=""thread""]/dt"))
             {
@@ -122,7 +129,7 @@ namespace Nichan
         {
             var ret = new Thread();
             ret.Title = HttpUtility.HtmlDecode(doc.XPathSelectElement(@"/html/head/title")?.Value);
-            if (ret.Title == null) throw new InternalParseException();
+            if (ret.Title == null) throw new ThreadParserException();
 
             foreach (XElement elem in doc.XPathSelectElements(@"/html/body/div/div[@class=""thread""]/div[@class=""post""]"))
             {
@@ -157,27 +164,18 @@ namespace Nichan
                 return new Type2ThreadParser();
         }
 
-        public static Thread ParseFromUri(string uri)
+        /// <summary>
+        /// スレッドのHTMLを格納した<see cref="TextReader"/>からスレッドを解析
+        /// </summary>
+        /// <exception cref="ThreadParserException">解析エラーの場合</exception>
+        public static Thread ParseFromStream(TextReader reader)
         {
-            XDocument doc;
-            //var doc = new HtmlDocument();
-            
-            using (var sgml = new SgmlReader { DocType="HTML",IgnoreDtd = false ,Href=uri})
-            {
-                sgml.WhitespaceHandling = WhitespaceHandling.None;
-                sgml.CaseFolding = Sgml.CaseFolding.ToLower;
-                doc = XDocument.Load(sgml);
-            }
-            Thread ret;
-            try
-            {
-                ret = GetThreadParser(doc).Parse(doc);
-            }
-            catch(InternalParseException e)
-            {
-                throw new ParseException(new Uri(uri), e);
-            }
-            ret.Uri = new Uri(uri);
+            using var sgmlReader = new SgmlReader { DocType = "HTML", IgnoreDtd = false, InputStream = reader };
+            sgmlReader.WhitespaceHandling = WhitespaceHandling.None;
+            sgmlReader.CaseFolding = CaseFolding.ToLower;
+            var doc = XDocument.Load(sgmlReader);
+
+            Thread ret = GetThreadParser(doc).Parse(doc);
             return ret;
         }
     }

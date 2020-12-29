@@ -1,14 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Drawing;
+using System.IO;
 using System.Linq;
-using System.Text;
+using System.Net;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using System.Drawing;
-using System.Net;
-using System.Diagnostics;
 
 namespace TVTComment.Model.ChatCollectService
 {
@@ -64,7 +65,6 @@ namespace TVTComment.Model.ChatCollectService
             }
         }
 
-        protected readonly Color chatColor;
         protected readonly TimeSpan resCollectInterval, threadSearchInterval;
         protected readonly NichanUtils.INichanThreadSelector threadSelector;
 
@@ -95,10 +95,13 @@ namespace TVTComment.Model.ChatCollectService
         /// <param name="resCollectInterval">レスを集める間隔 1秒未満にしても1秒になる</param>
         /// <param name="threadSearchInterval">レスを集めるスレッドのリストを更新する間隔 <paramref name="resCollectInterval"/>未満にしても同じ間隔になる</param>
         /// <param name="threadSelector">レスを集めるスレッドを決める<seealso cref="NichanUtils.INichanThreadSelector"/></param>
-        public NichanChatCollectService(ChatCollectServiceEntry.IChatCollectServiceEntry serviceEntry,Color chatColor,TimeSpan resCollectInterval,TimeSpan threadSearchInterval,NichanUtils.INichanThreadSelector threadSelector):base(TimeSpan.FromSeconds(10))
+        public NichanChatCollectService(
+            ChatCollectServiceEntry.IChatCollectServiceEntry serviceEntry,
+            TimeSpan resCollectInterval, TimeSpan threadSearchInterval,
+            NichanUtils.INichanThreadSelector threadSelector
+        ):base(TimeSpan.FromSeconds(10))
         {
             ServiceEntry = serviceEntry;
-            this.chatColor = chatColor;
 
             if (resCollectInterval < TimeSpan.FromSeconds(1))
                 resCollectInterval = TimeSpan.FromSeconds(1);
@@ -161,8 +164,10 @@ namespace TVTComment.Model.ChatCollectService
                             {
                                 elem.ReplaceWith("\n");
                             }
-                            chats.Enqueue(new Chat(thread.Res[resIdx].Date.Value, thread.Res[resIdx].Text.Value, Chat.PositionType.Normal, Chat.SizeType.Normal,
-                                chatColor.IsEmpty ? Color.White : chatColor, thread.Res[resIdx].UserId, thread.Res[resIdx].Number));
+                            chats.Enqueue(new Chat(
+                                thread.Res[resIdx].Date.Value, thread.Res[resIdx].Text.Value, Chat.PositionType.Normal, Chat.SizeType.Normal,
+                                Color.White, thread.Res[resIdx].UserId, thread.Res[resIdx].Number
+                            ));
                         }
 
                         var pairValue = pair.Value;
@@ -253,26 +258,45 @@ namespace TVTComment.Model.ChatCollectService
     {
         protected override string TypeName => "2chHTML";
 
+        private static readonly HttpClient httpClient = new HttpClient();
+
         public HTMLNichanChatCollectService(
             ChatCollectServiceEntry.IChatCollectServiceEntry serviceEntry,
-            Color chatColor,
             TimeSpan resCollectInterval,
             TimeSpan threadSearchInterval,
             NichanUtils.INichanThreadSelector threadSelector
-        ) : base(serviceEntry, chatColor, resCollectInterval, threadSearchInterval, threadSelector)
+        ) : base(serviceEntry, resCollectInterval, threadSearchInterval, threadSelector)
         {
         }
 
         protected override async Task<Nichan.Thread> GetThread(string url)
         {
+            string response;
             try
             {
-                return Nichan.ThreadParser.ParseFromUri(url);
+                response = await httpClient.GetStringAsync(url).ConfigureAwait(false);
             }
-            catch(WebException e)
+            catch (HttpRequestException e)
             {
-                throw new ChatCollectException($"サーバーとの通信でエラーが発生しました\n\n{e}", e);
+                if (e.StatusCode == null)
+                    throw new ChatCollectException($"サーバーとの通信でエラーが発生しました\nURL: {url}", e);
+                else
+                    throw new ChatCollectException($"サーバーからエラーが返されました\nURL: {url}\nHTTPステータスコード: {e.StatusCode}", e);
             }
+
+            using var textReader = new StringReader(response);
+            Nichan.Thread thread;
+            try
+            {
+                thread = Nichan.ThreadParser.ParseFromStream(textReader);
+            }
+            catch(Nichan.ThreadParserException e)
+            {
+                throw new ChatCollectException($"対応していないHTMLのドキュメント構造です\nURL: {url}", e);
+            }
+            thread.Uri = new Uri(url);
+
+            return thread;
         }
     }
 
@@ -282,12 +306,11 @@ namespace TVTComment.Model.ChatCollectService
 
         public DATNichanChatCollectService(
             ChatCollectServiceEntry.IChatCollectServiceEntry serviceEntry,
-            Color chatColor,
             TimeSpan resCollectInterval,
             TimeSpan threadSearchInterval,
             NichanUtils.INichanThreadSelector threadSelector,
             Nichan.ApiClient nichanApiClient
-        ) : base(serviceEntry, chatColor, resCollectInterval, threadSearchInterval, threadSelector)
+        ) : base(serviceEntry, resCollectInterval, threadSearchInterval, threadSelector)
         {
             this.apiClient = nichanApiClient;
         }

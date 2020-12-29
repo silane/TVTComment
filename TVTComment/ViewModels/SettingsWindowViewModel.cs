@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Input;
+﻿using ObservableUtils;
 using Prism.Commands;
-using Prism.Mvvm;
 using Prism.Interactivity.InteractionRequest;
-using ObservableUtils;
+using Prism.Mvvm;
+using System;
+using System.Linq;
+using System.Windows.Input;
 
 namespace TVTComment.ViewModels
 {
@@ -20,9 +17,12 @@ namespace TVTComment.ViewModels
         public ObservableValue<string> NiconicoPassword { get; } = new ObservableValue<string>();
         public ObservableValue<string> NichanResCollectInterval { get; } = new ObservableValue<string>();
         public ObservableValue<string> NichanThreadSearchInterval { get; } = new ObservableValue<string>();
-        public ObservableValue<System.Drawing.Color> NichanChatColor { get; } = new ObservableValue<System.Drawing.Color>();
-        public ObservableValue<string> NichanHmKey { get; } = new ObservableValue<string>();
-        public ObservableValue<string> NichanAppKey { get; } = new ObservableValue<string>();
+        public ObservableValue<string> NichanApiHmKey { get; } = new ObservableValue<string>();
+        public ObservableValue<string> NichanApiAppKey { get; } = new ObservableValue<string>();
+        public ObservableValue<string> NichanApiAuthUserAgent { get; } = new ObservableValue<string>();
+        public ObservableValue<string> NichanApiAuthX2chUA { get; } = new ObservableValue<string>();
+        public ObservableValue<string> NichanApiUserAgent { get; } = new ObservableValue<string>();
+        public ObservableValue<string> NichanPastCollectServiceBackTime { get; } = new ObservableValue<string>();
 
         public Model.ChatService.NichanChatService.BoardInfo SelectedNichanBoard { get; set; }
 
@@ -73,9 +73,12 @@ namespace TVTComment.ViewModels
                           TimeSpan.FromSeconds(uint.Parse(NichanResCollectInterval.Value)),
                           TimeSpan.FromSeconds(uint.Parse(NichanThreadSearchInterval.Value)));
                       
-                      nichan.SetChatColor(NichanChatColor.Value);
+                      nichan.SetApiParams(
+                          NichanApiHmKey.Value, NichanApiAppKey.Value, nichan.GochanApiUserId, nichan.GochanApiPassword,
+                          NichanApiAuthUserAgent.Value, NichanApiAuthX2chUA.Value, NichanApiUserAgent.Value
+                      );
 
-                      nichan.SetApiParams(NichanHmKey.Value, NichanAppKey.Value, nichan.UserId, nichan.Password);
+                      nichan.SetPastCollectServiceBackTime(TimeSpan.FromMinutes(double.Parse(NichanPastCollectServiceBackTime.Value)));
 
                       syncNichanSettings();
                   }
@@ -102,9 +105,12 @@ namespace TVTComment.ViewModels
         {
             NichanResCollectInterval.Value = nichan.ResCollectInterval.TotalSeconds.ToString();
             NichanThreadSearchInterval.Value = nichan.ThreadSearchInterval.TotalSeconds.ToString();
-            NichanChatColor.Value = nichan.ChatColor;
-            NichanHmKey.Value = nichan.HmKey;
-            NichanAppKey.Value = nichan.AppKey;
+            NichanApiHmKey.Value = nichan.GochanApiHmKey;
+            NichanApiAppKey.Value = nichan.GochanApiAppKey;
+            NichanApiAuthUserAgent.Value = nichan.GochanApiAuthUserAgent;
+            NichanApiAuthX2chUA.Value = nichan.GochanApiAuthX2UA;
+            NichanApiUserAgent.Value = nichan.GochanApiUserAgent;
+            NichanPastCollectServiceBackTime.Value = nichan.PastCollectServiceBackTime.TotalMinutes.ToString();
         }
     }
 }

@@ -6,6 +6,7 @@
         xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
         xmlns:prism="http://prismlibrary.com/"
         xmlns:local="clr-namespace:TVTComment.Views"
+        xmlns:converters="clr-namespace:TVTComment.Views.Converters"
         xmlns:behaviors="clr-namespace:TVTComment.Views.Behaviors"
         mc:Ignorable="d"
         prism:ViewModelLocator.AutoWireViewModel="True"
@@ -16,13 +17,14 @@
             <behaviors:DisposeDataContextAction/>
         </i:EventTrigger>
     </i:Interaction.Triggers>
-    
+
     <Window.Resources>
         <Style TargetType="{x:Type Button}">
             <Setter Property="Margin" Value="4"/>
         </Style>
+        <converters:ColorToSolidColorBrushConverter x:Key="ColorConverter"/>
     </Window.Resources>
-    
+
     <Grid VerticalAlignment="Stretch">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="auto"/>
@@ -56,6 +58,35 @@
                     </GroupBox>
                     <GroupBox Header="改変">
                         <StackPanel>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Button Command="{Binding AddSetColorRuleCommand}" Grid.Column="0">
+                                    色変更
+                                </Button>
+                                <Button Grid.Column="1" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="1*"/>
+                                            <ColumnDefinition Width="10*"/>
+                                            <ColumnDefinition Width="1*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="1*"/>
+                                            <RowDefinition Height="10*"/>
+                                            <RowDefinition Height="1*"/>
+                                        </Grid.RowDefinitions>
+                                        <Rectangle Grid.Column="1" Grid.Row="1" Fill="{Binding SetColorRuleColor.Value,Converter={StaticResource ColorConverter},Mode=OneWay}"/>
+                                    </Grid>
+                                    <i:Interaction.Triggers>
+                                        <i:EventTrigger EventName="Click">
+                                            <behaviors:ShowColorDialogAction Color="{Binding SetColorRuleColor.Value,Mode=TwoWay}"/>
+                                        </i:EventTrigger>
+                                    </i:Interaction.Triggers>
+                                </Button>
+                            </Grid>
                             <Button Command="{Binding AddRandomizeColorRuleCommand}">色ランダム化</Button>
                             <Button Command="{Binding AddSmallOnMultiLineRuleCommand}" VerticalContentAlignment="Center">
                                 <TextBlock VerticalAlignment="Center">
@@ -79,7 +110,7 @@
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
                                         <ItemsControl ItemsSource="{Binding ChatModRule.TargetChatCollectServiceEntries}" DisplayMemberPath="Name" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled">
-                                           
+
                                         </ItemsControl>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
