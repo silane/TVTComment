@@ -34,7 +34,10 @@ namespace TVTComment.Model.ChatCollectServiceEntry
         {
             if (creationOption != null && !(creationOption is ChatCollectServiceCreationOption))
                 throw new ArgumentException($"Type of {nameof(creationOption)} must be {nameof(NewNiconicoJikkyouChatCollectServiceEntry)}.{nameof(ChatCollectServiceCreationOption)}", nameof(creationOption));
-            return new ChatCollectService.NewNiconicoJikkyouChatCollectService(this, this.liveIdResolver, session.Value);
+            var session = this.session.Value;
+            if (session == null)
+                throw new ChatCollectServiceCreationException("ニコニコ生放送にはニコニコへのログインが必要です");
+            return new ChatCollectService.NewNiconicoJikkyouChatCollectService(this, this.liveIdResolver, session);
         }
     }
 }
