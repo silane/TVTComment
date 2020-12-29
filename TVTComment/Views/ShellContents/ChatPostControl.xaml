@@ -90,7 +90,7 @@
                 </ComboBox.ItemsSource>
             </ComboBox>
             <GridSplitter HorizontalAlignment="Stretch" Grid.Column="1"/>
-            <TextBox Name="PostTextBox" Text="{Binding PostText.Value,UpdateSourceTrigger=PropertyChanged}" ToolTip="コメント (Alt+Enterで改行)" AcceptsReturn="True" Grid.Column="2">
+            <TextBox Name="PostTextBox" Text="{Binding PostText.Value,UpdateSourceTrigger=PropertyChanged,Delay=1}" ToolTip="コメント (Alt+Enterで改行)" AcceptsReturn="True" Grid.Column="2">
                 <i:Interaction.Triggers>
                     <behaviors:ReturnKeyTextBoxTrigger>
                         <i:InvokeCommandAction Command="{Binding PostCommand}"/>
