@@ -22,6 +22,7 @@ namespace TVTComment.Model.ChatService
         //private ObservableValue<Dictionary<uint, int>> jkIdTable = new ObservableValue<Dictionary<uint, int>>();
         private ObservableValue<NiconicoUtils.NiconicoLoginSession> loginSession = new ObservableValue<NiconicoUtils.NiconicoLoginSession>();
 
+        private NiconicoUtils.JkIdResolver jkIdResolver;
         private NiconicoUtils.LiveIdResolver liveIdResolver;
         private NiconicoChatServiceSettings settings;
 
@@ -41,6 +42,7 @@ namespace TVTComment.Model.ChatService
         )
         {
             this.settings = settings;
+            this.jkIdResolver = new NiconicoUtils.JkIdResolver(channelDatabase, new NiconicoUtils.JkIdTable(jikkyouIdTableFilePath));
             this.liveIdResolver = new NiconicoUtils.LiveIdResolver(channelDatabase, new NiconicoUtils.LiveIdTable(liveIdTableFilePath));
 
             try
@@ -55,6 +57,7 @@ namespace TVTComment.Model.ChatService
             ChatCollectServiceEntries = new ChatCollectServiceEntry.IChatCollectServiceEntry[] {
                 new ChatCollectServiceEntry.NewNiconicoJikkyouChatCollectServiceEntry(this, this.liveIdResolver, this.loginSession),
                 new ChatCollectServiceEntry.NiconicoLiveChatCollectServiceEntry(this, this.loginSession),
+                new ChatCollectServiceEntry.TsukumijimaJikkyoApiChatCollectServiceEntry(this, this.jkIdResolver),
             };
             ChatTrendServiceEntries = new IChatTrendServiceEntry[0];
         }
