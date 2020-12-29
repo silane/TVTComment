@@ -253,6 +253,8 @@ namespace TVTComment.ViewModels
                     model.ChatCollectServiceModule.AddService(item.ServiceEntry, new Model.ChatCollectServiceEntry.NewNiconicoJikkyouChatCollectServiceEntry.ChatCollectServiceCreationOption());
                 else if (item.ServiceEntry is Model.ChatCollectServiceEntry.NewUnOfficialNiconicoLogChatCollectServiceEntry)
                     model.ChatCollectServiceModule.AddService(item.ServiceEntry, new Model.ChatCollectServiceEntry.NewUnOfficialNiconicoLogChatCollectServiceEntry.ChatCollectServiceCreationOption());
+                else if (item.ServiceEntry is Model.ChatCollectServiceEntry.PastNichanChatCollectServiceEntry)
+                    model.ChatCollectServiceModule.AddService(item.ServiceEntry, null);
                 else if (
                     item.ServiceEntry is Model.ChatCollectServiceEntry.NichanChatCollectServiceEntry ||
                     item.ServiceEntry is Model.ChatCollectServiceEntry.FileChatCollectServiceEntry ||
