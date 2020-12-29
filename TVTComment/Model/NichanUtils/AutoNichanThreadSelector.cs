@@ -15,9 +15,9 @@ namespace TVTComment.Model.NichanUtils
             this.threadResolver = threadResolver;
         }
 
-        public IEnumerable<string> Get(ChannelInfo channel,DateTime time)
+        public IEnumerable<string> Get(ChannelInfo channel, DateTime time)
         {
-            MatchingThread matchingThread = threadResolver.Resolve(channel.NetworkId, channel.ServiceId);
+            MatchingThread matchingThread = threadResolver.Resolve(channel);
             if (matchingThread == null)
                 return new string[0];
 

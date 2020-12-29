@@ -13,7 +13,7 @@ namespace TVTComment.Model.NichanUtils
 
         public string Get(ChannelInfo channel, DateTime time)
         {
-            MatchingThread matchingThread = this.threadResolver.Resolve(channel.NetworkId, channel.ServiceId);
+            MatchingThread matchingThread = this.threadResolver.Resolve(channel);
             if (matchingThread == null)
                 return "";
 
