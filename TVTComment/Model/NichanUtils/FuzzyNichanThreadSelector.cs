@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace TVTComment.Model.NichanUtils
 {
@@ -45,7 +44,7 @@ namespace TVTComment.Model.NichanUtils
             ThreadTitleExample = normalizeThreadTitle(threadTitleExample);
         }
 
-        public IEnumerable<string> Get(ChannelInfo channel,DateTime time)
+        public async Task<IEnumerable<string>> Get(ChannelInfo channel,DateTime time)
         {
             Nichan.Board board = Nichan.BoardParser.ParseFromUri(BoardUri.ToString());
 

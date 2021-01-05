@@ -129,7 +129,7 @@ namespace TVTComment.Model.ChatCollectService
                         i = 0;
                         if (currentChannel != null && currentTime != null)
                         {
-                            IEnumerable<string> threadUris = threadSelector.Get(currentChannel, currentTime.Value);
+                            IEnumerable<string> threadUris = await threadSelector.Get(currentChannel, currentTime.Value);
 
                             lock (this.threads)
                             {

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace TVTComment.Model.NichanUtils
 {
-    class AutoNichanThreadSelector:INichanThreadSelector
+    class AutoNichanThreadSelector : INichanThreadSelector
     {
         private ThreadResolver threadResolver;
 
@@ -15,7 +15,7 @@ namespace TVTComment.Model.NichanUtils
             this.threadResolver = threadResolver;
         }
 
-        public IEnumerable<string> Get(ChannelInfo channel, DateTime time)
+        public async Task<IEnumerable<string>> Get(ChannelInfo channel, DateTime time)
         {
             MatchingThread matchingThread = threadResolver.Resolve(channel);
             if (matchingThread == null)

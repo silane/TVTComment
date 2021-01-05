@@ -17,7 +17,7 @@ namespace TVTComment.Model.NichanUtils
             Keywords = keywords.Select(x=>x.ToLower().Normalize(NormalizationForm.FormKD));
         }
 
-        public IEnumerable<string> Get(ChannelInfo channel, DateTime time)
+        public async Task<IEnumerable<string>> Get(ChannelInfo channel, DateTime time)
         {
             Nichan.Board board = Nichan.BoardParser.ParseFromUri(BoardUri.ToString());
 
