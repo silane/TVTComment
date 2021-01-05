@@ -1,13 +1,18 @@
 ﻿using Prism.Commands;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net.Http;
+using System.Text;
 using System.Windows.Input;
 
 namespace TVTComment.ViewModels.ChatCollectServiceCreationOptionControl
 {
     class NichanChatCollectServiceCreationOptionControlViewModel : ChatCollectServiceCreationOptionControlViewModel
     {
+        private static readonly HttpClient httpClient = new HttpClient();
+
         public override event EventHandler Finished;
 
         public ICommand OkCommand { get; }
@@ -49,7 +54,7 @@ namespace TVTComment.ViewModels.ChatCollectServiceCreationOptionControl
             RefreshThreadsCommand = new DelegateCommand(RefreshThreads);
         }
 
-    public override Model.ChatCollectServiceEntry.IChatCollectServiceCreationOption GetChatCollectServiceCreationOption()
+        public override Model.ChatCollectServiceEntry.IChatCollectServiceCreationOption GetChatCollectServiceCreationOption()
         {
             switch (Method)
             {
@@ -69,11 +74,26 @@ namespace TVTComment.ViewModels.ChatCollectServiceCreationOptionControl
             }
         }
 
-        private void RefreshThreads()
+        private async void RefreshThreads()
         {
-            if (SelectedBoard == null) return;
-            Nichan.Board board = Nichan.BoardParser.ParseFromUri(SelectedBoard.Uri.ToString());
-            Threads = board.Threads;
+            if (this.SelectedBoard == null) return;
+            string boardUri = this.SelectedBoard.Uri.ToString();
+            var uri = new Uri(boardUri);
+            string boardHost = $"{uri.Scheme}://{uri.Host}";
+            string boardName = uri.Segments[1];
+            if (boardName.EndsWith('/'))
+                boardName = boardName[..^1];
+
+            byte[] subjectBytes = await httpClient.GetByteArrayAsync($"{boardHost}/{boardName}/subject.txt");
+            string subject = Encoding.GetEncoding(932).GetString(subjectBytes);
+
+            using var textReader = new StringReader(subject);
+            List<Nichan.Thread> threadsInBoard = (await Nichan.SubjecttxtParser.ParseFromStream(textReader)).ToList();
+
+            foreach (var thread in threadsInBoard)
+                thread.Uri = new Uri($"{boardHost}/test/read.cgi/{boardName}/{thread.Name}/l50");
+
+            this.Threads = threadsInBoard;
         }
     }
 }

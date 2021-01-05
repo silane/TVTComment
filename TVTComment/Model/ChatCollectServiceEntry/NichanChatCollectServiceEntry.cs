@@ -76,11 +76,11 @@ namespace TVTComment.Model.ChatCollectServiceEntry
 
             NichanUtils.INichanThreadSelector selector=null;
             if (co.Method == ChatCollectServiceCreationOption.ThreadSelectMethod.Fixed)
-                selector = new NichanUtils.FixedNichanThreadSelector(new string[1] { co.Uri.ToString() });
+                selector = new NichanUtils.FixedNichanThreadSelector(new string[] { co.Uri.ToString() });
             else if (co.Method == ChatCollectServiceCreationOption.ThreadSelectMethod.Keyword)
-                selector = new NichanUtils.KeywordNichanThreadSelector(co.Uri,co.Keywords);
+                selector = new NichanUtils.KeywordNichanThreadSelector(co.Uri.ToString(),co.Keywords);
             else if (co.Method == ChatCollectServiceCreationOption.ThreadSelectMethod.Fuzzy)
-                selector = new NichanUtils.FuzzyNichanThreadSelector(co.Uri, co.Title);
+                selector = new NichanUtils.FuzzyNichanThreadSelector(co.Uri.ToString(), co.Title);
             else if (co.Method == ChatCollectServiceCreationOption.ThreadSelectMethod.Auto)
                 selector = new NichanUtils.AutoNichanThreadSelector(threadResolver);
             else
