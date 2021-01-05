@@ -165,7 +165,8 @@ namespace Nichan
         }
 
         /// <summary>
-        /// スレッドのHTMLを格納した<see cref="TextReader"/>からスレッドを解析
+        /// スレッドのHTMLを格納した<see cref="TextReader"/>からスレッドを解析。
+        /// ただし<see cref="Thread.Uri"/>および<see cref="Thread.Name"/>はnull。
         /// </summary>
         /// <exception cref="ThreadParserException">解析エラーの場合</exception>
         public static Thread ParseFromStream(TextReader reader)

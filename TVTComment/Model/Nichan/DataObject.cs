@@ -16,6 +16,13 @@ namespace Nichan
     public class Thread
     {
         public Uri Uri { get; set; }
+        /// <summary>
+        /// 例: "1608373013"
+        /// </summary>
+        public string Name { get; set; }
+        /// <summary>
+        /// 例: "【NicoJK】 TVTest実況表示プラグインについて語るスレ その6 【TvtComment】"
+        /// </summary>
         public string Title { get; set; }
         public int ResCount { get; set; }
         public List<Res> Res { get; set; } = new List<Res>();

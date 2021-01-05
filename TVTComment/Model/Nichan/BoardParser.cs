@@ -32,22 +32,29 @@ namespace Nichan
             try
             {
                 var ret = new Board();
-                string baseUri = doc.XPathSelectElement(@"/html/head/base").Attribute("href").Value;
+                Uri baseUri = new Uri(docUri, doc.XPathSelectElement(@"/html/head/base").Attribute("href").Value);
 
                 foreach (XElement elem in doc.XPathSelectElements(@"/html/body/div[2]/small/a"))
                 {
                     var thread = new Thread();
+
                     string str = elem.Value;
                     int idx = str.IndexOf(' ') + 1;
                     int idx2 = str.LastIndexOf(' ');
                     thread.Title = str.Substring(idx, idx2 - idx);
-                    thread.Uri = new Uri(docUri, baseUri);
-                    thread.Uri = new Uri(thread.Uri, elem.Attribute("href").Value);
+
+                    string href = elem.Attribute("href").Value;
+                    thread.Uri = new Uri(baseUri, href);
+                    idx = href.IndexOf('/');
+                    thread.Name = href[..idx];
+
                     thread.ResCount = int.Parse(str.Substring(idx2 + 2, str.LastIndexOf(')') - idx2 - 2));
+
                     ret.Threads.Add(thread);
                 }
                 return ret;
-            }catch(NullReferenceException e)
+            }
+            catch(NullReferenceException e)
             {
                 throw new BoardParserException(null, e);
             }

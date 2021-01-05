@@ -110,6 +110,7 @@ namespace TVTComment.Model.ChatCollectService
 
             bool leaped = time < this.lastTime || time > this.lastTime + this.continuousCallLimit;
             var lastTime = !leaped ? this.lastTime : time - TimeSpan.FromSeconds(1);
+            // TODO: 録画の再生を一時停止すると時刻が数秒巻き戻ることがある。するとコメントが2重で表示される。
             lock(this.threadList)
             {
                 return this.threadList.SelectMany(x => x.Res).Where(
@@ -211,6 +212,7 @@ namespace TVTComment.Model.ChatCollectService
             if (datResponse != null)
             {
                 ret = new Nichan.Thread();
+                ret.Name = thread;
                 var datParser = new Nichan.DatParser();
                 datParser.Feed(datResponse);
 
@@ -254,7 +256,6 @@ namespace TVTComment.Model.ChatCollectService
         /// <see cref="collectChatTask"/>を<see cref="Task.Wait"/>した時に出た<see cref="AggregateException"/>を適切な例外に変換して投げなおす。
         /// 例外を投げなければタスクがキャンセルされたことによる例外だったということ。
         /// </summary>
-        /// <param name="e"></param>
         private static void collectChatTaskExceptionHandler(AggregateException e)
         {
             if (e.InnerExceptions.All(x => x is OperationCanceledException))

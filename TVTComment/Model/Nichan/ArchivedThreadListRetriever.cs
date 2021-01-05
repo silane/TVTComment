@@ -139,7 +139,9 @@ namespace Nichan
                         if (threadUrl == "" || threadTitle == "" || resCount == 0)
                             continue;
 
-                        threadList.Add((threadId, new Thread() { Uri = new Uri(new Uri(url), threadUrl), Title = threadTitle, ResCount = resCount }));
+                        threadList.Add((threadId, new Thread() {
+                            Uri = new Uri(new Uri(url), threadUrl), Name = threadId.ToString(), Title = threadTitle, ResCount = resCount,
+                        }));
                     }
 
                     this.threadListCache.Add(url, threadList);
