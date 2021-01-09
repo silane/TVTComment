@@ -94,6 +94,7 @@
                                     行以上のコメントsmall化
                                 </TextBlock>
                             </Button>
+                            <Button Command="{Binding AddRemoveAnchorCommand}">アンカー削除</Button>
                         </StackPanel>
                     </GroupBox>
                 </StackPanel>
