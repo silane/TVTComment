@@ -170,6 +170,9 @@ namespace TVTComment.Model
                     case "RemoveAnchor":
                         entry.ChatModRule = new ChatModRules.RemoveAnchorChatModRule(targetServices);
                         break;
+                    case "RemoveUrl":
+                        entry.ChatModRule = new ChatModRules.RemoveUrlChatModRule(targetServices);
+                        break;
                     case "SetColor":
                         string[] splited = entity.Expression.Split(',');
                         byte[] components = splited.Length == 4
@@ -222,6 +225,8 @@ namespace TVTComment.Model
                 }
                 else if (x.ChatModRule is ChatModRules.RemoveAnchorChatModRule)
                     entity.Type = "RemoveAnchor";
+                else if (x.ChatModRule is ChatModRules.RemoveUrlChatModRule)
+                    entity.Type = "RemoveUrl";
                 else if(x.ChatModRule is ChatModRules.SetColorChatModRule)
                 {
                     entity.Type = "SetColor";

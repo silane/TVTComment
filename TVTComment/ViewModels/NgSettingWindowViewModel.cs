@@ -82,6 +82,7 @@ namespace TVTComment.ViewModels
         public ICommand AddRandomizeColorRuleCommand { get; private set; }
         public ICommand AddSmallOnMultiLineRuleCommand { get; private set; }
         public ICommand AddRemoveAnchorCommand { get; private set; }
+        public ICommand AddRemoveUrlCommand { get; private set; }
         public ICommand AddSetColorRuleCommand { get; private set; }
         public ICommand RemoveRuleCommand { get; private set; }
 
@@ -141,6 +142,11 @@ namespace TVTComment.ViewModels
             AddRemoveAnchorCommand = new DelegateCommand(() =>
             {
                 model.ChatModule.AddChatModRule(new Model.ChatModRules.RemoveAnchorChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value)));
+            });
+
+            AddRemoveUrlCommand = new DelegateCommand(() =>
+            {
+                model.ChatModule.AddChatModRule(new Model.ChatModRules.RemoveUrlChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value)));
             });
 
             AddSetColorRuleCommand = new DelegateCommand(() =>
