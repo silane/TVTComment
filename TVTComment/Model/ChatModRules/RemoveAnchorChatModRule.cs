@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace TVTComment.Model.ChatModRules
@@ -17,13 +18,15 @@ namespace TVTComment.Model.ChatModRules
 
         public bool Modify(Chat chat)
         {
-            var match = AnchorPattern.Match(chat.Text);
-            if (!match.Success)
+            var matches = AnchorPattern.Matches(chat.Text);
+            if (matches.Count == 0)
             {
                 return false;
             }
 
-            var newText = chat.Text.Replace(match.Value, "").Trim();
+            var newText = matches
+                .Aggregate(chat.Text, (s, match) => s.Replace(match.Value, string.Empty))
+                .Trim();
             chat.SetText(newText);
 
             return true;
