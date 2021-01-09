@@ -176,6 +176,9 @@ namespace TVTComment.Model
                     case "RenderEmotionAsComment":
                         entry.ChatModRule = new ChatModRules.RenderEmotionAsCommentChatModRule(targetServices);
                         break;
+                    case "RenderInfoAsComment":
+                        entry.ChatModRule = new ChatModRules.RenderInfoAsCommentChatModRule(targetServices);
+                        break;
                     case "SetColor":
                         string[] splited = entity.Expression.Split(',');
                         byte[] components = splited.Length == 4
@@ -232,6 +235,8 @@ namespace TVTComment.Model
                     entity.Type = "RemoveUrl";
                 else if (x.ChatModRule is ChatModRules.RenderEmotionAsCommentChatModRule)
                     entity.Type = "RenderEmotionAsComment";
+                else if (x.ChatModRule is ChatModRules.RenderInfoAsCommentChatModRule)
+                    entity.Type = "RenderInfoAsComment";
                 else if(x.ChatModRule is ChatModRules.SetColorChatModRule)
                 {
                     entity.Type = "SetColor";
