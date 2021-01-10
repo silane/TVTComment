@@ -10,7 +10,6 @@ namespace TVTComment.Model.ChatService
     {
         public string UserId { get; set; } = "";
         public string Password { get; set; } = "";
-        public UnOfficialNiconicoLogSettings UnOfficialNiconicoLog { get; set; } = new UnOfficialNiconicoLogSettings();
     }
 
     class NiconicoChatService : IChatService
