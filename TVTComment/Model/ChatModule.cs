@@ -60,7 +60,7 @@ namespace TVTComment.Model
             }));
 
             collectServiceModule.NewChatProduced += collectServiceModule_NewChatProduced;
-            
+
             loadSettings();
         }
 
@@ -167,6 +167,18 @@ namespace TVTComment.Model
                             lineCount=2;
                         entry.ChatModRule = new ChatModRules.SmallOnMultiLineChatModRule(targetServices,lineCount);
                         break;
+                    case "RemoveAnchor":
+                        entry.ChatModRule = new ChatModRules.RemoveAnchorChatModRule(targetServices);
+                        break;
+                    case "RemoveUrl":
+                        entry.ChatModRule = new ChatModRules.RemoveUrlChatModRule(targetServices);
+                        break;
+                    case "RenderEmotionAsComment":
+                        entry.ChatModRule = new ChatModRules.RenderEmotionAsCommentChatModRule(targetServices);
+                        break;
+                    case "RenderInfoAsComment":
+                        entry.ChatModRule = new ChatModRules.RenderInfoAsCommentChatModRule(targetServices);
+                        break;
                     case "SetColor":
                         string[] splited = entity.Expression.Split(',');
                         byte[] components = splited.Length == 4
@@ -217,6 +229,14 @@ namespace TVTComment.Model
                     entity.Type = "SmallOnMultiLine";
                     entity.Expression = ((ChatModRules.SmallOnMultiLineChatModRule)x.ChatModRule).LineCount.ToString();
                 }
+                else if (x.ChatModRule is ChatModRules.RemoveAnchorChatModRule)
+                    entity.Type = "RemoveAnchor";
+                else if (x.ChatModRule is ChatModRules.RemoveUrlChatModRule)
+                    entity.Type = "RemoveUrl";
+                else if (x.ChatModRule is ChatModRules.RenderEmotionAsCommentChatModRule)
+                    entity.Type = "RenderEmotionAsComment";
+                else if (x.ChatModRule is ChatModRules.RenderInfoAsCommentChatModRule)
+                    entity.Type = "RenderInfoAsComment";
                 else if(x.ChatModRule is ChatModRules.SetColorChatModRule)
                 {
                     entity.Type = "SetColor";

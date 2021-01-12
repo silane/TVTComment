@@ -94,6 +94,10 @@
                                     行以上のコメントsmall化
                                 </TextBlock>
                             </Button>
+                            <Button Command="{Binding AddRemoveAnchorCommand}">アンカー削除</Button>
+                            <Button Command="{Binding AddRemoveUrlCommand}">URL 削除</Button>
+                            <Button Command="{Binding AddRenderEmotionAsCommentCommand}">/emotion をコメントとして描画</Button>
+                            <Button Command="{Binding AddRenderInfoAsCommentCommand}">/info をコメントとして描画</Button>
                         </StackPanel>
                     </GroupBox>
                 </StackPanel>
