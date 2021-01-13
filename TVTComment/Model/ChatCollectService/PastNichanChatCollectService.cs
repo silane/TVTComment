@@ -211,8 +211,7 @@ namespace TVTComment.Model.ChatCollectService
 
             if (datResponse != null)
             {
-                ret = new Nichan.Thread();
-                ret.Name = thread;
+                ret = new Nichan.Thread() { Name = thread };
                 var datParser = new Nichan.DatParser();
                 datParser.Feed(datResponse);
 

@@ -68,23 +68,19 @@ namespace TVTComment.Model.ChatCollectServiceEntry
 
         public ChatCollectService.IChatCollectService GetNewService(IChatCollectServiceCreationOption creationOption)
         {
-            creationOption = creationOption ?? new ChatCollectServiceCreationOption(ChatCollectServiceCreationOption.ThreadSelectMethod.Auto, null, null,null);
+            creationOption ??= new ChatCollectServiceCreationOption(ChatCollectServiceCreationOption.ThreadSelectMethod.Auto, null, null,null);
 
-            ChatCollectServiceCreationOption co = creationOption as ChatCollectServiceCreationOption;
-            if (co==null)
+            if (creationOption is not ChatCollectServiceCreationOption co)
                 throw new ArgumentException($"Type of {nameof(creationOption)} must be {nameof(NichanChatCollectServiceEntry)}.{nameof(ChatCollectServiceCreationOption)}", nameof(creationOption));
 
-            NichanUtils.INichanThreadSelector selector=null;
-            if (co.Method == ChatCollectServiceCreationOption.ThreadSelectMethod.Fixed)
-                selector = new NichanUtils.FixedNichanThreadSelector(new string[] { co.Uri.ToString() });
-            else if (co.Method == ChatCollectServiceCreationOption.ThreadSelectMethod.Keyword)
-                selector = new NichanUtils.KeywordNichanThreadSelector(co.Uri.ToString(),co.Keywords);
-            else if (co.Method == ChatCollectServiceCreationOption.ThreadSelectMethod.Fuzzy)
-                selector = new NichanUtils.FuzzyNichanThreadSelector(co.Uri.ToString(), co.Title);
-            else if (co.Method == ChatCollectServiceCreationOption.ThreadSelectMethod.Auto)
-                selector = new NichanUtils.AutoNichanThreadSelector(threadResolver);
-            else
-                throw new ArgumentOutOfRangeException("((ChatCollectServiceCreationOption)creationOption).Method is out of range");
+            NichanUtils.INichanThreadSelector selector = co.Method switch
+            {
+                ChatCollectServiceCreationOption.ThreadSelectMethod.Fixed => new NichanUtils.FixedNichanThreadSelector(new string[] { co.Uri.ToString() }),
+                ChatCollectServiceCreationOption.ThreadSelectMethod.Keyword => new NichanUtils.KeywordNichanThreadSelector(co.Uri.ToString(), co.Keywords),
+                ChatCollectServiceCreationOption.ThreadSelectMethod.Fuzzy => new NichanUtils.FuzzyNichanThreadSelector(co.Uri.ToString(), co.Title),
+                ChatCollectServiceCreationOption.ThreadSelectMethod.Auto => new NichanUtils.AutoNichanThreadSelector(threadResolver),
+                _ => throw new ArgumentOutOfRangeException(nameof(creationOption), "((ChatCollectServiceCreationOption)creationOption).Method is out of range"),
+            };
 
             return this.getNichanChatCollectService(selector);
         }
@@ -125,7 +121,7 @@ namespace TVTComment.Model.ChatCollectServiceEntry
         public override string Name => "2chDAT";
         public override string Description => "2chのレスをAPIでのDAT取得により表示";
 
-        private ObservableValue<Nichan.ApiClient> apiClient;
+        private readonly ObservableValue<Nichan.ApiClient> apiClient;
 
         public DATNichanChatCollectServiceEntry(
             ChatService.NichanChatService owner,

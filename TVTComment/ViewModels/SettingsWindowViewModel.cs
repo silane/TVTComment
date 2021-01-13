@@ -8,7 +8,7 @@ using System.Windows.Input;
 
 namespace TVTComment.ViewModels
 {
-    class SettingsWindowViewModel:BindableBase
+    class SettingsWindowViewModel : BindableBase
     {
         public ObservableValue<int> ChatPreserveCount { get; }
         public ShellContents.DefaultChatCollectServicesViewModel DefaultChatCollectServices { get; }
@@ -33,15 +33,13 @@ namespace TVTComment.ViewModels
 
         public SettingsWindowContents.ChatCollectServiceCreationPresetSettingControlViewModel ChatCollectServiceCreationPresetSettingControlViewModel { get; }
 
-        private Model.TVTComment model;
-        private Model.ChatService.NiconicoChatService niconico;
-        private Model.ChatService.NichanChatService nichan;
+        private readonly Model.ChatService.NiconicoChatService niconico;
+        private readonly Model.ChatService.NichanChatService nichan;
 
         public SettingsWindowViewModel(Model.TVTComment model)
         {
             DefaultChatCollectServices = new ShellContents.DefaultChatCollectServicesViewModel(model);
 
-            this.model = model;
             niconico = model.ChatServices.OfType<Model.ChatService.NiconicoChatService>().Single();
             nichan = model.ChatServices.OfType<Model.ChatService.NichanChatService>().Single();
 

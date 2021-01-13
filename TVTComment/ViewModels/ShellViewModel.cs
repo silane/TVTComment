@@ -43,7 +43,7 @@ namespace TVTComment.ViewModels
                 set { SetProperty(ref this.height, value); }
             }
         }
-        private Rect windowPosition = new Rect();
+        private readonly Rect windowPosition = new Rect();
         public Rect WindowPosition => this.windowPosition;
 
         private Model.ChannelInfo selectedChannel;
@@ -57,7 +57,7 @@ namespace TVTComment.ViewModels
             model.ChatCollectServiceCreationPresetModule?.CreationPresets.MakeOneWayLinkedCollection(x => new ShellContents.ChatCollectServiceAddListItemViewModel(x.ServiceEntry, x))
             .ObservableConcat(model.ChatServices.SelectMany(x => x.ChatCollectServiceEntries).Select(x => new ShellContents.ChatCollectServiceAddListItemViewModel(x, null)));
 
-        private IObservable<long> updateTimer = Observable.Interval(new TimeSpan(0, 0, 5), new SynchronizationContextScheduler(SynchronizationContext.Current));
+        private readonly IObservable<long> updateTimer = Observable.Interval(new TimeSpan(0, 0, 5), new SynchronizationContextScheduler(SynchronizationContext.Current));
         public DisposableReadOnlyObservableCollection<ShellContents.ChatCollectServiceViewModel> ChatCollectServices =>
             model.ChatCollectServiceModule?.RegisteredServices?.MakeOneWayLinkedCollection(x => new ShellContents.ChatCollectServiceViewModel(x, updateTimer.Select(_ => new System.Reactive.Unit())));
 
@@ -105,8 +105,8 @@ namespace TVTComment.ViewModels
 
         private bool initialized = false;
         private bool disposed = false;
-        private CompositeDisposable disposables = new CompositeDisposable();
-        private Model.TVTComment model;
+        private readonly CompositeDisposable disposables = new CompositeDisposable();
+        private readonly Model.TVTComment model;
 
         public ShellViewModel(Model.TVTComment model)
         {
@@ -134,7 +134,7 @@ namespace TVTComment.ViewModels
             }
             catch (Exception e)
             {
-                AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = $"初期化で予期しないエラーが発生しました\n{e.ToString()}" });
+                AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = $"初期化で予期しないエラーが発生しました\n{e}" });
                 CloseApplication();
                 return;
             }
@@ -244,29 +244,27 @@ namespace TVTComment.ViewModels
             }
             else
             {
-                if (item.ServiceEntry is Model.ChatCollectServiceEntry.NiconicoChatCollectServiceEntry)
-                    model.ChatCollectServiceModule.AddService(item.ServiceEntry, new Model.ChatCollectServiceEntry.NiconicoChatCollectServiceEntry.ChatCollectServiceCreationOption());
-                else if (item.ServiceEntry is Model.ChatCollectServiceEntry.NiconicoLogChatCollectServiceEntry)
-                    model.ChatCollectServiceModule.AddService(item.ServiceEntry, new Model.ChatCollectServiceEntry.NiconicoLogChatCollectServiceEntry.ChatCollectServiceCreationOption());
-                else if (item.ServiceEntry is Model.ChatCollectServiceEntry.NewNiconicoJikkyouChatCollectServiceEntry)
-                    model.ChatCollectServiceModule.AddService(item.ServiceEntry, new Model.ChatCollectServiceEntry.NewNiconicoJikkyouChatCollectServiceEntry.ChatCollectServiceCreationOption());
-                else if (item.ServiceEntry is Model.ChatCollectServiceEntry.PastNichanChatCollectServiceEntry)
-                    model.ChatCollectServiceModule.AddService(item.ServiceEntry, null);
-                else if (item.ServiceEntry is Model.ChatCollectServiceEntry.TsukumijimaJikkyoApiChatCollectServiceEntry)
-                    model.ChatCollectServiceModule.AddService(item.ServiceEntry, null);
-                else if (
-                    item.ServiceEntry is Model.ChatCollectServiceEntry.NichanChatCollectServiceEntry ||
-                    item.ServiceEntry is Model.ChatCollectServiceEntry.FileChatCollectServiceEntry ||
-                    item.ServiceEntry is Model.ChatCollectServiceEntry.NiconicoLiveChatCollectServiceEntry
-                )
+                switch(item.ServiceEntry)
                 {
-                    var confirmation = await ChatCollectServiceCreationSettingsRequest.RaiseAsync(
-                        new Notifications.ChatCollectServiceCreationSettingsConfirmation { Title = "コメント元設定", TargetChatCollectServiceEntry = item.ServiceEntry });
-                    if (!confirmation.Confirmed) return;
-                    model.ChatCollectServiceModule.AddService(item.ServiceEntry, confirmation.ChatCollectServiceCreationOption);
+                    case Model.ChatCollectServiceEntry.NiconicoChatCollectServiceEntry _:
+                    case Model.ChatCollectServiceEntry.NiconicoLogChatCollectServiceEntry _:
+                    case Model.ChatCollectServiceEntry.NewNiconicoJikkyouChatCollectServiceEntry _:
+                    case Model.ChatCollectServiceEntry.PastNichanChatCollectServiceEntry _:
+                    case Model.ChatCollectServiceEntry.TsukumijimaJikkyoApiChatCollectServiceEntry _:
+                        model.ChatCollectServiceModule.AddService(item.ServiceEntry, null);
+                        break;
+                    case Model.ChatCollectServiceEntry.NichanChatCollectServiceEntry _:
+                    case Model.ChatCollectServiceEntry.FileChatCollectServiceEntry _:
+                    case Model.ChatCollectServiceEntry.NiconicoLiveChatCollectServiceEntry _:
+                        var confirmation = await ChatCollectServiceCreationSettingsRequest.RaiseAsync(
+                            new Notifications.ChatCollectServiceCreationSettingsConfirmation { Title = "コメント元設定", TargetChatCollectServiceEntry = item.ServiceEntry }
+                        );
+                        if (!confirmation.Confirmed) return;
+                        model.ChatCollectServiceModule.AddService(item.ServiceEntry, confirmation.ChatCollectServiceCreationOption);
+                        break;
+                    default:
+                        throw new Exception("Unknown ChatCollectServiceEntry: " + item.ServiceEntry.GetType().ToString());
                 }
-                else
-                    throw new Exception("Unknown ChatCollectServiceEntry: " + item.GetType().ToString());
             }
         }
 
