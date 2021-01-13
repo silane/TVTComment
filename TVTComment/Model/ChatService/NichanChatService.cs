@@ -19,8 +19,8 @@ namespace TVTComment.Model.ChatService
             public string UserAgent { get; set; } = "Mozilla/5.0 (compatible; JaneStyle/3.80..)";
         }
 
-        public TimeSpan ThreadUpdateInterval { get; set; } = new TimeSpan(0, 0, 15);
-        public TimeSpan ThreadListUpdateInterval { get; set; } = new TimeSpan(0, 0, 1);
+        public TimeSpan ThreadUpdateInterval { get; set; } = new TimeSpan(0, 0, 1);
+        public TimeSpan ThreadListUpdateInterval { get; set; } = new TimeSpan(0, 0, 15);
         public TimeSpan PastCollectServiceBackTime { get; set; } = new TimeSpan(3, 0, 0);
         public GochanApiSettings GochanApi { get; set; } = new GochanApiSettings();
 
