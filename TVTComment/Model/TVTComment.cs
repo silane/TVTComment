@@ -116,7 +116,8 @@ namespace TVTComment.Model
                     Settings.Niconico, this.channelDatabase, Path.Combine(baseDir, "niconicojikkyouids.txt"), Path.Combine(baseDir, "niconicoliveids.txt")
                 ),
                 new ChatService.NichanChatService(Settings.Nichan, this.channelDatabase, Path.Combine(baseDir, "2chthreads.txt")),
-                new ChatService.FileChatService()
+                new ChatService.FileChatService(),
+                new ChatService.TwitterChatService(Settings.Twitter)
             });
 
             var chatCollectServiceEntryIds = this.ChatServices.SelectMany(x => x.ChatCollectServiceEntries).Select(x => x.Id);
