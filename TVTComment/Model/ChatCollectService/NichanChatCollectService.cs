@@ -117,76 +117,72 @@ namespace TVTComment.Model.ChatCollectService
 
         private async Task resCollectLoop(CancellationToken cancellationToken)
         {
-            int webExceptionCount = 0;
             int count = (int)(threadSearchInterval.TotalMilliseconds / resCollectInterval.TotalMilliseconds);
             for (int i = count; !cancellationToken.IsCancellationRequested; i++)
             {
-                try
+                if (i == count)
                 {
-                    if (i == count)
+                    //スレ一覧を更新する
+                    i = 0;
+                    if (currentChannel != null && currentTime != null)
                     {
-                        //スレ一覧を更新する
-                        i = 0;
-                        if (currentChannel != null && currentTime != null)
+                        IEnumerable<string> threadUris;
+                        try
                         {
-                            IEnumerable<string> threadUris = threadSelector.Get(currentChannel, currentTime.Value);
-
-                            lock (this.threads)
-                            {
-                                //新しいスレ一覧に入ってないものを消す
-                                foreach (string uri in this.threads.Keys.Where(x => !threadUris.Contains(x)).ToList())
-                                    this.threads.Remove(uri);
-                                //新しいスレ一覧で追加されたものを追加する
-                                foreach (string uri in threadUris)
-                                    if (!this.threads.ContainsKey(uri))
-                                        this.threads.Add(uri, (null, 0));
-                            }
+                            threadUris = await threadSelector.Get(currentChannel, currentTime.Value);
                         }
-                        else
-                            i = count - 1;//取得対象のチャンネル、時刻が設定されていなければやり直す
-                    }
-
-                    KeyValuePair<string, (string Title, int ResCount)>[] copiedThreads;
-                    lock(this.threads)
-                        copiedThreads = this.threads.ToArray();
-                    foreach (var pair in copiedThreads.ToArray())
-                    {
-                        Nichan.Thread thread = await this.GetThread(pair.Key);
-                        int fromResIdx = thread.Res.FindLastIndex(res => res.Number <= pair.Value.ResCount);
-                        fromResIdx++;
-
-                        for (int resIdx = fromResIdx; resIdx < thread.Res.Count; resIdx++)
+                        catch(HttpRequestException e)
                         {
-                            //1001から先のレスは返さない
-                            if (thread.Res[resIdx].Number > 1000)
-                                break;
-                            foreach (XElement elem in thread.Res[resIdx].Text.Elements("br").ToArray())
-                            {
-                                elem.ReplaceWith("\n");
-                            }
-                            chats.Enqueue(new Chat(
-                                thread.Res[resIdx].Date.Value, thread.Res[resIdx].Text.Value, Chat.PositionType.Normal, Chat.SizeType.Normal,
-                                Color.White, thread.Res[resIdx].UserId, thread.Res[resIdx].Number
-                            ));
+                            throw new ChatCollectException($"収集スレッドリストの更新処理でHTTPエラーが発生しました\n{e}", e);
                         }
 
-                        var pairValue = pair.Value;
-                        if (pair.Value.ResCount == 0)
-                            pairValue.Title = thread.Title;
-                        pairValue.ResCount = thread.Res[^1].Number;
-                        lock(this.threads)
-                            this.threads[pair.Key] = pairValue;
+                        lock (this.threads)
+                        {
+                            //新しいスレ一覧に入ってないものを消す
+                            foreach (string uri in this.threads.Keys.Where(x => !threadUris.Contains(x)).ToList())
+                                this.threads.Remove(uri);
+                            //新しいスレ一覧で追加されたものを追加する
+                            foreach (string uri in threadUris)
+                                if (!this.threads.ContainsKey(uri))
+                                    this.threads.Add(uri, (null, 0));
+                        }
                     }
-                    await Task.Delay(1000, cancellationToken);
-                }
-                catch(WebException)
-                {
-                    webExceptionCount++;
-                    if (webExceptionCount < 10)
-                        continue;
                     else
-                        throw;
+                        i = count - 1;//取得対象のチャンネル、時刻が設定されていなければやり直す
                 }
+
+                KeyValuePair<string, (string Title, int ResCount)>[] copiedThreads;
+                lock(this.threads)
+                    copiedThreads = this.threads.ToArray();
+                foreach (var pair in copiedThreads.ToArray())
+                {
+                    Nichan.Thread thread = await this.GetThread(pair.Key);
+                    int fromResIdx = thread.Res.FindLastIndex(res => res.Number <= pair.Value.ResCount);
+                    fromResIdx++;
+
+                    for (int resIdx = fromResIdx; resIdx < thread.Res.Count; resIdx++)
+                    {
+                        //1001から先のレスは返さない
+                        if (thread.Res[resIdx].Number > 1000)
+                            break;
+                        foreach (XElement elem in thread.Res[resIdx].Text.Elements("br").ToArray())
+                        {
+                            elem.ReplaceWith("\n");
+                        }
+                        chats.Enqueue(new Chat(
+                            thread.Res[resIdx].Date.Value, thread.Res[resIdx].Text.Value, Chat.PositionType.Normal, Chat.SizeType.Normal,
+                            Color.White, thread.Res[resIdx].UserId, thread.Res[resIdx].Number
+                        ));
+                    }
+
+                    var pairValue = pair.Value;
+                    if (pair.Value.ResCount == 0)
+                        pairValue.Title = thread.Title;
+                    pairValue.ResCount = thread.Res[^1].Number;
+                    lock(this.threads)
+                        this.threads[pair.Key] = pairValue;
+                }
+                await Task.Delay(1000, cancellationToken);
             }
 
         }

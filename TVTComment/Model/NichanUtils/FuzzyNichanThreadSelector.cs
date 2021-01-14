@@ -1,14 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
-using System.Threading.Tasks;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace TVTComment.Model.NichanUtils
 {
-    class FuzzyNichanThreadSelector:INichanThreadSelector
+    class FuzzyNichanThreadSelector : INichanThreadSelector
     {
+        private static readonly HttpClient httpClient = new HttpClient();
+        private readonly string boardHost;
+        private readonly string boardName;
+
         private static int getLevenshteinDistance(string str1,string str2)
         {
             int[,] d = new int[str1.Length+1, str2.Length+1];
@@ -37,26 +43,38 @@ namespace TVTComment.Model.NichanUtils
             return title;
         }
 
-        public Uri BoardUri { get; }
+        public string BoardUri { get; }
         public string ThreadTitleExample { get; }
-        public FuzzyNichanThreadSelector(Uri boardUri,string threadTitleExample)
+        public FuzzyNichanThreadSelector(string boardUri, string threadTitleExample)
         {
-            BoardUri = boardUri;
+            var uri = new Uri(boardUri);
+            this.boardHost = $"{uri.Scheme}://{uri.Host}";
+            this.boardName = uri.Segments[1];
+            if (this.boardName.EndsWith('/'))
+                this.boardName = this.boardName[..^1];
+
+            this.BoardUri = boardUri;
             ThreadTitleExample = normalizeThreadTitle(threadTitleExample);
         }
 
-        public IEnumerable<string> Get(ChannelInfo channel,DateTime time)
+        public async Task<IEnumerable<string>> Get(ChannelInfo channel,DateTime time)
         {
-            Nichan.Board board = Nichan.BoardParser.ParseFromUri(BoardUri.ToString());
+            byte[] subjectBytes = await httpClient.GetByteArrayAsync($"{this.boardHost}/{this.boardName}/subject.txt");
+            string subject = Encoding.GetEncoding(932).GetString(subjectBytes);
 
-            var threads = board.Threads.Where(x => x.ResCount <= 1000).
+            using var textReader = new StringReader(subject);
+            IEnumerable<Nichan.Thread> threadsInBoard = await Nichan.SubjecttxtParser.ParseFromStream(textReader);
+
+            var threads = threadsInBoard.Where(x => x.ResCount <= 1000).
                 Select(x => new { Thread = x, EditDistance = getLevenshteinDistance(normalizeThreadTitle(x.Title), ThreadTitleExample) }).
-                OrderBy(x => x.EditDistance);
-
-            if (threads.FirstOrDefault() == null) return new string[0];
+                OrderBy(x => x.EditDistance).ToArray();
 
             //レーベンシュタイン距離の最小値から距離10以内のものを選択
-            return threads.TakeWhile(x => x.EditDistance <= threads.First().EditDistance+10).Take(3).Select(x => x.Thread.Uri.ToString());
+            return threads.TakeWhile(
+                x => x.EditDistance <= threads.First().EditDistance + 10
+            ).Take(3).Select(
+                x => $"{this.boardHost}/test/read.cgi/{this.boardName}/{x.Thread.Name}/l50"
+            );
         }
     }
 }

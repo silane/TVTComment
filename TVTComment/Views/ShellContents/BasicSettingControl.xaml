@@ -70,7 +70,7 @@
             <Slider
                 Name="WindowFontSizeSlider"
                 Value="{Binding WindowFontSize.Value}"
-                Minimum="8" Maximum="20" LargeChange="1" SmallChange="1"
+                Minimum="8" Maximum="40" LargeChange="1" SmallChange="1"
                 TickPlacement="BottomRight" VerticalAlignment="Center"/>
         </DockPanel>
 

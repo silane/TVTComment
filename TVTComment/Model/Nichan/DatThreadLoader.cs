@@ -42,8 +42,9 @@ namespace Nichan
         public string ThreadId { get; }
 
         /// <summary>
-        /// 取得結果の<see cref="Nichan.Thread"/><br/>
-        /// <see cref="Update(ApiClient)"/>を呼ぶ度に変更があれば更新されていく
+        /// 取得結果の<see cref="Nichan.Thread"/>。<br/>
+        /// <see cref="Update(ApiClient)"/>を呼ぶ度に変更があれば更新されていく。
+        /// ただし<see cref="Thread.Uri"/>はnull。
         /// </summary>
         public Thread Thread { get; } = new Thread();
         /// <summary>
@@ -59,6 +60,7 @@ namespace Nichan
         public DatThreadLoader(string serverName, string boardName, string threadId)
         {
             (this.ServerName, this.BoardName, this.ThreadId) = (serverName, boardName, threadId);
+            this.Thread.Name = threadId;
         }
 
         /// <summary>
