@@ -11,7 +11,7 @@
         xmlns:settingswindowcontents="clr-namespace:TVTComment.Views.SettingsWindowContents"
         mc:Ignorable="d"
         prism:ViewModelLocator.AutoWireViewModel="True"
-        Title="SettingWindow" Height="500" Width="400" WindowStyle="ToolWindow">
+        Title="SettingWindow" Height="550" Width="400" WindowStyle="ToolWindow">
 
     <Window.Resources>
         <converters:ColorToStringConverter x:Key="StringToColorConverter"/>
@@ -28,7 +28,7 @@
             <prism:PopupWindowAction IsModal="True" CenterOverAssociatedObject="True"/>
         </prism:InteractionRequestTrigger>
     </i:Interaction.Triggers>
-    
+
     <TabControl>
         <TabItem Header="一般">
             <StackPanel Orientation="Vertical">
@@ -46,15 +46,15 @@
                             </ItemsControl>
                         </GroupBox>
                         <GroupBox Header="録画番組視聴時">
-                        <ItemsControl ItemsSource="{Binding DefaultChatCollectServices.RecordServices}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal">
-                                        <CheckBox IsChecked="{Binding IsEnabled}" Content="{Binding ServiceEntry.Name}" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
+                            <ItemsControl ItemsSource="{Binding DefaultChatCollectServices.RecordServices}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <CheckBox IsChecked="{Binding IsEnabled}" Content="{Binding ServiceEntry.Name}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
                         </GroupBox>
                     </StackPanel>
                 </GroupBox>
@@ -67,7 +67,7 @@
                         <ColumnDefinition Width="auto"/>
                         <ColumnDefinition/>
                     </Grid.ColumnDefinitions>
-                    <Label Grid.Column="0" Grid.Row="0">コメントログ数 (0で無限): </Label>
+                    <Label Grid.Column="0" Grid.Row="0">コメントログ数 (0で無限):</Label>
                     <TextBox Text="{Binding ChatPreserveCount.Value}" Grid.Column="1" Grid.Row="0" InputMethod.IsInputMethodSuspended="True" VerticalAlignment="Center"/>
                 </Grid>
             </StackPanel>
@@ -97,6 +97,54 @@
                 </GroupBox>
                 <GroupBox Header="新実況生放送ID設定" Grid.Row="2">
                     <TextBlock>設定はniconicoliveids.txtから行ってください<LineBreak/>設定変更はプラグイン再起動後に適用されます</TextBlock>
+                </GroupBox>
+            </Grid>
+        </TabItem>
+        <TabItem Header="Twitter実況">
+            <Grid local:Grid.Shape="*:auto,auto,*">
+                <TextBlock Text="設定後は現在使用中のコメント元をいったん無効にして再度有効にする必要があります" TextWrapping="Wrap" Grid.Row="0"/>
+                <GroupBox Header="TwitterAPI設定" Grid.Row="1">
+                    <StackPanel>
+                        <Grid local:Grid.Shape="auto,*:auto,auto,auto,auto,auto">
+                            <Label Content="API key" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="0"/>
+                            <TextBox Text="{Binding TwitterApiKey.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="0"/>
+                            <Label Content="API secret" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="1"/>
+                            <TextBox Text="{Binding TwitterApiSecret.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="1"/>
+                        </Grid>
+                        <Button Content="適用" Command="{Binding ApplyTwitterApisCommand}" HorizontalAlignment="Right"/>
+                    </StackPanel>
+                </GroupBox>
+                <GroupBox Header="アカウントにログイン" Grid.Row="2">
+                    <Grid local:Grid.Shape="*:auto,auto,auto,auto,*,auto">
+                        <TextBlock Text="Twitterアカウントにログインするには以下の2つの方法のいずれかを利用する必要があります" TextWrapping="Wrap"  Grid.Row="0"/>
+                        <GroupBox Header="Access tokenでログイン" Grid.Row="1">
+                            <StackPanel>
+                                <TextBlock Text="PINを利用してログインした場合、ログイン後にAccessToken及びSecretはPINログインにて取得した値に上書きされますので注意してください" TextWrapping="Wrap" Foreground="Red"/>
+                                <Grid local:Grid.Shape="auto,*:auto,auto,auto,auto,auto">
+                                    <Label Content="Access token" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="1"/>
+                                    <TextBox Text="{Binding TwitterApiAccessKey.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="1"/>
+                                    <Label Content="Access secret" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="2"/>
+                                    <TextBox Text="{Binding TwitterApiAccessSecret.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="2"/>
+                                </Grid>
+                                <Button Content="ログイン" Command="{Binding LoginTokensTwitterCommand}"  Grid.Column="1" Grid.Row="0" HorizontalAlignment="Stretch" Margin="5,5,5,0"/>
+
+                            </StackPanel>
+                        </GroupBox>
+                        <TextBlock Text="or"  TextWrapping="Wrap" HorizontalAlignment="Center" Grid.Row="2"/>
+                        <GroupBox Header="OAuthのPINでログイン" Grid.Row="3">
+                            <StackPanel>
+                                <Button Content="Twitter OAuth画面を開く" Command="{Binding OpenTwitter}" Margin="0,5,0,0"/>
+                                <Grid local:Grid.Shape="auto,*:auto,auto,auto,auto,auto" Margin="0,10,0,0">
+                                    <TextBlock Text="PINコード：" Grid.Column="0" Grid.Row="0" />
+                                    <TextBox Text="{Binding TwitterPinCode.Value}" Grid.Column="1" Grid.Row="0" />
+                                </Grid>
+                                <Button Content="PINでログイン" Command="{Binding EnterTwitter}" Margin="0,10,0,0"/>
+                             </StackPanel>
+                        </GroupBox>
+                        <TextBlock Text="{Binding TwitterStatus.Value}" HorizontalAlignment="Right" Grid.Row="4" Height="57"/>
+                        <Button Content="ログアウト" Command="{Binding LogoutTwitterCommand}" Grid.Row="5" HorizontalAlignment="Stretch" Margin="5,5,5,0" VerticalAlignment="Top"/>
+
+                    </Grid>
                 </GroupBox>
             </Grid>
         </TabItem>
