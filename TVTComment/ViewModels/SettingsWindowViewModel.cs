@@ -3,8 +3,10 @@ using Prism.Commands;
 using Prism.Interactivity.InteractionRequest;
 using Prism.Mvvm;
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows.Input;
+using TVTComment.Model.TwitterUtils;
 
 namespace TVTComment.ViewModels
 {
@@ -23,12 +25,24 @@ namespace TVTComment.ViewModels
         public ObservableValue<string> NichanApiAuthX2chUA { get; } = new ObservableValue<string>();
         public ObservableValue<string> NichanApiUserAgent { get; } = new ObservableValue<string>();
         public ObservableValue<string> NichanPastCollectServiceBackTime { get; } = new ObservableValue<string>();
+        public ObservableValue<string> TwitterApiKey { get; } = new ObservableValue<string>();
+        public ObservableValue<string> TwitterApiSecret { get; } = new ObservableValue<string>();
+        public ObservableValue<string> TwitterApiAccessKey { get; } = new ObservableValue<string>();
+        public ObservableValue<string> TwitterApiAccessSecret { get; } = new ObservableValue<string>();
+        public ObservableValue<string> TwitterStatus { get; } = new ObservableValue<string>();
+        public ObservableValue<string> TwitterPinCode { get; } = new ObservableValue<string>();
 
         public Model.ChatService.NichanChatService.BoardInfo SelectedNichanBoard { get; set; }
 
         public ICommand LoginNiconicoCommand { get; }
         public ICommand ApplyNichanSettingsCommand { get; }
-        
+        public ICommand ApplyTwitterApisCommand { get; }
+        public ICommand LoginTokensTwitterCommand { get; }
+        public ICommand LogoutTokensTwitterCommand { get; }
+        public ICommand LogoutTwitterCommand { get; }
+        public ICommand OpenTwitter { get; }
+        public ICommand EnterTwitter { get; }
+
         public InteractionRequest<Notification> AlertRequest { get; } = new InteractionRequest<Notification>();
 
         public SettingsWindowContents.ChatCollectServiceCreationPresetSettingControlViewModel ChatCollectServiceCreationPresetSettingControlViewModel { get; }
@@ -36,6 +50,9 @@ namespace TVTComment.ViewModels
         private Model.TVTComment model;
         private Model.ChatService.NiconicoChatService niconico;
         private Model.ChatService.NichanChatService nichan;
+        private Model.ChatService.TwitterChatService twitter;
+
+        private TwitterAuthentication twitterAuthentication;
 
         public SettingsWindowViewModel(Model.TVTComment model)
         {
@@ -44,6 +61,7 @@ namespace TVTComment.ViewModels
             this.model = model;
             niconico = model.ChatServices.OfType<Model.ChatService.NiconicoChatService>().Single();
             nichan = model.ChatServices.OfType<Model.ChatService.NichanChatService>().Single();
+            twitter = model.ChatServices.OfType<Model.ChatService.TwitterChatService>().Single();
 
             ChatCollectServiceCreationPresetSettingControlViewModel = new SettingsWindowContents.ChatCollectServiceCreationPresetSettingControlViewModel(model);
 
@@ -88,10 +106,69 @@ namespace TVTComment.ViewModels
                   }
               });
 
+            ApplyTwitterApisCommand = new DelegateCommand(() => {
+                twitter.ApiKey = TwitterApiKey.Value;
+                twitter.ApiSecret = TwitterApiSecret.Value;
+                AlertRequest.Raise(new Notification { Title = "TVTCommentメッセージ", Content = "適用しました" });
+            });
+
+            LoginTokensTwitterCommand = new DelegateCommand(async () => {
+                try
+                {
+                    await twitter.LoginAccessTokens(TwitterApiKey.Value, TwitterApiSecret.Value, TwitterApiAccessKey.Value, TwitterApiAccessSecret.Value);
+                    syncTwitterStatus();
+                }
+                catch (Exception e)
+                {
+                    AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = e.Message });
+                }
+            });
+
+
+            OpenTwitter = new DelegateCommand(() => {
+                try
+                {
+                    twitterAuthentication = twitter.InitOAuthPin(twitter.ApiKey, twitter.ApiSecret);
+                    var oAuthSession = twitterAuthentication.AuthSession;
+                    Process.Start(new ProcessStartInfo(oAuthSession.AuthorizeUri.ToString()) { UseShellExecute = true });
+                }
+                catch (Exception e)
+                {
+                    AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = e.Message });
+                }
+            });
+
+            EnterTwitter = new DelegateCommand(async () => {
+                try
+                {
+                    await twitter.LoginOAuthPin(twitterAuthentication, TwitterPinCode.Value);
+                    syncTwitterStatus();
+                }
+                catch (Exception e)
+                {
+                    AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = e.Message });
+                }
+
+            });
+
+            LogoutTwitterCommand = new DelegateCommand(() =>
+            {
+                try
+                {
+                    twitter.Logout();
+                }
+                catch (Exception e)
+                {
+                    AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = e.Message });
+                }
+                syncTwitterStatus();
+            });
+
             ChatPreserveCount = model.ChatModule.ChatPreserveCount;
 
             syncNiconicoUserStatus();
             syncNichanSettings();
+            syncTwitterStatus();
         }
 
         private void syncNiconicoUserStatus()
@@ -111,6 +188,15 @@ namespace TVTComment.ViewModels
             NichanApiAuthX2chUA.Value = nichan.GochanApiAuthX2UA;
             NichanApiUserAgent.Value = nichan.GochanApiUserAgent;
             NichanPastCollectServiceBackTime.Value = nichan.PastCollectServiceBackTime.TotalMinutes.ToString();
+        }
+
+        private void syncTwitterStatus()
+        {
+            TwitterApiKey.Value = twitter.ApiKey;
+            TwitterApiSecret.Value = twitter.ApiSecret;
+            TwitterApiAccessKey.Value = twitter.ApiAccessToken;
+            TwitterApiAccessSecret.Value = twitter.ApiAccessSecret;
+            TwitterStatus.Value = twitter.IsLoggedin ? twitter.UserName + "としてログイン中" : "未ログイン";
         }
     }
 }
