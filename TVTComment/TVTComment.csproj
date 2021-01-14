@@ -7,16 +7,10 @@
     <TargetFramework>net5.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
-<<<<<<< HEAD
     <Version>1.6.15</Version>
     <Copyright>© 2017 silane / © 2020 noriokun4649</Copyright>
     <Authors>silane edit by noriokun4649</Authors>
     <Company>silane</Company>
-=======
-    <Version>1.8.1</Version>
-    <Copyright>© 2017 silane</Copyright>
-    <Authors>silane</Authors>
->>>>>>> upstream/master
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="AttachedCommandBehavior" Version="2.0.0" />
