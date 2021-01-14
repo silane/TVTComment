@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace TVTComment.Model
+﻿namespace TVTComment.Model
 {
     class TVTCommentSettings
     {
         public ChatService.NiconicoChatServiceSettings Niconico { get; set; } = new ChatService.NiconicoChatServiceSettings();
         public ChatService.NichanChatServiceSettings Nichan { get; set; } = new ChatService.NichanChatServiceSettings();
+        public ChatService.TwitterChatServiceSettings Twitter { get; set; } = new ChatService.TwitterChatServiceSettings();
         public string[] ChatPostMailTextExamples { get; set; } = new string[0];
         public byte ChatOpacity { get; set; } = 255;
         public int ChatPreserveCount { get; set; } = 10000;
