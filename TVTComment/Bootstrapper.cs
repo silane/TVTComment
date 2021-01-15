@@ -28,6 +28,8 @@ namespace TVTComment
                 (nameof(Views.ChatCollectServiceCreationOptionControl.FileChatCollectServiceCreationOptionControl));
             this.Container.RegisterTypeForNavigation<Views.ChatCollectServiceCreationOptionControl.NiconicoLiveChatCollectServiceCreationOptionControl>
                 (nameof(Views.ChatCollectServiceCreationOptionControl.NiconicoLiveChatCollectServiceCreationOptionControl));
+            this.Container.RegisterTypeForNavigation<Views.ChatCollectServiceCreationOptionControl.TwitterLiveChatCollectServiceCreationOptionControl>
+                (nameof(Views.ChatCollectServiceCreationOptionControl.TwitterLiveChatCollectServiceCreationOptionControl));
         }
     }
 }
