@@ -128,7 +128,10 @@ namespace TVTComment.Model.ChatCollectService
                         IEnumerable<string> threadUris;
                         try
                         {
-                            threadUris = await threadSelector.Get(currentChannel, new DateTimeOffset(currentTime.Value, TimeSpan.FromHours(9)));
+                            threadUris = await threadSelector.Get(
+                                currentChannel, new DateTimeOffset(currentTime.Value, TimeSpan.FromHours(9)),
+                                cancellationToken
+                            );
                         }
                         catch(HttpRequestException e)
                         {

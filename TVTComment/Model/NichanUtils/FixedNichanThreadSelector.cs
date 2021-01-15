@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace TVTComment.Model.NichanUtils
@@ -13,7 +14,9 @@ namespace TVTComment.Model.NichanUtils
             this.Uris = uris;
         }
 
-        public async Task<IEnumerable<string>> Get(ChannelInfo channel, DateTimeOffset time)
+        public async Task<IEnumerable<string>> Get(
+            ChannelInfo channel, DateTimeOffset time, CancellationToken cancellationToken
+        )
         {
             return this.Uris;
         }

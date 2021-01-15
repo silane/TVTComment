@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace TVTComment.Model.NichanUtils
@@ -29,9 +30,9 @@ namespace TVTComment.Model.NichanUtils
             Keywords = keywords.Select(x=>x.ToLower().Normalize(NormalizationForm.FormKD));
         }
 
-        public async Task<IEnumerable<string>> Get(ChannelInfo channel, DateTimeOffset time)
+        public async Task<IEnumerable<string>> Get(ChannelInfo channel, DateTimeOffset time, CancellationToken cancellationToken)
         {
-            byte[] subjectBytes = await httpClient.GetByteArrayAsync($"{this.boardHost}/{this.boardName}/subject.txt");
+            byte[] subjectBytes = await httpClient.GetByteArrayAsync($"{this.boardHost}/{this.boardName}/subject.txt", cancellationToken);
             string subject = Encoding.GetEncoding(932).GetString(subjectBytes);
 
             using var textReader = new StringReader(subject);

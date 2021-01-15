@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace TVTComment.Model.NichanUtils
@@ -19,13 +20,17 @@ namespace TVTComment.Model.NichanUtils
             this.threadResolver = threadResolver;
         }
 
-        public async Task<IEnumerable<string>> Get(ChannelInfo channel, DateTimeOffset time)
+        public async Task<IEnumerable<string>> Get(
+            ChannelInfo channel, DateTimeOffset time, CancellationToken cancellationToken
+        )
         {
             MatchingThread matchingThread = threadResolver.Resolve(channel, false);
             if (matchingThread == null)
                 return new string[0];
 
-            IEnumerable<string> keywords = matchingThread.ThreadTitleKeywords.Select(x => x.ToLower().Normalize(NormalizationForm.FormKD));
+            IEnumerable<string> keywords = matchingThread.ThreadTitleKeywords.Select(
+                x => x.ToLower().Normalize(NormalizationForm.FormKD)
+            );
 
             string boardUri = matchingThread.BoardUri.ToString();
             var uri = new Uri(boardUri);
@@ -34,7 +39,9 @@ namespace TVTComment.Model.NichanUtils
             if (boardName.EndsWith('/'))
                 boardName = boardName[..^1];
 
-            byte[] subjectBytes = await httpClient.GetByteArrayAsync($"{boardHost}/{boardName}/subject.txt");
+            byte[] subjectBytes = await httpClient.GetByteArrayAsync(
+                $"{boardHost}/{boardName}/subject.txt", cancellationToken
+            );
             string subject = Encoding.GetEncoding(932).GetString(subjectBytes);
 
             using var textReader = new StringReader(subject);
