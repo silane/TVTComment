@@ -1,5 +1,6 @@
 ﻿using ObservableUtils;
 using System;
+using TVTComment.Model.ChatCollectService;
 using TVTComment.Model.TwitterUtils;
 
 namespace TVTComment.Model.ChatCollectServiceEntry
@@ -11,7 +12,7 @@ namespace TVTComment.Model.ChatCollectServiceEntry
             public string SearchWord { get; }
             public ChatCollectServiceCreationOption(string searchWord)
             {
-                this.SearchWord = searchWord;
+                SearchWord = searchWord;
             }
         }
 
@@ -21,7 +22,7 @@ namespace TVTComment.Model.ChatCollectServiceEntry
         public string Description => "指定した検索ワードでTwitter実況";
         public bool CanUseDefaultCreationOption => false;
 
-        private ObservableValue<TwitterAuthentication> Session;
+        private readonly ObservableValue<TwitterAuthentication> Session;
 
         public TwitterLiveChatCollectServiceEntry(ChatService.TwitterChatService Owner, ObservableValue<TwitterAuthentication> Session)
         {
@@ -29,9 +30,14 @@ namespace TVTComment.Model.ChatCollectServiceEntry
             this.Session = Session;
         }
 
-        public ChatCollectService.IChatCollectService GetNewService(IChatCollectServiceCreationOption creationOption)
+        public IChatCollectService GetNewService(IChatCollectServiceCreationOption creationOption)
         {
-            return null;
+            if (creationOption == null || !(creationOption is ChatCollectServiceCreationOption co))
+                throw new ArgumentException($"Type of {nameof(creationOption)} must be {nameof(TwitterLiveChatCollectServiceEntry)}.{nameof(ChatCollectServiceCreationOption)}", nameof(creationOption));
+            var session = Session.Value;
+            if (session == null)
+                throw new ChatCollectServiceCreationException("Twiiterリアルタイム実況にはTwitterへのログインが必要です");
+            return new TwitterLiveCollectService(this, co.SearchWord, session);
         }
     }
 }
