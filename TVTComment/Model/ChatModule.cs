@@ -188,6 +188,12 @@ namespace TVTComment.Model
                             targetServices, Color.FromArgb(components[0], components[1], components[2], components[3])
                         );
                         break;
+                    case "RemoveHashtag":
+                        entry.ChatModRule = new ChatModRules.RemoveHashtagChatModRule(targetServices);
+                        break;
+                    case "RemoveMention":
+                        entry.ChatModRule = new ChatModRules.RemoveMentionChatModRule(targetServices);
+                        break;
                     default:
                         continue;
                 }
@@ -243,6 +249,10 @@ namespace TVTComment.Model
                     Color color = ((ChatModRules.SetColorChatModRule)x.ChatModRule).Color;
                     entity.Expression = $"{color.A},{color.R},{color.G},{color.B}";
                 }
+                else if (x.ChatModRule is ChatModRules.RemoveHashtagChatModRule)
+                    entity.Type = "RemoveHashtag";
+                else if (x.ChatModRule is ChatModRules.RemoveMentionChatModRule)
+                    entity.Type = "RemoveMention";
                 else
                     throw new Exception();
                 return entity;

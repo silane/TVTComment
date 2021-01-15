@@ -83,6 +83,8 @@ namespace TVTComment.ViewModels
         public ICommand AddSmallOnMultiLineRuleCommand { get; private set; }
         public ICommand AddRemoveAnchorCommand { get; private set; }
         public ICommand AddRemoveUrlCommand { get; private set; }
+        public ICommand AddRemoveHashtagCommand { get; private set; }
+        public ICommand AddRemoveMentionCommand { get; private set; }
         public ICommand AddRenderEmotionAsCommentCommand { get; private set; }
         public ICommand AddRenderInfoAsCommentCommand { get; private set; }
         public ICommand AddSetColorRuleCommand { get; private set; }
@@ -149,6 +151,16 @@ namespace TVTComment.ViewModels
             AddRemoveUrlCommand = new DelegateCommand(() =>
             {
                 model.ChatModule.AddChatModRule(new Model.ChatModRules.RemoveUrlChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value)));
+            });
+
+            AddRemoveHashtagCommand = new DelegateCommand(() =>
+            {
+                model.ChatModule.AddChatModRule(new Model.ChatModRules.RemoveHashtagChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value)));
+            });
+
+            AddRemoveMentionCommand = new DelegateCommand(() =>
+            {
+                model.ChatModule.AddChatModRule(new Model.ChatModRules.RemoveMentionChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value)));
             });
 
             AddRenderEmotionAsCommentCommand = new DelegateCommand(() =>
