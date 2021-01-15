@@ -11,8 +11,8 @@ namespace TVTComment.ViewModels.ChatCollectServiceCreationOptionControl
 
         public string SearchWord
         {
-            get { return this.searchWord; }
-            set { SetProperty(ref this.searchWord, value); }
+            get { return searchWord; }
+            set { SetProperty(ref searchWord, value); }
         }
 
         public ICommand OkCommand { get; }
@@ -21,14 +21,14 @@ namespace TVTComment.ViewModels.ChatCollectServiceCreationOptionControl
 
         public TwitterLiveChatCollectServiceCreationOptionControlViewModel()
         {
-            this.OkCommand = new DelegateCommand(() => this.Finished(this, new EventArgs()));
+            this.OkCommand = new DelegateCommand(() => Finished(this, new EventArgs()));
         }
 
         public override IChatCollectServiceCreationOption GetChatCollectServiceCreationOption()
         {
-            if (string.IsNullOrWhiteSpace(this.searchWord))
+            if (string.IsNullOrWhiteSpace(searchWord))
                 return null;
-            return new TwitterLiveChatCollectServiceEntry.ChatCollectServiceCreationOption(this.searchWord);
+            return new TwitterLiveChatCollectServiceEntry.ChatCollectServiceCreationOption(searchWord);
         }
     }
 }

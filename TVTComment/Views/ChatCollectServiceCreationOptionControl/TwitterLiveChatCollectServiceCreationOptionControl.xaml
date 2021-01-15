@@ -15,7 +15,7 @@
     </i:Interaction.Behaviors>
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Loaded">
-            <behaviors:SetKeyboardFocusedElementAction Element="{Binding Source={x:Reference liveIdTextbox}}"/>
+            <behaviors:SetKeyboardFocusedElementAction Element="{Binding Source={x:Reference searchWordTextbox}}"/>
         </i:EventTrigger>
     </i:Interaction.Triggers>
     <Grid>
@@ -28,12 +28,12 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <Label Grid.Row="0" Grid.Column="0">キーワード:</Label>
-        <TextBox Grid.Row="0" Grid.Column="1" x:Name="searchWordTextbox" Text="{Binding SearchWord, UpdateSourceTrigger=PropertyChanged, Delay=1}" VerticalAlignment="Center">
+        <Label Grid.Row="0" Grid.Column="0">検索ワード:</Label>
+        <TextBox Grid.Row="0" Grid.Column="1" x:Name="searchWordTextbox" Text="{Binding SearchWord, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center">
             <TextBox.InputBindings>
                 <KeyBinding Key="Return" Command="{Binding OkCommand}" />
             </TextBox.InputBindings>
         </TextBox>
-        <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">Twitterで検索するキーワード。ハッシュタグなども検索可</TextBlock>
+        <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">Twitterでリアルタイムに取得するコメントを絞り込む検索ワード</TextBlock>
     </Grid>
 </UserControl>
