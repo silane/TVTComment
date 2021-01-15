@@ -258,7 +258,8 @@ namespace TVTComment.ViewModels
                 else if (
                     item.ServiceEntry is Model.ChatCollectServiceEntry.NichanChatCollectServiceEntry ||
                     item.ServiceEntry is Model.ChatCollectServiceEntry.FileChatCollectServiceEntry ||
-                    item.ServiceEntry is Model.ChatCollectServiceEntry.NiconicoLiveChatCollectServiceEntry
+                    item.ServiceEntry is Model.ChatCollectServiceEntry.NiconicoLiveChatCollectServiceEntry ||
+                    item.ServiceEntry is Model.ChatCollectServiceEntry.TwitterLiveChatCollectServiceEntry
                 )
                 {
                     var confirmation = await ChatCollectServiceCreationSettingsRequest.RaiseAsync(
