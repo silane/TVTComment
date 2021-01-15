@@ -6,6 +6,6 @@ namespace TVTComment.Model.NichanUtils
 {
     interface INichanThreadSelector
     {
-        Task<IEnumerable<string>> Get(ChannelInfo channel, DateTime time);
+        Task<IEnumerable<string>> Get(ChannelInfo channel, DateTimeOffset time);
     }
 }

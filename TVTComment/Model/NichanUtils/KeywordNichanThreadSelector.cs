@@ -29,7 +29,7 @@ namespace TVTComment.Model.NichanUtils
             Keywords = keywords.Select(x=>x.ToLower().Normalize(NormalizationForm.FormKD));
         }
 
-        public async Task<IEnumerable<string>> Get(ChannelInfo channel, DateTime time)
+        public async Task<IEnumerable<string>> Get(ChannelInfo channel, DateTimeOffset time)
         {
             byte[] subjectBytes = await httpClient.GetByteArrayAsync($"{this.boardHost}/{this.boardName}/subject.txt");
             string subject = Encoding.GetEncoding(932).GetString(subjectBytes);

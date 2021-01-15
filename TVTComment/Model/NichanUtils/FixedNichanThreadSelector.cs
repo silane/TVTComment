@@ -13,7 +13,7 @@ namespace TVTComment.Model.NichanUtils
             this.Uris = uris;
         }
 
-        public async Task<IEnumerable<string>> Get(ChannelInfo channel, DateTime time)
+        public async Task<IEnumerable<string>> Get(ChannelInfo channel, DateTimeOffset time)
         {
             return this.Uris;
         }
