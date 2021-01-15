@@ -21,7 +21,7 @@ namespace TVTComment.Model.NichanUtils
 
         public async Task<IEnumerable<string>> Get(ChannelInfo channel, DateTime time)
         {
-            MatchingThread matchingThread = threadResolver.Resolve(channel);
+            MatchingThread matchingThread = threadResolver.Resolve(channel, false);
             if (matchingThread == null)
                 return new string[0];
 
