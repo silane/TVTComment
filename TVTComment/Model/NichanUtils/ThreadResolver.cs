@@ -23,7 +23,7 @@
                 //BSとCSの間ではサービスIDが重複する可能性があるがほとんどないので割り切る
                 foreach (ChannelEntry channel in channelDatabase.GetByServiceId(serviceId))
                 {
-                    MatchingThread ret = boardDatabase.GetMatchingThreadForChannel(channel);
+                    MatchingThread ret = boardDatabase.GetMatchingThread(channel);
                     if (ret != null)
                         return ret;
                 }
@@ -34,7 +34,7 @@
                 ChannelEntry channel = channelDatabase.GetByNetworkIdAndServiceId(networkId, serviceId);//channels.txtの登録チャンネルに解決
                 if (channel == null)
                     return null;
-                return boardDatabase.GetMatchingThreadForChannel(channel);
+                return boardDatabase.GetMatchingThread(channel);
             }
         }
     }
