@@ -140,6 +140,7 @@ namespace TVTComment.Model.ChatService
         public void Logout()
         {
             twitterSession.Value.Logout();
+            twitterSession.Value = null;
             IsLoggedin = false;
             settings.ApiAccessToken = "";
             settings.ApiAccessSecret = "";
