@@ -28,30 +28,24 @@ namespace TVTComment.Model.ChatCollectService
         private readonly Task chatCollectTask;
         private readonly ConcurrentQueue<Status> statusQueue = new ConcurrentQueue<Status>();
         private readonly CancellationTokenSource cancel = new CancellationTokenSource();
+        private readonly string SearchWord;
 
 
         public TwitterLiveCollectService(IChatCollectServiceEntry serviceEntry, string searchWord, TwitterAuthentication twitter)
         {
             ServiceEntry = serviceEntry;
+            SearchWord = searchWord;
             Twitter = twitter;
             chatCollectTask = SearchStreamAsync(searchWord, cancel.Token);
         }
 
         public  string GetInformationText()
         {
-            return "";
+            return "検索ワード:" + SearchWord;
         }
 
         private async Task SearchStreamAsync(string searchWord, CancellationToken cancel)
         {
-            /*
-            var stream = Twitter.Token.Streaming.FilterAsObservable(track: searchWord).Publish();
-            stream.OfType<StatusMessage>()
-                .Subscribe((x) => {
-                    statusQueue.Enqueue(x.Status);
-                    Debug.WriteLine(x.Status.Text);});
-            disposableStream  = stream.Connect();*/
-
             await Task.Run(() =>
             {
                 foreach (var status in Twitter.Token.Streaming.Filter(track: searchWord)
@@ -61,10 +55,8 @@ namespace TVTComment.Model.ChatCollectService
                 {
                     if (cancel.IsCancellationRequested) break ;
                     statusQueue.Enqueue(status);
-                    Debug.WriteLine(status.Text);
                 }
             });
-
         }
 
         public IEnumerable<Chat> GetChats(ChannelInfo channel, DateTime time)
@@ -77,7 +69,6 @@ namespace TVTComment.Model.ChatCollectService
             {
                 throw new ChatCollectException("ストリームが切断されました");
             }
-            Debug.WriteLine(statusQueue.Count);
             var list = new List<Chat>();
             while (statusQueue.TryDequeue(out var status))
             {
