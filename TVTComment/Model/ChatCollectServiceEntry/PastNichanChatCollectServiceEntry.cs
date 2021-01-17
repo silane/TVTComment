@@ -26,9 +26,9 @@ namespace TVTComment.Model.ChatCollectServiceEntry
 
         public ChatCollectService.IChatCollectService GetNewService(IChatCollectServiceCreationOption creationOption)
         {
-            var boardSelector = new NichanUtils.AutoNichanBoardSelector(this.threadResolver);
+            var threadSelector = new NichanUtils.AutoPastNichanThreadSelector(this.threadResolver, TimeSpan.FromSeconds(15), this.backTime.Value);
             return new ChatCollectService.PastNichanChatCollectService(
-                this, boardSelector, this.backTime.Value
+                this, threadSelector, TimeSpan.FromSeconds(15)
             );
         }
 
