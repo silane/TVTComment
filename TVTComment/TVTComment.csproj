@@ -7,7 +7,7 @@
     <TargetFramework>net5.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
-    <Version>1.8.1</Version>
+    <Version>1.9.0</Version>
     <Copyright>© 2017 silane</Copyright>
     <Authors>silane</Authors>
   </PropertyGroup>
