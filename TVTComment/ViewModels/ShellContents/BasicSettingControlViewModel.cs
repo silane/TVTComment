@@ -31,7 +31,7 @@ namespace TVTComment.ViewModels.ShellContents
             this.model = model;
 
             var assembly = Assembly.GetExecutingAssembly().GetName();
-            this.Version = assembly.Version.ToString(3);
+            this.Version = assembly.Version.ToString(4);
         }
 
         public async Task Initialize()
