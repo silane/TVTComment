@@ -1,13 +1,10 @@
-﻿using System;
-using System.Text;
+﻿using ObservableUtils;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Configuration;
-using System.Collections.Specialized;
-using ObservableUtils;
-using System.Reactive.Disposables;
 using System.Drawing;
+using System.Linq;
+using System.Reactive.Disposables;
 
 namespace TVTComment.Model
 {
@@ -21,22 +18,21 @@ namespace TVTComment.Model
         public DateTime? LastAppliedTime { get; set; }
     }
 
-    class ChatModule:IDisposable
+    class ChatModule : IDisposable
     {
-        private TVTCommentSettings settings;
-        private IPCModule ipc;
-        private ChatCollectServiceModule collectServiceModule;
-        private ChannelInformationModule channelInformationModule;
-        private IEnumerable<ChatService.IChatService> chatServices;
-        private CompositeDisposable disposables = new CompositeDisposable();
+        private readonly TVTCommentSettings settings;
+        private readonly IPCModule ipc;
+        private readonly ChatCollectServiceModule collectServiceModule;
+        private readonly IEnumerable<ChatService.IChatService> chatServices;
+        private readonly CompositeDisposable disposables = new CompositeDisposable();
 
         public ObservableValue<int> ChatPreserveCount { get; } = new ObservableValue<int>();
         public ObservableValue<bool> ClearChatsOnChannelChange { get; } = new ObservableValue<bool>();
 
-        private ObservableCollection<Chat> chats = new ObservableCollection<Chat>();
+        private readonly ObservableCollection<Chat> chats = new ObservableCollection<Chat>();
         public ReadOnlyObservableCollection<Chat> Chats { get; }
 
-        private ObservableCollection<ChatModRuleEntry> chatModRules = new ObservableCollection<ChatModRuleEntry>();
+        private readonly ObservableCollection<ChatModRuleEntry> chatModRules = new ObservableCollection<ChatModRuleEntry>();
         public ReadOnlyObservableCollection<ChatModRuleEntry> ChatModRules { get; }
 
         public ChatModule(
@@ -51,7 +47,6 @@ namespace TVTComment.Model
             this.chatServices = chatServices;
             this.ipc = ipc;
             this.collectServiceModule = collectServiceModule;
-            this.channelInformationModule = channelInformationModule;
             disposables.Add(ChatPreserveCount.Subscribe(x => onChatPreserveCountChanged()));
             disposables.Add(channelInformationModule.CurrentChannel.Subscribe(x =>
             {
@@ -144,7 +139,7 @@ namespace TVTComment.Model
                 switch (entity.Type)
                 {
                     case "WordNg":
-                        entry.ChatModRule=new ChatModRules.WordNgChatModRule(targetServices, entity.Expression);
+                        entry.ChatModRule = new ChatModRules.WordNgChatModRule(targetServices, entity.Expression);
                         break;
                     case "UserNg":
                         entry.ChatModRule = new ChatModRules.UserNgChatModRule(targetServices, entity.Expression);
@@ -208,53 +203,63 @@ namespace TVTComment.Model
             this.settings.ChatModRules = chatModRules.Select(x =>
             {
                 var entity = new Serialization.ChatModRuleEntity {
-                    TargetChatCollectServiceEntries =x.ChatModRule.TargetChatCollectServiceEntries.Select(entry=>entry.Id).ToArray(),
+                    TargetChatCollectServiceEntries = x.ChatModRule.TargetChatCollectServiceEntries.Select(entry=>entry.Id).ToArray(),
                     AppliedCount = x.AppliedCount,
                     LastAppliedTime = x.LastAppliedTime
                 };
-                if (x.ChatModRule is ChatModRules.WordNgChatModRule)
+
+                switch(x.ChatModRule)
                 {
-                    entity.Type = "WordNg";
-                    entity.Expression = ((ChatModRules.WordNgChatModRule)x.ChatModRule).Word;
+                    case ChatModRules.WordNgChatModRule wordNg:
+                        entity.Type = "WordNg";
+                        entity.Expression = wordNg.Word;
+                        break;
+                    case ChatModRules.UserNgChatModRule userNg:
+                        entity.Type = "UserNg";
+                        entity.Expression = userNg.UserId;
+                        break;
+                    case ChatModRules.IroKomeNgChatModRule _:
+                        entity.Type = "IroKomeNg";
+                        break;
+                    case ChatModRules.JyougeKomeNgChatModRule _:
+                        entity.Type = "JyougeKomeNg";
+                        break;
+                    case ChatModRules.JyougeIroKomeNgChatModRule _:
+                        entity.Type = "JyougeIroKomeNg";
+                        break;
+                    case ChatModRules.RandomizeColorChatModRule _:
+                        entity.Type = "RandomizeColor";
+                        break;
+                    case ChatModRules.SmallOnMultiLineChatModRule smallOnMultiLine:
+                        entity.Type = "SmallOnMultiLine";
+                        entity.Expression = smallOnMultiLine.LineCount.ToString();
+                        break;
+                    case ChatModRules.RemoveAnchorChatModRule _:
+                        entity.Type = "RemoveAnchor";
+                        break;
+                    case ChatModRules.RemoveUrlChatModRule _:
+                        entity.Type = "RemoveUrl";
+                        break;
+                    case ChatModRules.RenderEmotionAsCommentChatModRule _:
+                        entity.Type = "RenderEmotionAsComment";
+                        break;
+                    case ChatModRules.RenderInfoAsCommentChatModRule _:
+                        entity.Type = "RenderInfoAsComment";
+                        break;
+                    case ChatModRules.RemoveHashtagChatModRule _:
+                        entity.Type = "RemoveHashtag";
+                        break;
+                    case ChatModRules.RemoveMentionChatModRule _:
+                        entity.Type = "RemoveMention";
+                        break;
+                    case ChatModRules.SetColorChatModRule setColor:
+                        entity.Type = "SetColor";
+                        Color color = setColor.Color;
+                        entity.Expression = $"{color.A},{color.R},{color.G},{color.B}";
+                        break;
+                    default:
+                        throw new Exception();
                 }
-                else if (x.ChatModRule is ChatModRules.UserNgChatModRule)
-                {
-                    entity.Type = "UserNg";
-                    entity.Expression = ((ChatModRules.UserNgChatModRule)x.ChatModRule).UserId;
-                }
-                else if (x.ChatModRule is ChatModRules.IroKomeNgChatModRule)
-                    entity.Type = "IroKomeNg";
-                else if (x.ChatModRule is ChatModRules.JyougeKomeNgChatModRule)
-                    entity.Type = "JyougeKomeNg";
-                else if (x.ChatModRule is ChatModRules.JyougeIroKomeNgChatModRule)
-                    entity.Type = "JyougeIroKomeNg";
-                else if (x.ChatModRule is ChatModRules.RandomizeColorChatModRule)
-                    entity.Type = "RandomizeColor";
-                else if (x.ChatModRule is ChatModRules.SmallOnMultiLineChatModRule)
-                {
-                    entity.Type = "SmallOnMultiLine";
-                    entity.Expression = ((ChatModRules.SmallOnMultiLineChatModRule)x.ChatModRule).LineCount.ToString();
-                }
-                else if (x.ChatModRule is ChatModRules.RemoveAnchorChatModRule)
-                    entity.Type = "RemoveAnchor";
-                else if (x.ChatModRule is ChatModRules.RemoveUrlChatModRule)
-                    entity.Type = "RemoveUrl";
-                else if (x.ChatModRule is ChatModRules.RenderEmotionAsCommentChatModRule)
-                    entity.Type = "RenderEmotionAsComment";
-                else if (x.ChatModRule is ChatModRules.RenderInfoAsCommentChatModRule)
-                    entity.Type = "RenderInfoAsComment";
-                else if(x.ChatModRule is ChatModRules.SetColorChatModRule)
-                {
-                    entity.Type = "SetColor";
-                    Color color = ((ChatModRules.SetColorChatModRule)x.ChatModRule).Color;
-                    entity.Expression = $"{color.A},{color.R},{color.G},{color.B}";
-                }
-                else if (x.ChatModRule is ChatModRules.RemoveHashtagChatModRule)
-                    entity.Type = "RemoveHashtag";
-                else if (x.ChatModRule is ChatModRules.RemoveMentionChatModRule)
-                    entity.Type = "RemoveMention";
-                else
-                    throw new Exception();
                 return entity;
             }).ToArray();
         }

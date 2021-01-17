@@ -176,6 +176,6 @@ namespace Nichan
 
         private string lastModified = "";
         private int loadedNumBytes = 0;
-        private DatParser datParser = new DatParser();
+        private readonly DatParser datParser = new DatParser();
     }
 }

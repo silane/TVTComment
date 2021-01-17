@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -30,7 +29,7 @@ namespace TVTComment.Model.ChatCollectService
 
         public override string Name => this.TypeName + this.threadSelector switch
         {
-            NichanUtils.AutoNichanThreadSelector auto => " ([自動])",
+            NichanUtils.AutoNichanThreadSelector _ => " ([自動])",
             NichanUtils.FuzzyNichanThreadSelector fuzzy => $" ([類似] {fuzzy.ThreadTitleExample})",
             NichanUtils.KeywordNichanThreadSelector keyword => $" ([キーワード] {string.Join(", ", keyword.Keywords)})",
             NichanUtils.FixedNichanThreadSelector fix => $" ([固定] {string.Join(", ", fix.Uris)})",
@@ -79,13 +78,13 @@ namespace TVTComment.Model.ChatCollectService
         private ChannelInfo currentChannel;
         private DateTime? currentTime;
 
-        private ConcurrentQueue<Chat> chats = new ConcurrentQueue<Chat>();
+        private readonly ConcurrentQueue<Chat> chats = new ConcurrentQueue<Chat>();
         /// <summary>
         /// キーはスレッドのURI
         /// </summary>
-        private SortedList<string, (string Title, int ResCount)> threads = new SortedList<string, (string, int)>();
-        private List<Chat> chatBuffer = new List<Chat>();
-        private List<(DateTime PostTime, DateTime RetrieveTime)> chatTimes = new List<(DateTime, DateTime)>();
+        private readonly SortedList<string, (string Title, int ResCount)> threads = new SortedList<string, (string, int)>();
+        private readonly List<Chat> chatBuffer = new List<Chat>();
+        private readonly List<(DateTime PostTime, DateTime RetrieveTime)> chatTimes = new List<(DateTime, DateTime)>();
 
         /// <summary>
         /// <see cref="NichanChatCollectService"/>を初期化する
@@ -129,7 +128,10 @@ namespace TVTComment.Model.ChatCollectService
                         IEnumerable<string> threadUris;
                         try
                         {
-                            threadUris = await threadSelector.Get(currentChannel, currentTime.Value);
+                            threadUris = await threadSelector.Get(
+                                currentChannel, new DateTimeOffset(currentTime.Value, TimeSpan.FromHours(9)),
+                                cancellationToken
+                            );
                         }
                         catch(HttpRequestException e)
                         {
@@ -350,7 +352,7 @@ namespace TVTComment.Model.ChatCollectService
             return threadLoader.Thread;
         }
 
-        private Nichan.ApiClient apiClient;
-        private Dictionary<(string server, string board, string thread), Nichan.DatThreadLoader> threadLoaders = new Dictionary<(string, string, string), Nichan.DatThreadLoader>();
+        private readonly Nichan.ApiClient apiClient;
+        private readonly Dictionary<(string server, string board, string thread), Nichan.DatThreadLoader> threadLoaders = new Dictionary<(string, string, string), Nichan.DatThreadLoader>();
     }
 }

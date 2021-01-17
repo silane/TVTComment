@@ -19,8 +19,8 @@ namespace TVTComment.Model.ChatService
             public string UserAgent { get; set; } = "Mozilla/5.0 (compatible; JaneStyle/3.80..)";
         }
 
-        public TimeSpan ThreadUpdateInterval { get; set; } = new TimeSpan(0, 0, 15);
-        public TimeSpan ThreadListUpdateInterval { get; set; } = new TimeSpan(0, 0, 1);
+        public TimeSpan ThreadUpdateInterval { get; set; } = new TimeSpan(0, 0, 1);
+        public TimeSpan ThreadListUpdateInterval { get; set; } = new TimeSpan(0, 0, 15);
         public TimeSpan PastCollectServiceBackTime { get; set; } = new TimeSpan(3, 0, 0);
         public GochanApiSettings GochanApi { get; set; } = new GochanApiSettings();
 
@@ -65,15 +65,15 @@ namespace TVTComment.Model.ChatService
         public TimeSpan PastCollectServiceBackTime => this.pastCollectServiceBackTime.Value;
 
         //このChatServiceに行われた設定変更が子のChatServiceEntryに伝わるようにするためにObservableValueで包む
-        private ObservableValue<TimeSpan> resCollectInterval=new ObservableValue<TimeSpan>();
-        private ObservableValue<TimeSpan> threadSearchInterval = new ObservableValue<TimeSpan>();
-        private ObservableValue<Nichan.ApiClient> nichanApiClient = new ObservableValue<Nichan.ApiClient>();
-        private ObservableValue<TimeSpan> pastCollectServiceBackTime = new ObservableValue<TimeSpan>();
+        private readonly ObservableValue<TimeSpan> resCollectInterval = new ObservableValue<TimeSpan>();
+        private readonly ObservableValue<TimeSpan> threadSearchInterval = new ObservableValue<TimeSpan>();
+        private readonly ObservableValue<Nichan.ApiClient> nichanApiClient = new ObservableValue<Nichan.ApiClient>();
+        private readonly ObservableValue<TimeSpan> pastCollectServiceBackTime = new ObservableValue<TimeSpan>();
 
-        private NichanUtils.BoardDatabase boardDatabase;
-        private NichanUtils.ThreadResolver threadResolver;
+        private readonly NichanUtils.BoardDatabase boardDatabase;
+        private readonly NichanUtils.ThreadResolver threadResolver;
 
-        private NichanChatServiceSettings settings;
+        private readonly NichanChatServiceSettings settings;
 
         public NichanChatService(
             NichanChatServiceSettings settings, ChannelDatabase channelDatabase,

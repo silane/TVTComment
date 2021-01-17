@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace TVTComment.Model.NichanUtils
@@ -57,16 +58,23 @@ namespace TVTComment.Model.NichanUtils
             ThreadTitleExample = normalizeThreadTitle(threadTitleExample);
         }
 
-        public async Task<IEnumerable<string>> Get(ChannelInfo channel,DateTime time)
+        public async Task<IEnumerable<string>> Get(
+            ChannelInfo channel, DateTimeOffset time, CancellationToken cancellationToken
+        )
         {
-            byte[] subjectBytes = await httpClient.GetByteArrayAsync($"{this.boardHost}/{this.boardName}/subject.txt");
+            byte[] subjectBytes = await httpClient.GetByteArrayAsync(
+                $"{this.boardHost}/{this.boardName}/subject.txt", cancellationToken
+            );
             string subject = Encoding.GetEncoding(932).GetString(subjectBytes);
 
             using var textReader = new StringReader(subject);
             IEnumerable<Nichan.Thread> threadsInBoard = await Nichan.SubjecttxtParser.ParseFromStream(textReader);
 
             var threads = threadsInBoard.Where(x => x.ResCount <= 1000).
-                Select(x => new { Thread = x, EditDistance = getLevenshteinDistance(normalizeThreadTitle(x.Title), ThreadTitleExample) }).
+                Select(x => new {
+                    Thread = x,
+                    EditDistance = getLevenshteinDistance(normalizeThreadTitle(x.Title), ThreadTitleExample)
+                }).
                 OrderBy(x => x.EditDistance).ToArray();
 
             //レーベンシュタイン距離の最小値から距離10以内のものを選択

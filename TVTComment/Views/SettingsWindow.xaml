@@ -76,7 +76,7 @@
             <settingswindowcontents:ChatCollectServiceCreationPresetSettingControl DataContext="{Binding ChatCollectServiceCreationPresetSettingControlViewModel}"/>
         </TabItem>-->
         <TabItem Header="ニコニコ実況">
-            <Grid local:Grid.Shape="*:auto,auto,*">
+            <Grid local:Grid.Shape="*:auto,auto,*,*">
                 <TextBlock Text="設定後は現在使用中のコメント元をいったん無効にして再度有効にする必要があります" TextWrapping="Wrap" Grid.Row="0"/>
 
 
@@ -96,7 +96,16 @@
                     </Grid>
                 </GroupBox>
                 <GroupBox Header="新実況生放送ID設定" Grid.Row="2">
-                    <TextBlock>設定はniconicoliveids.txtから行ってください<LineBreak/>設定変更はプラグイン再起動後に適用されます</TextBlock>
+                    <TextBlock>
+                        設定はniconicoliveids.txtから行ってください<LineBreak/>
+                        設定変更はプラグイン再起動後に適用されます
+                    </TextBlock>
+                </GroupBox>
+                <GroupBox Header="非公式実況過去ログ実況ID設定" Grid.Row="3">
+                    <TextBlock>
+                        設定はniconicojikkyouids.txtから行ってください<LineBreak/>
+                        設定変更はプラグイン再起動後に適用されます
+                    </TextBlock>
                 </GroupBox>
             </Grid>
         </TabItem>
@@ -153,9 +162,9 @@
                 <TextBlock TextWrapping="Wrap" Grid.Row="0">現在使用中のコメント元には変更は適用されません</TextBlock>
                 <GroupBox Header="「2chDAT」コメント元設定" Grid.Row="1">
                     <Grid local:Grid.Shape="auto,*:auto,auto">
-                        <Label Content="レスの更新間隔(秒)" ToolTip="この間隔ごとにスレのHTMLがダウンロードされ、レスが更新されます" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="0"/>
+                        <Label Content="レスの更新間隔(秒)" ToolTip="この間隔ごとにレスがダウンロードされ、コメントが追加されます" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="0"/>
                         <TextBox Text="{Binding NichanResCollectInterval.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="0"/>
-                        <Label Content="収集スレッドの更新間隔(秒)" ToolTip="この間隔ごとに板のHTMLがダウンロードされ、収集対象のスレッドが変更されます" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="1"/>
+                        <Label Content="スレッドリストの更新間隔(秒)" ToolTip="この間隔ごとに板内のスレッドのリストがダウンロードされ、レス収集対象のスレッドが変更されます" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="1"/>
                         <TextBox Text="{Binding NichanThreadSearchInterval.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="1"/>
                     </Grid>
                 </GroupBox>

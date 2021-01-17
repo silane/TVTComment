@@ -78,11 +78,9 @@ namespace Nichan
 
         private string getHash(string message)
         {
-            using (HMACSHA256 hs256 = new HMACSHA256(Encoding.UTF8.GetBytes(this.HmKey)))
-            {
-                byte[] hash = hs256.ComputeHash(Encoding.UTF8.GetBytes(message));
-                return BitConverter.ToString(hash).Replace("-", "").ToLower();
-            }
+            using HMACSHA256 hs256 = new HMACSHA256(Encoding.UTF8.GetBytes(this.HmKey));
+            byte[] hash = hs256.ComputeHash(Encoding.UTF8.GetBytes(message));
+            return BitConverter.ToString(hash).Replace("-", "").ToLower();
         }
 
         private async Task authorize()

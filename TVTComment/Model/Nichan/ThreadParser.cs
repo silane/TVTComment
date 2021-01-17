@@ -53,7 +53,7 @@ namespace Nichan
                 res.Mail = HttpUtility.HtmlDecode(elem.XPathSelectElement(@"div[@class=""name""]/b/a")?.Attribute("href").Value);
                 string dateStr = elem.XPathSelectElement(@"div[@class=""date""]").Value;
                 int idx = dateStr.IndexOf("ID:");
-                res.UserId=idx!=-1 ? dateStr.Substring(idx + 3):null;
+                res.UserId=idx!=-1 ? dateStr[(idx + 3)..] :null;
                 res.Date = getDate(dateStr);
                 res.Text = elem.XPathSelectElement(@"div[@class=""message""]");
                 ret.Res.Add(res);
@@ -96,12 +96,12 @@ namespace Nichan
                     res.Mail = HttpUtility.HtmlDecode(res.Mail);
                 str=(string)elem.XPathEvaluate(@"string(text()[last()])");
                 int idx=str.IndexOf("ID:");
-                res.UserId = idx == -1 ? null : str.Substring(idx + 3);
+                res.UserId = idx == -1 ? null : str[(idx + 3)..];
                 res.Date = getDate(str);
                 res.Text = elem.XPathSelectElement(@"following-sibling::dd[1]");
                 XElement[] brs = res.Text.Elements("br").ToArray();
-                brs[brs.Length - 2].Remove();
-                brs[brs.Length - 1].Remove();
+                brs[^2].Remove();
+                brs[^1].Remove();
                 ret.Res.Add(res);
             }
             ret.ResCount = ret.Res.Count;
@@ -138,7 +138,7 @@ namespace Nichan
                 res.Name = HttpUtility.HtmlDecode(elem.XPathSelectElement(@"div[@class=""meta""]/span[@class=""name""]/b").Value);
                 res.Mail = HttpUtility.HtmlDecode(elem.XPathSelectElement(@"div[@class=""meta""]/span[@class=""name""]/b/a")?.Attribute("href").Value);
                 res.UserId = elem.Attribute("data-userid").Value;
-                if (res.UserId.Length > 3) res.UserId = res.UserId.Substring(3);
+                if (res.UserId.Length > 3) res.UserId = res.UserId[3..];
                 string dateStr = elem.XPathSelectElement(@"div[@class=""meta""]/span[@class=""date""]").Value;
                 res.Date = getDate(dateStr);
                 res.Text = elem.XPathSelectElement(@"div[@class=""message""]/span");

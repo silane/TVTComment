@@ -2,7 +2,6 @@
 using Prism.Commands;
 using Prism.Interactivity.InteractionRequest;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
@@ -14,7 +13,7 @@ namespace TVTComment.ViewModels.ShellContents
 {
     class ChatPostControlViewModel : INotifyPropertyChanged
     {
-        private Model.TVTComment model;
+        private readonly Model.TVTComment model;
 
         public ObservableValue<byte> ChatOpacity { get; private set; }
         public ObservableValue<string> PostText { get; } = new ObservableValue<string>("");
@@ -66,7 +65,7 @@ namespace TVTComment.ViewModels.ShellContents
             this.PostCommand = new DelegateCommand(PostChat);
             this.UpdateNichanCurrentThreadsCommand = new DelegateCommand(() =>
             {
-                if (!(this.SelectedPostService.Value is Model.ChatCollectService.NichanChatCollectService nichanChatCollectService))
+                if (this.SelectedPostService.Value is not Model.ChatCollectService.NichanChatCollectService nichanChatCollectService)
                     return;
                 this.NichanCurrentThreads.Clear();
                 foreach (var thread in nichanChatCollectService.CurrentThreads)

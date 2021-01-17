@@ -17,14 +17,16 @@ namespace TVTComment.Model.ChatCollectService
 
         public override string GetInformationText()
         {
-            string ret = $"板: {(this.board == "" ? "[対応板なし]" : this.board)}, 前回の取得時刻: {this.lastCollectTime}";
+            string ret = "";
             lock(this.threadList)
             {
-                string threadInformation = string.Join("\n", this.threadList.Select(x => $"{x.Title}  ({x.ResCount})  {x.Uri}"));
+                string threadInformation = string.Join("\n", this.threadList.Where(
+                    x => this.currentThreadUrls.Contains(x.Uri.ToString())
+                ).Select(x => $"{x.Title}  ({x.ResCount})  {x.Uri}"));
                 if (threadInformation != "")
-                    ret += "\n" + threadInformation;
+                    ret += threadInformation;
                 else
-                    ret += "\n[スレなし]";
+                    ret += "[スレなし]";
             }
             return ret;
         }
@@ -33,79 +35,33 @@ namespace TVTComment.Model.ChatCollectService
 
         public PastNichanChatCollectService(
             ChatCollectServiceEntry.IChatCollectServiceEntry chatCollectServiceEntry,
-            NichanUtils.INichanBoardSelector boardSelector,
-            TimeSpan backTime
+            NichanUtils.INichanThreadSelector threadSelector,
+            TimeSpan threadSelectionUpdateInterval
         ) : base(TimeSpan.FromSeconds(10))
         {
             this.ServiceEntry = chatCollectServiceEntry;
-            this.boardSelector = boardSelector;
-            this.backTime = backTime;
+            this.threadSelector = threadSelector;
+            this.threadSelectionUpdateInterval = threadSelectionUpdateInterval;
+
+            this.resCollectLoopTask = Task.Run(() => this.ResCollectLoop(this.resCollectLoopTaskCancellation.Token));
         }
 
         protected override IEnumerable<Chat> GetOnceASecond(ChannelInfo channel, DateTime time)
         {
-            var currentTime = new DateTimeOffset(time, TimeSpan.FromHours(9));
-            string boardUrl = this.boardSelector.Get(channel, time);
-            (string server, string board) = getServerAndBoardFromBoardUrl(boardUrl);
+            this.lastGetChannel = channel;
+            this.lastGetTime = new DateTimeOffset(time, TimeSpan.FromHours(9));
 
-            // 前回の取得から14分以上経っている（未来へのシークを含む）か、
-            // 前回の取得時刻を超えて過去にシークしたか、板が違うなら再収集
-            if (
-                time >= this.lastCollectTime + TimeSpan.FromMinutes(14) ||
-                time - this.lastCollectTime < TimeSpan.Zero ||
-                board != this.board)
+            if (this.resCollectLoopTask.IsCompleted)
             {
-
-                this.collectChatTaskCancellation?.Cancel();
                 try
                 {
-                    // チャンネル変更やシークでなければcollectChatTaskはとっくに終わってるはず
-                    this.collectChatTask?.Wait();
+                    this.resCollectLoopTask.Wait();
                 }
-                catch(AggregateException e)
+                catch (AggregateException e)
                 {
-                    this.collectChatTask = null;
-                    collectChatTaskExceptionHandler(e);
+                    ResCollectLoopTaskExceptionHandler(e);
+                    return Enumerable.Empty<Chat>();
                 }
-                this.collectChatTask = null;
-
-                if (this.board != board)
-                {
-                    this.board = board;
-                    lock (this.threadList)
-                        this.threadList.Clear();
-                }
-
-                if(board != "")
-                {
-                    this.collectChatTaskCancellation = new CancellationTokenSource();
-
-                    // timeから15分後までに存在したスレのレスを別スレッドで収集開始
-                    this.collectChatTask = Task.Run(
-                        () => collectChat(board, server, currentTime, currentTime + TimeSpan.FromMinutes(15), this.collectChatTaskCancellation.Token)
-                    );
-                    this.lastCollectTime = time;
-                }
-                else
-                {
-                    this.collectChatTaskCancellation = null;
-                    this.collectChatTask = null;
-                }
-            }
-
-            if(this.collectChatTask?.IsCompleted ?? false)
-            {
-                // collectChatTaskで例外が出た場合になるべく早く気づけるようにするため
-                try
-                {
-                    this.collectChatTask.Wait();
-                }
-                catch(AggregateException e)
-                {
-                    this.collectChatTask = null;
-                    collectChatTaskExceptionHandler(e);
-                }
-                this.collectChatTask = null;
             }
 
             bool leaped = time < this.lastTime || time > this.lastTime + this.continuousCallLimit;
@@ -113,7 +69,9 @@ namespace TVTComment.Model.ChatCollectService
             // TODO: 録画の再生を一時停止すると時刻が数秒巻き戻ることがある。するとコメントが2重で表示される。
             lock(this.threadList)
             {
-                return this.threadList.SelectMany(x => x.Res).Where(
+                return this.threadList.Where(
+                    x => this.currentThreadUrls.Contains(x.Uri.ToString())
+                ).SelectMany(x => x.Res).Where(
                     x => lastTime <= x.Date && x.Date < time
                 ).Select(x => {
                     foreach (var elem in x.Text.Descendants("br").ToArray())
@@ -131,68 +89,65 @@ namespace TVTComment.Model.ChatCollectService
 
         public override void Dispose()
         {
-            this.collectChatTaskCancellation?.Cancel();
+            this.resCollectLoopTaskCancellation.Cancel();
             try
             {
-                this.collectChatTask?.Wait();
+                this.resCollectLoopTask.Wait();
             }
             catch (AggregateException e)
             {
                 try
                 {
-                    collectChatTaskExceptionHandler(e);
+                    ResCollectLoopTaskExceptionHandler(e);
                 }
                 catch(ChatCollectException)
                 { }
             }
-            finally
-            {
-                this.collectChatTask = null;
-            }
         }
 
-        private async Task collectChat(string board, string oneOfTheServer, DateTimeOffset startTime, DateTimeOffset endTime, CancellationToken cancellationToken)
+        private async Task ResCollectLoop(CancellationToken cancellationToken)
         {
-            if(!this.pastThreadListerCache.TryGetValue(board, out var threadLister))
+            while(true)
             {
-                threadLister = new Nichan.PastThreadLister(board, oneOfTheServer, this.backTime);
-                await threadLister.Initialize(cancellationToken);
-                this.pastThreadListerCache.Add(board, threadLister);
+                if (this.lastGetChannel == null)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+                    continue;
+                }
+
+                string[] threadUrls = (await this.threadSelector.Get(
+                    this.lastGetChannel, this.lastGetTime, cancellationToken
+                ).ConfigureAwait(false)).ToArray();
+
+                this.currentThreadUrls = threadUrls;
+
+                IEnumerable<string> existingThreadUrls;
+                lock (this.threadList)
+                    existingThreadUrls = this.threadList.Select(x => x.Uri.ToString()).ToArray();
+                IEnumerable<string> newThreadUrls = threadUrls.Where(x => !existingThreadUrls.Contains(x));
+
+                foreach(var newThreadUrl in newThreadUrls)
+                {
+                    var (server, board_, threadId) = GetServerBoardThreadFromThreadUrl(newThreadUrl);
+                    Nichan.Thread thread = await GetThread(server, board_, threadId, cancellationToken).ConfigureAwait(false);
+                    thread.Uri = new Uri(newThreadUrl); // キャッシュにヒットするようにthreadSelectorの返したUriで記憶する
+
+                    lock (this.threadList)
+                        this.threadList.Add(thread);
+                }
+
+                await Task.Delay(this.threadSelectionUpdateInterval, cancellationToken);
             }
-
-            IEnumerable<Nichan.Thread> threads = await threadLister.GetBetween(startTime, endTime, cancellationToken).ConfigureAwait(false);
-
-            IEnumerable<string> currentThreadUrls;
-            lock (this.threadList)
-                currentThreadUrls = this.threadList.Select(x => x.Uri.ToString()).ToArray();
-            IEnumerable<Nichan.Thread> newThreads = threads.Where(x => !currentThreadUrls.Contains(x.Uri.ToString()));
-
-            foreach(var newThread in newThreads)
-            {
-                var (server, board_, threadId) = getServerBoardThreadFromThreadUrl(newThread.Uri.ToString());
-                Nichan.Thread thread = await getThread(server, board_, threadId, cancellationToken);
-                thread.Uri = newThread.Uri; // キャッシュにヒットするようにthreadListerの返したUriで記憶する
-
-                lock(this.threadList)
-                    this.threadList.Add(thread);
-            }
-        }
-
-        private static readonly Regex reBoardUrl = new Regex(@"//(?<server>[^.]*)\.\dch\.(net|sc)/(?<board>[^/]*)(^|/.*)");
-        private static (string server, string board) getServerAndBoardFromBoardUrl(string boardUrl)
-        {
-            Match match = reBoardUrl.Match(boardUrl);
-            return (match.Groups["server"].Value, match.Groups["board"].Value);
         }
 
         private static readonly Regex reThreadUrl = new Regex(@"//(?<server>[^.]*)\.\dch\.(net|sc)/test/read\.cgi/(?<board>[^/]*)/(?<thread>\d*)($|/)");
-        private static (string server, string board, string thread) getServerBoardThreadFromThreadUrl(string threadUrl)
+        private static (string server, string board, string thread) GetServerBoardThreadFromThreadUrl(string threadUrl)
         {
             Match match = reThreadUrl.Match(threadUrl);
             return (match.Groups["server"].Value, match.Groups["board"].Value, match.Groups["thread"].Value);
         }
 
-        private static async Task<Nichan.Thread> getThread(string server, string board, string thread, CancellationToken cancellationToken)
+        private static async Task<Nichan.Thread> GetThread(string server, string board, string thread, CancellationToken cancellationToken)
         {
             Nichan.Thread ret;
             // まず2ch.scのdatから取得する
@@ -211,8 +166,7 @@ namespace TVTComment.Model.ChatCollectService
 
             if (datResponse != null)
             {
-                ret = new Nichan.Thread();
-                ret.Name = thread;
+                ret = new Nichan.Thread() { Name = thread };
                 var datParser = new Nichan.DatParser();
                 datParser.Feed(datResponse);
 
@@ -253,10 +207,10 @@ namespace TVTComment.Model.ChatCollectService
         }
 
         /// <summary>
-        /// <see cref="collectChatTask"/>を<see cref="Task.Wait"/>した時に出た<see cref="AggregateException"/>を適切な例外に変換して投げなおす。
+        /// <see cref="resCollectLoopTask"/>を<see cref="Task.Wait"/>した時に出た<see cref="AggregateException"/>を適切な例外に変換して投げなおす。
         /// 例外を投げなければタスクがキャンセルされたことによる例外だったということ。
         /// </summary>
-        private static void collectChatTaskExceptionHandler(AggregateException e)
+        private static void ResCollectLoopTaskExceptionHandler(AggregateException e)
         {
             if (e.InnerExceptions.All(x => x is OperationCanceledException))
                 return;
@@ -283,13 +237,13 @@ namespace TVTComment.Model.ChatCollectService
         }
 
         private static readonly HttpClient httpClient = new HttpClient();
-        private readonly NichanUtils.INichanBoardSelector boardSelector;
-        private readonly Dictionary<string, Nichan.PastThreadLister> pastThreadListerCache = new Dictionary<string, Nichan.PastThreadLister>();
+        private readonly NichanUtils.INichanThreadSelector threadSelector;
+        private readonly TimeSpan threadSelectionUpdateInterval;
         private readonly List<Nichan.Thread> threadList = new List<Nichan.Thread>();
-        private readonly TimeSpan backTime;
-        private string board = "";
-        private DateTimeOffset lastCollectTime = DateTimeOffset.MinValue;
-        private Task collectChatTask = null;
-        private CancellationTokenSource collectChatTaskCancellation = null;
+        private readonly Task resCollectLoopTask;
+        private readonly CancellationTokenSource resCollectLoopTaskCancellation = new CancellationTokenSource();
+        private string[] currentThreadUrls;
+        private ChannelInfo lastGetChannel = null;
+        private DateTimeOffset lastGetTime;
     }
 }

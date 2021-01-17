@@ -14,8 +14,22 @@
             this.boardDatabase = boardDatabase;
         }
 
-        public MatchingThread Resolve(ChannelInfo channelInfo)
+        public MatchingThread Resolve(ChannelInfo channelInfo, bool ignoreMainThreadTitleKeywords)
         {
+            MatchingThread getMatchingThread(ChannelEntry channel)
+            {
+                if(!ignoreMainThreadTitleKeywords)
+                    return this.boardDatabase.GetMatchingThread(channel);
+                else
+                {
+                    ThreadMappingRuleEntry ruleEntry = this.boardDatabase.GetMatchingThreadMappingRuleEntry(channel);
+                    if (ruleEntry == null) return null;
+                    BoardEntry boardEntry = this.boardDatabase.GetBoardEntryById(ruleEntry.BoardId);
+                    if (boardEntry == null) return null;
+                    return new MatchingThread(boardEntry.Title, boardEntry.Uri, ruleEntry.ThreadTitleKeywords);
+                }
+            }
+
             ushort networkId = channelInfo.NetworkId, serviceId = channelInfo.ServiceId;
             if (networkId == 0)
             {
@@ -23,7 +37,7 @@
                 //BSとCSの間ではサービスIDが重複する可能性があるがほとんどないので割り切る
                 foreach (ChannelEntry channel in channelDatabase.GetByServiceId(serviceId))
                 {
-                    MatchingThread ret = boardDatabase.GetMatchingThreadForChannel(channel);
+                    MatchingThread ret = getMatchingThread(channel);
                     if (ret != null)
                         return ret;
                 }
@@ -34,7 +48,7 @@
                 ChannelEntry channel = channelDatabase.GetByNetworkIdAndServiceId(networkId, serviceId);//channels.txtの登録チャンネルに解決
                 if (channel == null)
                     return null;
-                return boardDatabase.GetMatchingThreadForChannel(channel);
+                return getMatchingThread(channel);
             }
         }
     }

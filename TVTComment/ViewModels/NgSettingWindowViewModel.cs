@@ -13,10 +13,10 @@ using System.Windows.Input;
 
 namespace TVTComment.ViewModels
 {
-    class NgSettingWindowViewModel:BindableBase,IDisposable
+    class NgSettingWindowViewModel : BindableBase, IDisposable
     {
-        private Model.TVTComment model;
-        private CompositeDisposable disposables=new CompositeDisposable();
+        private readonly Model.TVTComment model;
+        private readonly CompositeDisposable disposables=new CompositeDisposable();
 
         private double windowTop = double.NaN;
         private double windowLeft = double.NaN;

@@ -10,7 +10,7 @@ using TVTComment.Model.TwitterUtils;
 
 namespace TVTComment.ViewModels
 {
-    class SettingsWindowViewModel:BindableBase
+    class SettingsWindowViewModel : BindableBase
     {
         public ObservableValue<int> ChatPreserveCount { get; }
         public ShellContents.DefaultChatCollectServicesViewModel DefaultChatCollectServices { get; }
@@ -58,7 +58,6 @@ namespace TVTComment.ViewModels
         {
             DefaultChatCollectServices = new ShellContents.DefaultChatCollectServicesViewModel(model);
 
-            this.model = model;
             niconico = model.ChatServices.OfType<Model.ChatService.NiconicoChatService>().Single();
             nichan = model.ChatServices.OfType<Model.ChatService.NichanChatService>().Single();
             twitter = model.ChatServices.OfType<Model.ChatService.TwitterChatService>().Single();
