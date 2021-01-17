@@ -85,7 +85,25 @@
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="auto"/>
             </Grid.RowDefinitions>
-            <TextBlock Grid.Row="0" Text="{Binding WindowTitle.Value}" VerticalAlignment="Center" Margin="5"/>
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <Button
+                        Content="0" FontFamily="Marlett"
+                        Command="{Binding MinimizeWindowCommand}"
+                        ToolTip="最小化" IsTabStop="False"
+                        WindowChrome.IsHitTestVisibleInChrome="True" Padding="5"
+                        HorizontalAlignment="Center" BorderThickness="0"
+                        Background="Transparent" Foreground="Gray"/>
+                    <Button
+                        Content="r" FontFamily="Marlett"
+                        Command="{Binding CloseApplicationCommand}"
+                        ToolTip="プラグイン無効化" IsTabStop="False"
+                        WindowChrome.IsHitTestVisibleInChrome="True" Padding="5"
+                        HorizontalAlignment="Center" BorderThickness="0"
+                        Background="Transparent" Foreground="Gray"/>
+                </StackPanel>
+                <TextBlock Grid.Row="0" Text="{Binding WindowTitle.Value}" VerticalAlignment="Center" Margin="5"/>
+            </DockPanel>
             <TabControl Grid.Row="1"
                     SelectedValue="{Binding SelectedTab.Value, Converter={StaticResource EnumToStringConverter}}"
                     SelectedValuePath="Name">

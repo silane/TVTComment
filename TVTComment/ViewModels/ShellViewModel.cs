@@ -84,6 +84,8 @@ namespace TVTComment.ViewModels
 
         public Views.AttachedProperties.GridViewColumnSettingsBinder.ColumnInfo[] ChatListColumnInfos { set; get; } = new Views.AttachedProperties.GridViewColumnSettingsBinder.ColumnInfo[0];
 
+        public ICommand CloseApplicationCommand { get; private set; }
+        public ICommand MinimizeWindowCommand { get; private set; }
         public ICommand ChangeChannelCommand { get; private set; }
         public DelegateCommand<ShellContents.ChatCollectServiceAddListItemViewModel> AddChatCollectServiceCommand { get; private set; }
         public DelegateCommand<Model.ChatCollectService.IChatCollectService> RemoveChatCollectServiceCommand { get; private set; }
@@ -185,6 +187,16 @@ namespace TVTComment.ViewModels
             model.CommandModule.ShowWindowCommandInvoked += commandModule_ShowWindowCommandInvoked;
 
             // コマンド生成
+            this.CloseApplicationCommand = new DelegateCommand(() =>
+            {
+                this.CloseApplication();
+            });
+
+            this.MinimizeWindowCommand = new DelegateCommand(() =>
+            {
+                window.WindowState = WindowState.Minimized;
+            });
+
             ChangeChannelCommand = new DelegateCommand<Model.ChannelInfo>(channel => { if (channel != null) model.ChannelInformationModule.SetCurrentChannel(channel); });
 
             AddChatCollectServiceCommand = new DelegateCommand<ShellContents.ChatCollectServiceAddListItemViewModel>(
