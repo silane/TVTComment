@@ -32,7 +32,7 @@ namespace TVTComment.Model.ChatCollectServiceEntry
 
         public IChatCollectService GetNewService(IChatCollectServiceCreationOption creationOption)
         {
-            if (creationOption == null || !(creationOption is ChatCollectServiceCreationOption co))
+            if (creationOption == null || creationOption is not ChatCollectServiceCreationOption co)
                 throw new ArgumentException($"Type of {nameof(creationOption)} must be {nameof(TwitterLiveChatCollectServiceEntry)}.{nameof(ChatCollectServiceCreationOption)}", nameof(creationOption));
             var session = Session.Value;
             if (session == null)

@@ -47,10 +47,9 @@ namespace TVTComment.ViewModels
 
         public SettingsWindowContents.ChatCollectServiceCreationPresetSettingControlViewModel ChatCollectServiceCreationPresetSettingControlViewModel { get; }
 
-        private Model.TVTComment model;
-        private Model.ChatService.NiconicoChatService niconico;
-        private Model.ChatService.NichanChatService nichan;
-        private Model.ChatService.TwitterChatService twitter;
+        private readonly Model.ChatService.NiconicoChatService niconico;
+        private readonly Model.ChatService.NichanChatService nichan;
+        private readonly Model.ChatService.TwitterChatService twitter;
 
         private TwitterAuthentication twitterAuthentication;
 

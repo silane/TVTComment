@@ -24,7 +24,7 @@ namespace TVTComment.Model.ChatCollectService
 
         public bool CanPost => true;
 
-        private TwitterAuthentication Twitter;
+        private readonly TwitterAuthentication Twitter;
         private readonly Task chatCollectTask;
         private readonly ConcurrentQueue<Status> statusQueue = new ConcurrentQueue<Status>();
         private readonly CancellationTokenSource cancel = new CancellationTokenSource();
@@ -56,7 +56,7 @@ namespace TVTComment.Model.ChatCollectService
                     if (cancel.IsCancellationRequested) break ;
                     statusQueue.Enqueue(status);
                 }
-            });
+            }, cancel);
         }
 
         public IEnumerable<Chat> GetChats(ChannelInfo channel, DateTime time)

@@ -23,8 +23,8 @@ namespace TVTComment.Model.ChatService
         public IReadOnlyList<IChatCollectServiceEntry> ChatCollectServiceEntries { get; }
         public IReadOnlyList<IChatTrendServiceEntry> ChatTrendServiceEntries { get; }
 
-        private ObservableValue<TwitterAuthentication> twitterSession = new ObservableValue<TwitterAuthentication>();
-        private TwitterChatServiceSettings settings;
+        private readonly ObservableValue<TwitterAuthentication> twitterSession = new ObservableValue<TwitterAuthentication>();
+        private readonly TwitterChatServiceSettings settings;
         public bool IsLoggedin { get; private set; }
         public string UserName { get; private set; }
 
@@ -64,7 +64,7 @@ namespace TVTComment.Model.ChatService
             ChatCollectServiceEntries = new IChatCollectServiceEntry[1] {
                 new TwitterLiveChatCollectServiceEntry(this, twitterSession)
             };
-            ChatTrendServiceEntries = new IChatTrendServiceEntry[0] {};
+            ChatTrendServiceEntries = Array.Empty<IChatTrendServiceEntry>();
         }
 
         /// <summary>
