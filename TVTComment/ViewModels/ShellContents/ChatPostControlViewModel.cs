@@ -55,7 +55,8 @@ namespace TVTComment.ViewModels.ShellContents
                 this.SelectedPostService.Select(x =>
                     x is Model.ChatCollectService.NiconicoChatCollectService ||
                     x is Model.ChatCollectService.NiconicoLiveChatCollectService ||
-                    x is Model.ChatCollectService.NewNiconicoJikkyouChatCollectService
+                    x is Model.ChatCollectService.NewNiconicoJikkyouChatCollectService ||
+                    x is Model.ChatCollectService.TwitterLiveChatCollectService
                 )
             );
             this.IsShowingNichanPostForm = new ReadOnlyObservableValue<bool>(
@@ -125,6 +126,15 @@ namespace TVTComment.ViewModels.ShellContents
                 model.ChatCollectServiceModule.PostChat(
                     SelectedPostService.Value,
                     new Model.ChatCollectService.NichanChatCollectService.ChatPostObject(this.SelectedNichanCurrentThread.Value.Uri.ToString())
+                );
+            }
+            else if (SelectedPostService.Value is Model.ChatCollectService.TwitterLiveChatCollectService)
+            {
+                if (string.IsNullOrWhiteSpace(PostText.Value))
+                    return;
+                model.ChatCollectServiceModule.PostChat(
+                    SelectedPostService.Value,
+                    new Model.ChatCollectService.TwitterLiveChatCollectService.ChatPostObject(PostText.Value, mail184.Replace("184", ""))
                 );
             }
             else
