@@ -1,11 +1,13 @@
-# TvtComment　過去ログ取得追加版
+# TvtComment　過去ログ取得追加版&Twitter実況対応版
 
 TVTest ニコニコ & 5ch コメント表示プラグイン
 
 - 利用は自己責任で行ってください
-- このプラグインはニコニコのサーバや5chのサーバーと通信します。サーバに高負荷を与えるような利用や改変をしないでください。
+- このプラグインはニコニコのサーバや5chのサーバーとTwitterのサーバーとも通信します。サーバに高負荷を与えるような利用や改変をしないでください。
 
-このプラグインは本家のTvtCommentに[非公式過去ログAPI](https://jikkyo.tsukumijima.net)から過去ログを取得する機能を追加した物です。
+このプラグインは本家のTvtCommentに[非公式過去ログAPI](https://jikkyo.tsukumijima.net)から過去ログを取得する機能を追加した物です。  
+さらに、Twitterリアルタイム実況の機能も追加しました。
+
 
 ## ライセンス
 本家同様MITライセンス
@@ -13,9 +15,15 @@ TVTest ニコニコ & 5ch コメント表示プラグイン
 ## ソースコード
 [GitHub](https://github.com/noriokun4649/TVTComment)
 
+## 開発環境
+- TVTest 0.10.0 a7040cdコミット分 ツールセットv142に再ターゲットしてMSVC 19.28.29335.0でコンパイル
+- LiblSDB 6e794bcコミット分 ツールセットv142に再ターゲットしてMSVC 19.28.29335.0でコンパイル
+- Microsoft Visual Studio Community 2019
+
 ## 謝辞
 このソフトは[TvtComment](https://github.com/silane/TVTComment)から改造して作られました。また過去ログの取得は[非公式過去ログAPI](https://jikkyo.tsukumijima.net)より取得しております。
 これら2つを作られた作者に感謝いたします。silane氏及びtsukumijima氏ありがとうございます。
+
 
 ## 編集者
 noriokun4649
