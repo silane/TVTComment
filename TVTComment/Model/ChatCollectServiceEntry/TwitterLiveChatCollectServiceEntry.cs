@@ -37,7 +37,7 @@ namespace TVTComment.Model.ChatCollectServiceEntry
             var session = Session.Value;
             if (session == null)
                 throw new ChatCollectServiceCreationException("Twiiterリアルタイム実況にはTwitterへのログインが必要です");
-            return new TwitterLiveCollectService(this, co.SearchWord, session);
+            return new TwitterLiveChatCollectService(this, co.SearchWord, session);
         }
     }
 }
