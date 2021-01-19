@@ -2,6 +2,7 @@
 using System;
 using System.Windows.Input;
 using TVTComment.Model.ChatCollectServiceEntry;
+using static TVTComment.Model.ChatCollectServiceEntry.TwitterLiveChatCollectServiceEntry.ChatCollectServiceCreationOption;
 
 namespace TVTComment.ViewModels.ChatCollectServiceCreationOptionControl
 {
@@ -17,18 +18,26 @@ namespace TVTComment.ViewModels.ChatCollectServiceCreationOptionControl
 
         public ICommand OkCommand { get; }
 
+        private ModeSelectMethod method;
+        public ModeSelectMethod Method
+        {
+            get { return method; }
+            set { SetProperty(ref method, value); }
+        }
+
         public override event EventHandler Finished;
 
         public TwitterLiveChatCollectServiceCreationOptionControlViewModel()
         {
-            this.OkCommand = new DelegateCommand(() => Finished(this, new EventArgs()));
+            OkCommand = new DelegateCommand(() => Finished(this, new EventArgs()));
+            Method = ModeSelectMethod.Auto;
         }
 
         public override IChatCollectServiceCreationOption GetChatCollectServiceCreationOption()
         {
-            if (string.IsNullOrWhiteSpace(searchWord))
+            if (string.IsNullOrWhiteSpace(searchWord) && ModeSelectMethod.Manual == Method)
                 return null;
-            return new TwitterLiveChatCollectServiceEntry.ChatCollectServiceCreationOption(searchWord);
+            return new TwitterLiveChatCollectServiceEntry.ChatCollectServiceCreationOption(Method ,searchWord);
         }
     }
 }
