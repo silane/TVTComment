@@ -1,6 +1,7 @@
 ﻿using ObservableUtils;
 using System;
 using TVTComment.Model.ChatCollectService;
+using TVTComment.Model.NiconicoUtils;
 using TVTComment.Model.TwitterUtils;
 
 namespace TVTComment.Model.ChatCollectServiceEntry
@@ -9,9 +10,12 @@ namespace TVTComment.Model.ChatCollectServiceEntry
     {
         public class ChatCollectServiceCreationOption : IChatCollectServiceCreationOption
         {
+            public enum ModeSelectMethod { Auto, Manual}
             public string SearchWord { get; }
-            public ChatCollectServiceCreationOption(string searchWord)
+            public ModeSelectMethod Method;
+            public ChatCollectServiceCreationOption(ModeSelectMethod method, string searchWord)
             {
+                Method = method;
                 SearchWord = searchWord;
             }
         }
@@ -23,10 +27,12 @@ namespace TVTComment.Model.ChatCollectServiceEntry
         public bool CanUseDefaultCreationOption => false;
 
         private readonly ObservableValue<TwitterAuthentication> Session;
+        private readonly SearchWordResolver searchWordResolver;
 
-        public TwitterLiveChatCollectServiceEntry(ChatService.TwitterChatService Owner, ObservableValue<TwitterAuthentication> Session)
+        public TwitterLiveChatCollectServiceEntry(ChatService.TwitterChatService Owner, SearchWordResolver searchWordResolver, ObservableValue<TwitterAuthentication> Session)
         {
             this.Owner = Owner;
+            this.searchWordResolver = searchWordResolver;
             this.Session = Session;
         }
 
@@ -37,7 +43,7 @@ namespace TVTComment.Model.ChatCollectServiceEntry
             var session = Session.Value;
             if (session == null)
                 throw new ChatCollectServiceCreationException("Twiiterリアルタイム実況にはTwitterへのログインが必要です");
-            return new TwitterLiveChatCollectService(this, co.SearchWord, session);
+            return new TwitterLiveChatCollectService(this, co.SearchWord, co.Method ,searchWordResolver, session);
         }
     }
 }

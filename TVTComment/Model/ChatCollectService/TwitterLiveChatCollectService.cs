@@ -1,17 +1,17 @@
 ﻿using CoreTweet;
 using CoreTweet.Streaming;
+using ObservableUtils;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TVTComment.Model.ChatCollectServiceEntry;
+using TVTComment.Model.NiconicoUtils;
 using TVTComment.Model.TwitterUtils;
+using static TVTComment.Model.ChatCollectServiceEntry.TwitterLiveChatCollectServiceEntry.ChatCollectServiceCreationOption;
 
 namespace TVTComment.Model.ChatCollectService
 {
@@ -33,23 +33,36 @@ namespace TVTComment.Model.ChatCollectService
         public bool CanPost => true;
 
         private readonly TwitterAuthentication Twitter;
-        private readonly Task chatCollectTask;
+        private Task chatCollectTask;
         private readonly ConcurrentQueue<Status> statusQueue = new ConcurrentQueue<Status>();
         private readonly CancellationTokenSource cancel = new CancellationTokenSource();
-        private readonly string SearchWord;
+        private readonly ObservableValue<string> SearchWord = new ObservableValue<string>("");
+        private readonly SearchWordResolver SearchWordResolver;
+        private readonly ModeSelectMethod ModeSelect;
 
 
-        public TwitterLiveChatCollectService(IChatCollectServiceEntry serviceEntry, string searchWord, TwitterAuthentication twitter)
+        public TwitterLiveChatCollectService(IChatCollectServiceEntry serviceEntry, string searchWord, ModeSelectMethod modeSelect,SearchWordResolver searchWordResolver, TwitterAuthentication twitter)
         {
             ServiceEntry = serviceEntry;
-            SearchWord = searchWord;
+            SearchWord.Value = searchWord;
             Twitter = twitter;
-            chatCollectTask = SearchStreamAsync(searchWord, cancel.Token);
+            ModeSelect = modeSelect;
+            SearchWordResolver = searchWordResolver;
+            switch (modeSelect)
+            {
+                case ModeSelectMethod.Auto:
+                    SearchWord.Where(x => x!=null && !x.Equals("")).Subscribe(res => chatCollectTask = SearchStreamAsync(res, cancel.Token));
+                    break;
+
+                case ModeSelectMethod.Manual:
+                    chatCollectTask = SearchStreamAsync(searchWord, cancel.Token);
+                    break;
+            }
         }
 
-        public  string GetInformationText()
+        public string GetInformationText()
         {
-            return "検索ワード:" + SearchWord;
+            return $"検索モード:{ModeSelect}\n検索ワード:{SearchWord.Value}";
         }
 
         private async Task SearchStreamAsync(string searchWord, CancellationToken cancel)
@@ -61,7 +74,8 @@ namespace TVTComment.Model.ChatCollectService
                             .Where(x => !x.Status.Text.StartsWith("RT"))
                             .Select(x => x.Status))
                 {
-                    if (cancel.IsCancellationRequested) break ;
+                    if (cancel.IsCancellationRequested || !SearchWord.Value.Equals(searchWord))
+                        break;
                     statusQueue.Enqueue(status);
                 }
             }, cancel);
@@ -69,14 +83,23 @@ namespace TVTComment.Model.ChatCollectService
 
         public IEnumerable<Chat> GetChats(ChannelInfo channel, DateTime time)
         {
-            if (chatCollectTask.IsCanceled)
+            if (ModeSelect == ModeSelectMethod.Auto)
             {
-                throw new ChatCollectException("Cancelしました");
+
+                SearchWord.Value = SearchWordResolver.Resolve(channel.NetworkId, channel.ServiceId);
             }
-            if (chatCollectTask.IsFaulted)
+            if (chatCollectTask != null)
             {
-                throw new ChatCollectException("ストリームが切断されました");
-            }
+                if (chatCollectTask.IsCanceled)
+                {
+                    throw new ChatCollectException("Cancelしました");
+                }
+                if (chatCollectTask.IsFaulted)
+                {
+                    throw new ChatCollectException("TwitterのAPI制限に達したか問題が発生したため切断されました");
+                }
+            }            
+
             var list = new List<Chat>();
             while (statusQueue.TryDequeue(out var status))
             {

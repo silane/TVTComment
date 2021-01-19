@@ -1,11 +1,10 @@
-﻿using CoreTweet;
-using ObservableUtils;
+﻿using ObservableUtils;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TVTComment.Model.ChatCollectServiceEntry;
+using TVTComment.Model.NiconicoUtils;
 using TVTComment.Model.TwitterUtils;
-using static CoreTweet.OAuth;
 
 namespace TVTComment.Model.ChatService
 {
@@ -25,6 +24,8 @@ namespace TVTComment.Model.ChatService
 
         private readonly ObservableValue<TwitterAuthentication> twitterSession = new ObservableValue<TwitterAuthentication>();
         private readonly TwitterChatServiceSettings settings;
+        private readonly SearchWordResolver searchWordResolver;
+
         public bool IsLoggedin { get; private set; }
         public string UserName { get; private set; }
 
@@ -47,10 +48,11 @@ namespace TVTComment.Model.ChatService
             get { return settings.ApiAccessSecret; }
         }
 
-        public TwitterChatService(TwitterChatServiceSettings settings)
+        public TwitterChatService(TwitterChatServiceSettings settings, ChannelDatabase channelDatabase, string filepath)
         {
             this.settings = settings;
-
+            var searchWordTable = new SearchWordTable(filepath);
+            searchWordResolver = new SearchWordResolver(channelDatabase, searchWordTable);
             try
             {
                 if (!string.IsNullOrWhiteSpace(ApiKey) && !string.IsNullOrWhiteSpace(ApiSecret) &&
@@ -62,7 +64,7 @@ namespace TVTComment.Model.ChatService
             { }
 
             ChatCollectServiceEntries = new IChatCollectServiceEntry[1] {
-                new TwitterLiveChatCollectServiceEntry(this, twitterSession)
+                new TwitterLiveChatCollectServiceEntry(this, searchWordResolver, twitterSession)
             };
             ChatTrendServiceEntries = Array.Empty<IChatTrendServiceEntry>();
         }

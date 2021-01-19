@@ -117,7 +117,7 @@ namespace TVTComment.Model
                 ),
                 new ChatService.NichanChatService(Settings.Nichan, this.channelDatabase, Path.Combine(baseDir, "2chthreads.txt")),
                 new ChatService.FileChatService(),
-                new ChatService.TwitterChatService(Settings.Twitter)
+                new ChatService.TwitterChatService(Settings.Twitter, channelDatabase, Path.Combine(baseDir, "twittersearchword.txt"))
             });
 
             var chatCollectServiceEntryIds = this.ChatServices.SelectMany(x => x.ChatCollectServiceEntries).Select(x => x.Id);
