@@ -108,10 +108,16 @@ namespace TVTComment.Model.ChatCollectService
             return list;
         }
 
-        public Task PostChat(BasicChatPostObject postObject)
+        public async Task PostChat(BasicChatPostObject postObject)
         {
-            var suffix = "\n"+(postObject as ChatPostObject)?.SuffixText ?? "";
-            return Twitter.Token.Statuses.UpdateAsync(postObject.Text + suffix);
+            try { 
+                var suffix = "\n"+(postObject as ChatPostObject)?.SuffixText ?? "";
+                await Twitter.Token.Statuses.UpdateAsync(postObject.Text + suffix);
+            }
+            catch
+            {
+                throw new ChatPostException("ツイート投稿に失敗しました。\nTwitterAPIのApp permissionsがRead Onlyになっていないことを確認してください。");
+            }
         }
 
         public void Dispose()
