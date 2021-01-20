@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Reflection;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
@@ -60,6 +61,9 @@ namespace TVTComment.Model.NiconicoUtils
             var handler = new HttpClientHandler();
             handler.CookieContainer.Add(niconicoSession.Cookie);
             this.httpClient = new HttpClient(handler);
+            var assembly = Assembly.GetExecutingAssembly().GetName();
+            var ua = assembly.Name + "/" + assembly.Version.ToString(3);
+            httpClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", ua);
         }
 
         /// <summary>

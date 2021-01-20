@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
@@ -51,6 +52,9 @@ namespace TVTComment.Model.NiconicoUtils
             var handler = new HttpClientHandler();
             handler.CookieContainer.Add(niconicoLoginSession.Cookie);
             this.httpClient = new HttpClient(handler);
+            var assembly = Assembly.GetExecutingAssembly().GetName();
+            var ua = assembly.Name + "/" + assembly.Version.ToString(3);
+            httpClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", ua);
         }
 
         /// <summary>
