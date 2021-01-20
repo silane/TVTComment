@@ -139,9 +139,9 @@ namespace TVTComment.Model.ChatCollectService
             if (!playerStatusRoot.GetProperty("meta").GetProperty("errorCode").GetString().Equals("OK"))
             {
                 if (playerStatusRoot.GetProperty("meta").GetProperty("errorCode").GetString().Equals("SERVER_ERROR"))
-                    throw new ChatReceivingException("ニコニコのサーバがメンテナンス中の可能性があります");
+                    throw new ChatReceivingException("ニコニコのサーバーがメンテナンス中の可能性があります");
                 if (playerStatusRoot.GetProperty("meta").GetProperty("errorCode").GetString().Equals("INTERNAL_SERVER_ERROR"))
-                    throw new ChatReceivingException("ニコニコのサーバで内部エラーが発生しました");
+                    throw new ChatReceivingException("ニコニコのサーバーで内部エラーが発生しました");
                 if (playerStatusRoot.GetProperty("meta").GetProperty("errorCode").GetString().Equals("NOT_FOUND"))
                     throw new ChatReceivingException("放送が見つかりませんでした");
                 throw new ChatReceivingException("コメントサーバーから予期しないPlayerStatusが返されました:\n" + playerStatusStr);
