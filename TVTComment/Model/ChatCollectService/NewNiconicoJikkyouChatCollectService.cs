@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
-using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 
 namespace TVTComment.Model.ChatCollectService
 {
@@ -153,29 +153,39 @@ namespace TVTComment.Model.ChatCollectService
 
         private async Task collectChat(string originalLiveId, CancellationToken cancellationToken)
         {
-            string playerStatusStr;
+            Stream playerStatusStr;
             try
             {
-                playerStatusStr = await this.httpClient.GetStringAsync($"http://live.nicovideo.jp/api/getplayerstatus/{originalLiveId}").ConfigureAwait(false);
+                if (!originalLiveId.StartsWith("lv")) // 代替えAPIではコミュニティ・チャンネルにおけるコメント鯖取得ができないのでlvを取得しに行く
+                {
+                    var getLiveId = await this.httpClient.GetStreamAsync($"https://live2.nicovideo.jp/unama/tool/v1/broadcasters/social_group/{originalLiveId}/program").ConfigureAwait(false);
+                    var liveIdJson = await JsonDocument.ParseAsync(getLiveId, cancellationToken: cancellationToken).ConfigureAwait(false);
+                    var liveIdRoot = liveIdJson.RootElement;
+                    if (!liveIdRoot.GetProperty("meta").GetProperty("errorCode").GetString().Equals("OK")) throw new ChatReceivingException("コミュニティ・チャンネルが見つかりませんでした");
+                    originalLiveId = liveIdRoot.GetProperty("data").GetProperty("nicoliveProgramId").GetString(); // lvから始まるLiveIDに置き換え
+
+                }
+                playerStatusStr = await this.httpClient.GetStreamAsync($"https://live2.nicovideo.jp/unama/watch/{originalLiveId}/programinfo").ConfigureAwait(false);
             }
             catch (HttpRequestException e)
             {
                 throw new ChatReceivingException("サーバーとの通信でエラーが発生しました", e);
             }
-            var playerStatus = XDocument.Parse(playerStatusStr).Root;
+            var playerStatus = await JsonDocument.ParseAsync(playerStatusStr, cancellationToken: cancellationToken).ConfigureAwait(false);
+            var playerStatusRoot = playerStatus.RootElement;
 
-            if (playerStatus.Attribute("status").Value != "ok")
+            if (!playerStatusRoot.GetProperty("meta").GetProperty("errorCode").GetString().Equals("OK"))
             {
-                if (playerStatus.Element("error")?.Element("code")?.Value == "comingsoon")
-                    throw new ChatReceivingException("放送開始前です");
-                if (playerStatus.Element("error")?.Element("code")?.Value == "closed")
-                    throw new LiveClosedChatReceivingException(); // 呼び出し側で特別な処理をするので別の例外を投げて区別する
-                if (playerStatus.Element("error")?.Element("code")?.Value == "notfound")
+                if (playerStatusRoot.GetProperty("meta").GetProperty("errorCode").GetString().Equals("SERVER_ERROR"))
+                    throw new ChatReceivingException("ニコニコのサーバがメンテナンス中の可能性があります");
+                if (playerStatusRoot.GetProperty("meta").GetProperty("errorCode").GetString().Equals("INTERNAL_SERVER_ERROR"))
+                    throw new ChatReceivingException("ニコニコのサーバで内部エラーが発生しました");
+                if (playerStatusRoot.GetProperty("meta").GetProperty("errorCode").GetString().Equals("NOT_FOUND"))
                     throw new LiveNotFoundChatReceivingException(); // 呼び出し側で特別な処理をするので別の例外を投げて区別する
                 throw new ChatReceivingException("コメントサーバーから予期しないPlayerStatusが返されました:\n" + playerStatusStr);
             }
 
-            this.liveId = playerStatus.Element("stream").Element("id").Value;
+            this.liveId = playerStatusRoot.GetProperty("data").GetProperty("socialGroup").GetProperty("id").GetString();
 
             try
             {

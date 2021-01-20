@@ -6,9 +6,9 @@ using System.Net.Sockets;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 
 namespace TVTComment.Model.NiconicoUtils
 {
@@ -73,10 +73,10 @@ namespace TVTComment.Model.NiconicoUtils
 
             for (int disconnectedCount = 0; disconnectedCount < 5; ++disconnectedCount)
             {
-                string str;
+                Stream str;
                 try
                 {
-                    str = await this.httpClient.GetStringAsync($"http://live.nicovideo.jp/api/getplayerstatus/{liveId}").ConfigureAwait(false);
+                    str = await this.httpClient.GetStreamAsync($"https://live2.nicovideo.jp/unama/watch/{liveId}/programinfo").ConfigureAwait(false);
                 }
                 // httpClient.CancelPendingRequestsが呼ばれた、もしくはタイムアウト
                 catch (TaskCanceledException e)
@@ -89,17 +89,17 @@ namespace TVTComment.Model.NiconicoUtils
                 {
                     throw new NetworkNicoLiveCommentReceiverException(e);
                 }
-                var playerStatus = XDocument.Parse(str).Root;
+                var playerStatus = await JsonDocument.ParseAsync(str, cancellationToken: cancellationToken).ConfigureAwait(false);
+                var playerStatusRoot = playerStatus.RootElement;
 
-                string threadId = playerStatus.Element("ms")?.Element("thread")?.Value;
-                string ms = playerStatus.Element("ms")?.Element("addr")?.Value;
-                string msPort = playerStatus.Element("ms")?.Element("port")?.Value;
-                if(threadId == null || ms == null || msPort == null)
+                var threadId = playerStatusRoot.GetProperty("data").GetProperty("rooms")[0].GetProperty("threadId").GetString();
+                var msUriStr = playerStatusRoot.GetProperty("data").GetProperty("rooms")[0].GetProperty("xmlSocketUri").GetString();
+                if(threadId == null || msUriStr == null)
                 {
-                    throw new InvalidPlayerStatusNicoLiveCommentReceiverException(str);
+                    throw new InvalidPlayerStatusNicoLiveCommentReceiverException(str.ToString());
                 }
-
-                using var tcpClinet = new TcpClient(ms, int.Parse(msPort));
+                var msUri = new Uri(msUriStr);
+                using var tcpClinet = new TcpClient(msUri.Host,msUri.Port);
                 var socketStream = tcpClinet.GetStream();
                 using var socketReader = new StreamReader(socketStream, Encoding.UTF8);
 
