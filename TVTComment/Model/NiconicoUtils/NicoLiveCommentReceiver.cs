@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 
 namespace TVTComment.Model.NiconicoUtils
 {
@@ -43,7 +44,7 @@ namespace TVTComment.Model.NiconicoUtils
     class NicoLiveCommentReceiver : IDisposable
     {
         public NiconicoLoginSession NiconicoLoginSession { get; }
-        
+
         public NicoLiveCommentReceiver(NiconicoLoginSession niconicoLoginSession)
         {
             this.NiconicoLoginSession = niconicoLoginSession;
@@ -51,6 +52,9 @@ namespace TVTComment.Model.NiconicoUtils
             var handler = new HttpClientHandler();
             handler.CookieContainer.Add(niconicoLoginSession.Cookie);
             this.httpClient = new HttpClient(handler);
+            var assembly = Assembly.GetExecutingAssembly().GetName();
+            var ua = assembly.Name + "/" + assembly.Version.ToString(3);
+            httpClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", ua);
         }
 
         /// <summary>
@@ -60,19 +64,19 @@ namespace TVTComment.Model.NiconicoUtils
         /// <exception cref="InvalidPlayerStatusNicoLiveCommentReceiverException"></exception>
         /// <exception cref="NetworkNicoLiveCommentReceiverException"></exception>
         /// <exception cref="ConnectionClosedNicoLiveCommentReceiverException"></exception>
-        public async IAsyncEnumerable<NiconicoCommentXmlTag> Receive(string liveId, [EnumeratorCancellation]CancellationToken cancellationToken)
+        public async IAsyncEnumerable<NiconicoCommentXmlTag> Receive(string liveId, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            using var _  = cancellationToken.Register(() =>
+            using var _ = cancellationToken.Register(() =>
             {
                 this.httpClient.CancelPendingRequests();
             });
 
             for (int disconnectedCount = 0; disconnectedCount < 5; ++disconnectedCount)
             {
-                string str;
+                Stream str;
                 try
                 {
-                    str = await this.httpClient.GetStringAsync($"http://live.nicovideo.jp/api/getplayerstatus/{liveId}").ConfigureAwait(false);
+                    str = await this.httpClient.GetStreamAsync($"https://live2.nicovideo.jp/unama/watch/{liveId}/programinfo").ConfigureAwait(false);
                 }
                 // httpClient.CancelPendingRequestsが呼ばれた、もしくはタイムアウト
                 catch (TaskCanceledException e)
@@ -81,21 +85,24 @@ namespace TVTComment.Model.NiconicoUtils
                         throw new OperationCanceledException(null, e, cancellationToken);
                     throw new NetworkNicoLiveCommentReceiverException(e);
                 }
-                catch(HttpRequestException e)
+                catch (HttpRequestException e)
                 {
                     throw new NetworkNicoLiveCommentReceiverException(e);
                 }
-                var playerStatus = XDocument.Parse(str).Root;
+                var playerStatus = await JsonDocument.ParseAsync(str, cancellationToken: cancellationToken).ConfigureAwait(false);
+                var playerStatusRoot = playerStatus.RootElement;
 
-                string threadId = playerStatus.Element("ms")?.Element("thread")?.Value;
-                string ms = playerStatus.Element("ms")?.Element("addr")?.Value;
-                string msPort = playerStatus.Element("ms")?.Element("port")?.Value;
-                if(threadId == null || ms == null || msPort == null)
+                if (playerStatusRoot.GetProperty("data").GetProperty("rooms").GetArrayLength() <= 0)
+                    throw new InvalidPlayerStatusNicoLiveCommentReceiverException("現在放送されていないか、コミュニティ限定配信のためコメント取得できませんでした");
+
+                var threadId = playerStatusRoot.GetProperty("data").GetProperty("rooms")[0].GetProperty("threadId").GetString();
+                var msUriStr = playerStatusRoot.GetProperty("data").GetProperty("rooms")[0].GetProperty("xmlSocketUri").GetString();
+                if (threadId == null || msUriStr == null)
                 {
-                    throw new InvalidPlayerStatusNicoLiveCommentReceiverException(str);
+                    throw new InvalidPlayerStatusNicoLiveCommentReceiverException(str.ToString());
                 }
-
-                using var tcpClinet = new TcpClient(ms, int.Parse(msPort));
+                var msUri = new Uri(msUriStr);
+                using var tcpClinet = new TcpClient(msUri.Host, msUri.Port);
                 var socketStream = tcpClinet.GetStream();
                 using var socketReader = new StreamReader(socketStream, Encoding.UTF8);
 
@@ -110,7 +117,7 @@ namespace TVTComment.Model.NiconicoUtils
                 {
                     await socketStream.WriteAsync(bodyEncoded, 0, bodyEncoded.Length, cancellationToken).ConfigureAwait(false);
                 }
-                catch(Exception e) when(e is ObjectDisposedException || e is SocketException || e is IOException)
+                catch (Exception e) when (e is ObjectDisposedException || e is SocketException || e is IOException)
                 {
                     if (cancellationToken.IsCancellationRequested)
                         throw new OperationCanceledException(null, e, cancellationToken);
@@ -142,7 +149,7 @@ namespace TVTComment.Model.NiconicoUtils
                         break; // 4時リセットかもしれない→もう一度試す
 
                     this.parser.Push(new string(buf[..receivedByte]));
-                    while(this.parser.DataAvailable())
+                    while (this.parser.DataAvailable())
                         yield return this.parser.Pop();
                 }
             }
