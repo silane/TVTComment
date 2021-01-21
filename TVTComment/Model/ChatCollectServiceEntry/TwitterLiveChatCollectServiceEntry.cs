@@ -3,6 +3,7 @@ using System;
 using TVTComment.Model.ChatCollectService;
 using TVTComment.Model.NiconicoUtils;
 using TVTComment.Model.TwitterUtils;
+using static TVTComment.Model.ChatCollectServiceEntry.TwitterLiveChatCollectServiceEntry.ChatCollectServiceCreationOption;
 
 namespace TVTComment.Model.ChatCollectServiceEntry
 {
@@ -24,7 +25,7 @@ namespace TVTComment.Model.ChatCollectServiceEntry
         public string Id => "TwitterLive";
         public string Name => "Twitterリアルタイム実況";
         public string Description => "指定した検索ワードでTwitter実況";
-        public bool CanUseDefaultCreationOption => false;
+        public bool CanUseDefaultCreationOption => true;
 
         private readonly ObservableValue<TwitterAuthentication> Session;
         private readonly SearchWordResolver searchWordResolver;
@@ -38,6 +39,7 @@ namespace TVTComment.Model.ChatCollectServiceEntry
 
         public IChatCollectService GetNewService(IChatCollectServiceCreationOption creationOption)
         {
+            creationOption ??= new ChatCollectServiceCreationOption(ModeSelectMethod.Auto, "");
             if (creationOption == null || creationOption is not ChatCollectServiceCreationOption co)
                 throw new ArgumentException($"Type of {nameof(creationOption)} must be {nameof(TwitterLiveChatCollectServiceEntry)}.{nameof(ChatCollectServiceCreationOption)}", nameof(creationOption));
             var session = Session.Value;
