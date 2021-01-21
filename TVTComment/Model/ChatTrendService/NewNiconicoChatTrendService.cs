@@ -27,7 +27,7 @@ namespace TVTComment.Model.ChatTrendService
 
         public async Task<IForceValueData> GetForceValueData()
         {
-            var lives = liveIdResolver.GetLiveIdList().Where(x => x.Contains("ch")).Select(x => x.Replace("ch",""));
+            var lives = liveIdResolver.GetLiveIdList().Where(x => x.Contains("ch")).Select(x => x.Replace("ch","")).Distinct();
             try
             {
                 foreach(var id in lives)
