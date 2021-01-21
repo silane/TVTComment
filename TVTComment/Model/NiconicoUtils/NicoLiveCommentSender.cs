@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Http;
 using System.Reflection;
 using System.Text;
@@ -75,26 +76,36 @@ namespace TVTComment.Model.NiconicoUtils
         /// <exception cref="ResponseErrorNicoLiveCommentSenderException"></exception>
         public async Task Send(string liveId, string message, string mail)
         {
-            string str;
+            Stream str;
             try
             {
-                str = await this.httpClient.GetStringAsync($"http://live.nicovideo.jp/api/getplayerstatus/{liveId}");
+                if (!liveId.StartsWith("lv")) // 代替えAPIではコミュニティ・チャンネルにおけるコメント鯖取得ができないのでlvを取得しに行く
+                {
+                    var getLiveId = await httpClient.GetStreamAsync($"https://live2.nicovideo.jp/unama/tool/v1/broadcasters/social_group/{liveId}/program").ConfigureAwait(false);
+                    var liveIdJson = await JsonDocument.ParseAsync(getLiveId).ConfigureAwait(false);
+                    var liveIdRoot = liveIdJson.RootElement;
+                    if (!liveIdRoot.GetProperty("meta").GetProperty("errorCode").GetString().Equals("OK")) throw new InvalidPlayerStatusNicoLiveCommentSenderException("コミュニティ・チャンネルが見つかりませんでした");
+                    liveId = liveIdRoot.GetProperty("data").GetProperty("nicoliveProgramId").GetString(); // lvから始まるLiveIDに置き換え
+
+                }
+                str = await this.httpClient.GetStreamAsync($"https://live2.nicovideo.jp/unama/watch/{liveId}/programinfo").ConfigureAwait(false);
             }
             catch(HttpRequestException e)
             {
                 throw new NetworkNicoLiveCommentSenderException(e);
             }
 
-            var playerStatus = XDocument.Parse(str).Root;
+            var playerStatus = await JsonDocument.ParseAsync(str).ConfigureAwait(false);
+            var playerStatusRoot = playerStatus.RootElement;
 
-            liveId = playerStatus.Element("stream")?.Element("id")?.Value;
-            string openTime = playerStatus.Element("stream")?.Element("open_time")?.Value;
-            if(liveId == null || openTime == null)
+            playerStatusRoot.GetProperty("data").GetProperty("beginAt").TryGetInt64(out long openTime);
+            
+            if(liveId == null || openTime == 0)
             {
-                throw new InvalidPlayerStatusNicoLiveCommentSenderException(str);
+                throw new InvalidPlayerStatusNicoLiveCommentSenderException(playerStatus.ToString());
             }
             // vposは10ミリ秒単位
-            long vpos = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() / 10 - long.Parse(openTime) * 100;
+            long vpos = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() / 10 - openTime * 100;
 
             var options = new JsonSerializerOptions
             {
