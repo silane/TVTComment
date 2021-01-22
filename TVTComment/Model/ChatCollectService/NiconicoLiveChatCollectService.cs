@@ -147,6 +147,9 @@ namespace TVTComment.Model.ChatCollectService
                 throw new ChatReceivingException("コメントサーバーから予期しないPlayerStatusが返されました:\n" + playerStatusStr);
             }
 
+            if (playerStatusRoot.GetProperty("data").GetProperty("rooms").GetArrayLength() <= 0)
+                throw new ChatReceivingException("現在放送されていないか、コミュニティ限定配信のためコメント取得できませんでした");
+
             liveId = playerStatusRoot.GetProperty("data").GetProperty("socialGroup").GetProperty("id").GetString();
 
             try

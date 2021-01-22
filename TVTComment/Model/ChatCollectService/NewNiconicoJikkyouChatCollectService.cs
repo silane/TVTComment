@@ -185,6 +185,9 @@ namespace TVTComment.Model.ChatCollectService
                 throw new ChatReceivingException("コメントサーバーから予期しないPlayerStatusが返されました:\n" + playerStatusStr);
             }
 
+            if (playerStatusRoot.GetProperty("data").GetProperty("rooms").GetArrayLength() <= 0)
+                throw new LiveNotFoundChatReceivingException();
+
             this.liveId = playerStatusRoot.GetProperty("data").GetProperty("socialGroup").GetProperty("id").GetString();
 
             try

@@ -92,9 +92,6 @@ namespace TVTComment.Model.NiconicoUtils
                 var playerStatus = await JsonDocument.ParseAsync(str, cancellationToken: cancellationToken).ConfigureAwait(false);
                 var playerStatusRoot = playerStatus.RootElement;
 
-                if (playerStatusRoot.GetProperty("data").GetProperty("rooms").GetArrayLength() <= 0)
-                    throw new InvalidPlayerStatusNicoLiveCommentReceiverException("現在放送されていないか、コミュニティ限定配信のためコメント取得できませんでした");
-
                 var threadId = playerStatusRoot.GetProperty("data").GetProperty("rooms")[0].GetProperty("threadId").GetString();
                 var msUriStr = playerStatusRoot.GetProperty("data").GetProperty("rooms")[0].GetProperty("xmlSocketUri").GetString();
                 if(threadId == null || msUriStr == null)
