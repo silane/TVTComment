@@ -44,7 +44,7 @@ namespace TVTComment.Model.NiconicoUtils
     class NicoLiveCommentReceiver : IDisposable
     {
         public NiconicoLoginSession NiconicoLoginSession { get; }
-        
+
         public NicoLiveCommentReceiver(NiconicoLoginSession niconicoLoginSession)
         {
             this.NiconicoLoginSession = niconicoLoginSession;

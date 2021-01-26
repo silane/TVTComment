@@ -67,7 +67,8 @@ namespace Nichan
                 reses = reses[1..];
             }
 
-            if (reses.Any(x => x.Length != 5))
+            // 通常は5フィールドだが、なぜか先頭行が6フィールドあるdatが確認されている
+            if (!reses.All(x => x.Length >= 5))
             {
                 throw new DatParserException();
             }
