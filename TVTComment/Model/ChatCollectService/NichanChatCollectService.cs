@@ -194,14 +194,14 @@ namespace TVTComment.Model.ChatCollectService
             currentChannel = channel;
             currentTime = time;
 
-            AggregateException e = resCollectTask.Exception;
-            if(e!=null)
+            AggregateException e = this.resCollectTask.Exception;
+            if(e != null)
             {
                 errored = true;
                 if (e.InnerExceptions.Count == 1 && e.InnerExceptions[0] is ChatCollectException)
                     throw e.InnerExceptions[0];
                 else
-                    throw new ChatCollectException($"スレ巡回スレッド内で予期しないエラー発生\n\n{e}",e);
+                    this.resCollectTask.Wait();
             }
 
             var newChats = this.chats.Where(x => (time - x.Time).Duration() < TimeSpan.FromSeconds(15)).ToArray();//投稿から15秒以内のレスのみ返す
