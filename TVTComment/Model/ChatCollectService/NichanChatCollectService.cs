@@ -180,7 +180,7 @@ namespace TVTComment.Model.ChatCollectService
                     var pairValue = pair.Value;
                     if (pair.Value.ResCount == 0)
                         pairValue.Title = thread.Title;
-                    pairValue.ResCount = thread.Res[^1].Number;
+                    pairValue.ResCount = thread.Res.Count == 0 ? 0 :  thread.Res[^1].Number;
                     lock(this.threads)
                         this.threads[pair.Key] = pairValue;
                 }
