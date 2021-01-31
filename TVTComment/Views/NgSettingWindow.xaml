@@ -54,6 +54,12 @@
                             <Button Content="色コメNG" Command="{Binding AddIroKomeNgCommand}"/>
                             <Button Content="上下コメNG" Command="{Binding AddJyougeKomeNgCommand}"/>
                             <Button Content="色コメかつ上下コメNG" Command="{Binding AddJyougeIroKomeNgCommand}"/>
+                            <Button Command="{Binding AddTextLengthNgCommand}" VerticalContentAlignment="Center">
+                                <TextBlock VerticalAlignment="Center">
+                                    <TextBox VerticalAlignment="Center" Width="30" Text="{Binding TextLengthCount.Value,UpdateSourceTrigger=PropertyChanged}" InputMethod.IsInputMethodSuspended="True"/>
+                                    文字以上のコメNG
+                                </TextBlock>
+                            </Button>
                         </StackPanel>
                     </GroupBox>
                     <GroupBox Header="改変">

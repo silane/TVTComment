@@ -71,6 +71,7 @@ namespace TVTComment.ViewModels
         public string NgText { get; set; }
         public Contents.ChatModRuleListItemViewModel SelectedRule { get; set; }
         public ReadOnlyObservableCollection<Contents.ChatModRuleListItemViewModel> Rules { get; private set; }
+        public ObservableValue<int> TextLengthCount { get; } = new ObservableValue<int>(20);
         public ObservableValue<int> SmallOnMultiLineRuleLineCount { get; } = new ObservableValue<int>(2);
         public ObservableValue<Color> SetColorRuleColor { get; } = new ObservableValue<Color>(Color.FromArgb(255, 255, 255));
 
@@ -79,6 +80,7 @@ namespace TVTComment.ViewModels
         public ICommand AddIroKomeNgCommand { get; private set; }
         public ICommand AddJyougeKomeNgCommand { get; private set; }
         public ICommand AddJyougeIroKomeNgCommand { get; private set; }
+        public ICommand AddTextLengthNgCommand { get; private set; }
         public ICommand AddRandomizeColorRuleCommand { get; private set; }
         public ICommand AddSmallOnMultiLineRuleCommand { get; private set; }
         public ICommand AddRemoveAnchorCommand { get; private set; }
@@ -131,6 +133,11 @@ namespace TVTComment.ViewModels
             AddJyougeIroKomeNgCommand = new DelegateCommand(() =>
             {
                 model.ChatModule.AddChatModRule(new Model.ChatModRules.JyougeIroKomeNgChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value)));
+            });
+
+            AddTextLengthNgCommand = new DelegateCommand(() =>
+            {
+                model.ChatModule.AddChatModRule(new Model.ChatModRules.TextLengthNg(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value),TextLengthCount.Value));
             });
 
             AddRandomizeColorRuleCommand = new DelegateCommand(() =>

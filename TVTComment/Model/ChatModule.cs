@@ -153,6 +153,11 @@ namespace TVTComment.Model
                     case "JyougeIroKomeNg":
                         entry.ChatModRule = new ChatModRules.JyougeIroKomeNgChatModRule(targetServices);
                         break;
+                    case "TextLengthNg":
+                        if (!int.TryParse(entity.Expression, out int textLength))
+                            textLength = 20;
+                        entry.ChatModRule = new ChatModRules.TextLengthNg(targetServices, textLength);
+                        break;
                     case "RandomizeColor":
                         entry.ChatModRule = new ChatModRules.RandomizeColorChatModRule(targetServices);
                         break;
@@ -226,6 +231,10 @@ namespace TVTComment.Model
                         break;
                     case ChatModRules.JyougeIroKomeNgChatModRule _:
                         entity.Type = "JyougeIroKomeNg";
+                        break;
+                    case ChatModRules.TextLengthNg textLength:
+                        entity.Type = "TextLengthNg";
+                        entity.Expression = textLength.MaxLength.ToString();
                         break;
                     case ChatModRules.RandomizeColorChatModRule _:
                         entity.Type = "RandomizeColor";
