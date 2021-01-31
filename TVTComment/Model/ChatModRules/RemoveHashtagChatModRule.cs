@@ -7,7 +7,7 @@ namespace TVTComment.Model.ChatModRules
 {
     class RemoveHashtagChatModRule : IChatModRule
     {
-        private static readonly Regex HashtagPattern = new Regex("#(w*[一-龠_ぁ-ん_ァ-ヴーａ-ｚＡ-Ｚa-zA-Z0-9]+|[a-zA-Z0-9_]+|[a-zA-Z0-9_]w*)", RegexOptions.Compiled);
+        private static readonly Regex HashtagPattern = new Regex("[#＃](w*[一-龠_ぁ-ん_ァ-ヴーａ-ｚＡ-Ｚa-zA-Z0-9]+|[a-zA-Z0-9_]+|[a-zA-Z0-9_]w*)", RegexOptions.Compiled);
 
         public string Description => "ハッシュタグを削除";
         public IEnumerable<IChatCollectServiceEntry> TargetChatCollectServiceEntries { get; }
@@ -26,6 +26,7 @@ namespace TVTComment.Model.ChatModRules
             }
 
             var newText = matches
+                .OrderByDescending(l => l.Length)
                 .Aggregate(chat.Text, (s, match) => s.Replace(match.Value, string.Empty))
                 .Trim();
             chat.SetText(newText);
