@@ -1,9 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Drawing;
 
 namespace TVTComment.Model.IPC.IPCMessage
 {
@@ -22,7 +18,7 @@ namespace TVTComment.Model.IPC.IPCMessage
         {
             string[] ret = new string[4];
             ret[0] = Chat.Text;
-            switch(Chat.Position)
+            switch (Chat.Position)
             {
                 case Chat.PositionType.Normal:
                     ret[1] = "Default";

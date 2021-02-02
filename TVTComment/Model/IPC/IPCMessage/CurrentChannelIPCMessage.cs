@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TVTComment.Model.IPC.IPCMessage
 {
@@ -29,7 +27,7 @@ namespace TVTComment.Model.IPC.IPCMessage
                 Channel.NetworkId = ushort.Parse(contents[3]);
                 Channel.TransportStreamId = ushort.Parse(contents[4]);
                 Channel.ServiceId = ushort.Parse(contents[5]);
-                
+
                 Channel.NetworkName = contents[7];
                 Channel.TransportStreamName = contents[8];
                 Channel.ServiceName = contents[9];
@@ -39,7 +37,7 @@ namespace TVTComment.Model.IPC.IPCMessage
                     DateTime.SpecifyKind(DateTimeOffset.FromUnixTimeSeconds(long.Parse(contents[14])).DateTime, DateTimeKind.Local),
                     new TimeSpan(0, 0, int.Parse(contents[15])));
             }
-            catch(FormatException)
+            catch (FormatException)
             {
                 throw new IPCMessageDecodeException("CurrentChannelのフォーマットが不正です");
             }

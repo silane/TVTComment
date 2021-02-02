@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Interactivity;
 
 namespace TVTComment.Views.Behaviors
 {
-    class FileDroppedTrigger:TriggerBase<FrameworkElement>
+    class FileDroppedTrigger : TriggerBase<FrameworkElement>
     {
         public string FilePath
         {
@@ -19,7 +14,7 @@ namespace TVTComment.Views.Behaviors
         // Using a DependencyProperty as the backing store for FilePath.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty FilePathProperty =
             DependencyProperty.Register("FilePath", typeof(string), typeof(FileDroppedTrigger), new PropertyMetadata(null));
-        
+
 
         protected override void OnAttached()
         {
@@ -46,11 +41,10 @@ namespace TVTComment.Views.Behaviors
                 e.Effects = DragDropEffects.None;
         }
 
-       
+
         private void AssociatedObject_Drop(object sender, DragEventArgs e)
         {
-            var files = e.Data.GetData(DataFormats.FileDrop) as string[];
-            if (files == null || files.Length == 0) return;
+            if (e.Data.GetData(DataFormats.FileDrop) is not string[] files || files.Length == 0) return;
             FilePath = files[0];
             e.Handled = true;
             InvokeActions(files);

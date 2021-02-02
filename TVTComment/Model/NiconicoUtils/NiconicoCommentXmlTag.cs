@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace TVTComment.Model.NiconicoUtils
 {
@@ -34,17 +32,17 @@ namespace TVTComment.Model.NiconicoUtils
             string mail, string userId, int premium, int anonymity, int abone
         )
         {
-            this.Text = text;
-            this.Thread = thread;
-            this.No = no;
-            this.Vpos = vpos;
-            this.Date = date;
-            this.DateUsec = dateUsec;
-            this.Mail = mail;
-            this.UserId = userId;
-            this.Premium = premium;
-            this.Anonymity = anonymity;
-            this.Abone = abone;
+            Text = text;
+            Thread = thread;
+            No = no;
+            Vpos = vpos;
+            Date = date;
+            DateUsec = dateUsec;
+            Mail = mail;
+            UserId = userId;
+            Premium = premium;
+            Anonymity = anonymity;
+            Abone = abone;
         }
     }
     class ThreadNiconicoCommentXmlTag : NiconicoCommentXmlTag

@@ -4,7 +4,7 @@ using System.Windows.Interactivity;
 
 namespace TVTComment.Views.Behaviors
 {
-    class DisposeDataContextAction:TriggerAction<FrameworkElement>
+    class DisposeDataContextAction : TriggerAction<FrameworkElement>
     {
         protected override void Invoke(object parameter)
         {

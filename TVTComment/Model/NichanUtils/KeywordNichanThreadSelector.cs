@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace TVTComment.Model.NichanUtils
 {
-    class KeywordNichanThreadSelector:INichanThreadSelector
+    class KeywordNichanThreadSelector : INichanThreadSelector
     {
         private static readonly HttpClient httpClient = new HttpClient();
         private readonly string boardHost;
@@ -21,29 +21,29 @@ namespace TVTComment.Model.NichanUtils
         public KeywordNichanThreadSelector(string boardUri, IEnumerable<string> keywords)
         {
             var uri = new Uri(boardUri);
-            this.boardHost = $"{uri.Scheme}://{uri.Host}";
-            this.boardName = uri.Segments[1];
-            if (this.boardName.EndsWith('/'))
-                this.boardName = this.boardName[..^1];
+            boardHost = $"{uri.Scheme}://{uri.Host}";
+            boardName = uri.Segments[1];
+            if (boardName.EndsWith('/'))
+                boardName = boardName[..^1];
 
-            this.BoardUri = boardUri;
-            Keywords = keywords.Select(x=>x.ToLower().Normalize(NormalizationForm.FormKD));
+            BoardUri = boardUri;
+            Keywords = keywords.Select(x => x.ToLower().Normalize(NormalizationForm.FormKD));
         }
 
         public async Task<IEnumerable<string>> Get(ChannelInfo channel, DateTimeOffset time, CancellationToken cancellationToken)
         {
-            byte[] subjectBytes = await httpClient.GetByteArrayAsync($"{this.boardHost}/{this.boardName}/subject.txt", cancellationToken);
+            byte[] subjectBytes = await httpClient.GetByteArrayAsync($"{boardHost}/{boardName}/subject.txt", cancellationToken);
             string subject = Encoding.GetEncoding(932).GetString(subjectBytes);
 
             using var textReader = new StringReader(subject);
             IEnumerable<Nichan.Thread> threadsInBoard = await Nichan.SubjecttxtParser.ParseFromStream(textReader);
 
             return threadsInBoard.Select(
-                x=> { x.Title = x.Title.ToLower().Normalize(NormalizationForm.FormKD); return x; }
+                x => { x.Title = x.Title.ToLower().Normalize(NormalizationForm.FormKD); return x; }
             ).Where(
                 x => Keywords.All(keyword => x.Title.Contains(keyword))
             ).Select(
-                x => $"{this.boardHost}/test/read.cgi/{this.boardName}/{x.Name}/l50"
+                x => $"{boardHost}/test/read.cgi/{boardName}/{x.Name}/l50"
             );
         }
     }

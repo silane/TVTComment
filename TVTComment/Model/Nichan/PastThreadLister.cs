@@ -14,7 +14,7 @@ namespace Nichan
     /// </summary>
     class PastThreadLister
     {
-        public string Board => this.threadListRetriever.Board;
+        public string Board => threadListRetriever.Board;
 
         /// <param name="board">板</param>
         /// <param name="oneOfTheServer">板が所属したことがあるサーバーのうちの一つ</param>
@@ -24,12 +24,12 @@ namespace Nichan
             if (backTime <= TimeSpan.Zero)
                 throw new ArgumentOutOfRangeException(nameof(backTime), $"{nameof(backTime)} must be positive");
             this.backTime = backTime;
-            this.threadListRetriever = new ArchivedThreadListRetriever(board, oneOfTheServer);
+            threadListRetriever = new ArchivedThreadListRetriever(board, oneOfTheServer);
         }
 
         public async Task Initialize(CancellationToken cancellationToken)
         {
-            await this.threadListRetriever.Prepare(cancellationToken).ConfigureAwait(false);
+            await threadListRetriever.Prepare(cancellationToken).ConfigureAwait(false);
         }
 
         public Task<IEnumerable<Thread>> GetAt(DateTimeOffset time, CancellationToken cancellationToken)
@@ -43,16 +43,16 @@ namespace Nichan
         /// </summary>
         public async Task<IEnumerable<Thread>> GetBetween(DateTimeOffset startTime, DateTimeOffset endTime, CancellationToken cancellationToken)
         {
-            var start = startTime - this.backTime;
-            var threads = await this.threadListRetriever.GetThreadsCreatedAt(start, endTime, cancellationToken).ConfigureAwait(false);
+            var start = startTime - backTime;
+            var threads = await threadListRetriever.GetThreadsCreatedAt(start, endTime, cancellationToken).ConfigureAwait(false);
 
             var ret = new List<Thread>();
-            foreach(Thread thread in threads)
+            foreach (Thread thread in threads)
             {
-                if(!this.threadTimeRangeCache.TryGetValue(thread.Uri.ToString(), out var range))
+                if (!threadTimeRangeCache.TryGetValue(thread.Uri.ToString(), out var range))
                 {
-                    range = await getThreadTimeRange(thread.Uri.ToString(), cancellationToken).ConfigureAwait(false);
-                    this.threadTimeRangeCache.Add(thread.Uri.ToString(), range);
+                    range = await GetThreadTimeRange(thread.Uri.ToString(), cancellationToken).ConfigureAwait(false);
+                    threadTimeRangeCache.Add(thread.Uri.ToString(), range);
                 }
 
                 if (startTime <= range.lastResTime && range.firstResTime < endTime)
@@ -72,12 +72,12 @@ namespace Nichan
         private readonly Dictionary<string, (DateTimeOffset firstResTime, DateTimeOffset lastResTime)> threadTimeRangeCache = new Dictionary<string, (DateTimeOffset, DateTimeOffset)>();
 
         private static readonly Regex reThreadUrl = new Regex(@"//(?<server>[^.]*)\.\dch\.(sc|net)/test/read\.cgi/(?<board>[^/]*)/(?<thread>[^/]*)($|/)");
-        private static async Task<(DateTimeOffset firstResTime, DateTimeOffset lastResTime)> getThreadTimeRange(string threadUrl, CancellationToken cancellationToken)
+        private static async Task<(DateTimeOffset firstResTime, DateTimeOffset lastResTime)> GetThreadTimeRange(string threadUrl, CancellationToken cancellationToken)
         {
             var reses = new List<Res>();
 
             Match match = reThreadUrl.Match(threadUrl);
-            if(match.Success)
+            if (match.Success)
             {
                 // まず2ch.scのdatから取得する
                 (string server, string board, string threadId) = (match.Groups["server"].Value, match.Groups["board"].Value, match.Groups["thread"].Value);
@@ -90,11 +90,11 @@ namespace Nichan
                 {
                     datResponse = await httpClient.GetStringAsync(datUrl, cancellationToken).ConfigureAwait(false);
                 }
-                catch(HttpRequestException)
+                catch (HttpRequestException)
                 {
                 }
 
-                if(datResponse != null)
+                if (datResponse != null)
                 {
                     var datParser = new DatParser();
                     datParser.Feed(datResponse);
@@ -108,7 +108,7 @@ namespace Nichan
                 }
             }
 
-            if(reses.Count == 0)
+            if (reses.Count == 0)
             {
                 // 2ch.scがダメだった場合、5ch.netのスクレイピング
                 if (!threadUrl.EndsWith('/'))

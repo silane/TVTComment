@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
@@ -43,14 +37,14 @@ namespace TVTComment.Views.Behaviors
         private void AssociatedObject_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             //AltとかといっしょにEnterを押すとEnterはSystemKey扱いになるっぽい
-            if (Keyboard.Modifiers == ModifierKey && (e.SystemKey==Key.Enter || e.Key==Key.Enter))
+            if (Keyboard.Modifiers == ModifierKey && (e.SystemKey == Key.Enter || e.Key == Key.Enter))
             {
                 int idx = AssociatedObject.CaretIndex;
                 AssociatedObject.Text = AssociatedObject.Text.Insert(AssociatedObject.CaretIndex, "\n");
                 AssociatedObject.CaretIndex = idx + 1;
                 e.Handled = true;
             }
-            else if (e.Key==Key.Enter)
+            else if (e.Key == Key.Enter)
             {
                 var textBinding = BindingOperations.GetBindingExpression(AssociatedObject, TextBox.TextProperty);
                 if (textBinding != null)

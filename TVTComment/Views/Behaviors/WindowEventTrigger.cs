@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Interactivity;
 
 namespace TVTComment.Views.Behaviors
 {
-    class WindowEventTrigger:EventTriggerBase<FrameworkElement>
+    class WindowEventTrigger : EventTriggerBase<FrameworkElement>
     {
         private Window window;
 
@@ -26,16 +21,15 @@ namespace TVTComment.Views.Behaviors
 
         protected override void OnAttached()
         {
-            var element = AssociatedObject as FrameworkElement;
-            if (element == null) return;
+            if (AssociatedObject is not FrameworkElement element) return;
             element.Loaded += AssociatedObject_Loaded;
         }
 
         private void AssociatedObject_Loaded(object sender, RoutedEventArgs e)
         {
-            ((FrameworkElement) AssociatedObject).Loaded -= AssociatedObject_Loaded;
+            ((FrameworkElement)AssociatedObject).Loaded -= AssociatedObject_Loaded;
 
-            window=Window.GetWindow(AssociatedObject);
+            window = Window.GetWindow(AssociatedObject);
             SourceObject = window;
         }
 

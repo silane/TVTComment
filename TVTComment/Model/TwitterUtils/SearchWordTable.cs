@@ -6,7 +6,7 @@ namespace TVTComment.Model.TwitterUtils
 {
     class SearchWordTable
     {
-        private enum RuleTarget { Flags,NSId,NId };
+        private enum RuleTarget { Flags, NSId, NId };
         private readonly List<Tuple<RuleTarget, uint, string>> rules = new List<Tuple<RuleTarget, uint, string>>();
         private readonly Dictionary<ChannelEntry, string> tableCache = new Dictionary<ChannelEntry, string>();
 

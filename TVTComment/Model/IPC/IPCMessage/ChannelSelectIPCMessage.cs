@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TVTComment.Model.IPC.IPCMessage
 {
-    class ChannelSelectIPCMessage:IIPCMessage
+    class ChannelSelectIPCMessage : IIPCMessage
     {
         public int SpaceIndex;
         public int ChannelIndex;

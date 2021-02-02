@@ -2,11 +2,8 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Interactivity;
 
 namespace TVTComment.Views.AttachedProperties
 {
@@ -16,7 +13,7 @@ namespace TVTComment.Views.AttachedProperties
         {
             public string Id { get; }
             public double Width { get; }
-            public ColumnInfo(string id,double width)
+            public ColumnInfo(string id, double width)
             {
                 Id = id;
                 Width = width;
@@ -51,12 +48,12 @@ namespace TVTComment.Views.AttachedProperties
 
         // Using a DependencyProperty as the backing store for Binding.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty BindingProperty =
-            DependencyProperty.RegisterAttached("Binding", typeof(ColumnInfo[]), typeof(GridViewColumnSettingsBinder), new PropertyMetadata(new ColumnInfo[0],OnBindingPropertyChanged));
+            DependencyProperty.RegisterAttached("Binding", typeof(ColumnInfo[]), typeof(GridViewColumnSettingsBinder), new PropertyMetadata(Array.Empty<ColumnInfo>(), OnBindingPropertyChanged));
 
 
-        private static Dictionary<GridViewColumnCollection, ListView> dict = new Dictionary<GridViewColumnCollection, ListView>();
+        private static readonly Dictionary<GridViewColumnCollection, ListView> dict = new Dictionary<GridViewColumnCollection, ListView>();
 
-        private static void OnBindingPropertyChanged(DependencyObject d,DependencyPropertyChangedEventArgs e)
+        private static void OnBindingPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var listView = (ListView)d;
             if (!listView.IsLoaded)
@@ -67,8 +64,8 @@ namespace TVTComment.Views.AttachedProperties
             else
             {
                 AttachGridViewColumnChangedEvent(listView);
-                updateGridViewColumns(listView);
-                updateColumnInfos(listView);
+                UpdateGridViewColumns(listView);
+                UpdateColumnInfos(listView);
             }
         }
 
@@ -77,8 +74,8 @@ namespace TVTComment.Views.AttachedProperties
             var listView = (ListView)sender;
             listView.Loaded -= ListView_Loaded;
             AttachGridViewColumnChangedEvent(listView);
-            updateGridViewColumns(listView);
-            updateColumnInfos(listView);
+            UpdateGridViewColumns(listView);
+            UpdateColumnInfos(listView);
         }
 
         private static void AttachGridViewColumnChangedEvent(ListView listView)
@@ -87,7 +84,7 @@ namespace TVTComment.Views.AttachedProperties
             dict[gridView.Columns] = listView;
             gridView.Columns.CollectionChanged -= GridViewColumnCollectionChanged;
             gridView.Columns.CollectionChanged += GridViewColumnCollectionChanged;
-            foreach(var column in gridView.Columns)
+            foreach (var column in gridView.Columns)
             {
                 ((INotifyPropertyChanged)column).PropertyChanged -= GridViewColumnPropertyChanged;
                 ((INotifyPropertyChanged)column).PropertyChanged += GridViewColumnPropertyChanged;
@@ -98,19 +95,18 @@ namespace TVTComment.Views.AttachedProperties
         {
             var column = (GridViewColumn)sender;
             var listView = dict.First(x => x.Key.Contains(column)).Value;
-            if (e.PropertyName==nameof(GridViewColumn.Width))
+            if (e.PropertyName == nameof(GridViewColumn.Width))
             {
-                updateColumnInfos(listView);
+                UpdateColumnInfos(listView);
             }
         }
 
         private static void GridViewColumnCollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
-            var columns = (GridViewColumnCollection)sender;
-            updateColumnInfos(dict[(GridViewColumnCollection)sender]);
+            UpdateColumnInfos(dict[(GridViewColumnCollection)sender]);
         }
 
-        private static void updateColumnInfos(ListView listView)
+        private static void UpdateColumnInfos(ListView listView)
         {
             var gridView = (GridView)listView.View;
             var columnInfos = gridView.Columns.Select(x =>
@@ -120,26 +116,26 @@ namespace TVTComment.Views.AttachedProperties
                 return new ColumnInfo(id, x.Width);
             }).ToArray();
             var currentColumnInfos = GetBinding(listView);
-            if (currentColumnInfos!=null && currentColumnInfos.SequenceEqual(columnInfos)) return;
+            if (currentColumnInfos != null && currentColumnInfos.SequenceEqual(columnInfos)) return;
             SetBinding(listView, columnInfos);
         }
 
-        private static void updateGridViewColumns(ListView listView)
+        private static void UpdateGridViewColumns(ListView listView)
         {
             var gridView = (GridView)listView.View;
             var columnInfos = GetBinding(listView);
             if (columnInfos == null) return;
             int idx = 0;
-            foreach(var columnInfo in columnInfos)
+            foreach (var columnInfo in columnInfos)
             {
                 int idx2 = 0;
-                foreach(var column in gridView.Columns)
+                foreach (var column in gridView.Columns)
                 {
                     var id = GetColumnId(column);
-                    if(id==columnInfo.Id)
+                    if (id == columnInfo.Id)
                     {
                         gridView.Columns[idx2].Width = columnInfo.Width;
-                        gridView.Columns.Move(idx2,idx);
+                        gridView.Columns.Move(idx2, idx);
                         break;
                     }
                     idx2++;

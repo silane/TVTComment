@@ -1,19 +1,14 @@
 ﻿using Prism.Regions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Interactivity;
 
 namespace TVTComment.Views.Behaviors
 {
-    class RemoveRegionAction:TriggerAction<DependencyObject>
+    class RemoveRegionAction : TriggerAction<DependencyObject>
     {
         protected override void Invoke(object parameter)
         {
-            IRegionManager regionManager=FindRegionManager(AssociatedObject);
+            IRegionManager regionManager = FindRegionManager(AssociatedObject);
             if (regionManager == null) return;
             regionManager.Regions.Remove(RegionManager.GetRegionName(AssociatedObject));
         }

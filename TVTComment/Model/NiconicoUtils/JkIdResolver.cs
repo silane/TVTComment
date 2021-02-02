@@ -1,16 +1,14 @@
-﻿using System.Collections.Generic;
-
-namespace TVTComment.Model.NiconicoUtils
+﻿namespace TVTComment.Model.NiconicoUtils
 {
     /// <summary>
     /// ネットワークID・サービスIDとニコニコ実況IDの対応付けを行う
     /// </summary>
     class JkIdResolver
     {
-        private ChannelDatabase channelDatabase;
-        private JkIdTable jkIdTable;
+        private readonly ChannelDatabase channelDatabase;
+        private readonly JkIdTable jkIdTable;
 
-        public JkIdResolver(ChannelDatabase channelDatabase,JkIdTable jkIdTable)
+        public JkIdResolver(ChannelDatabase channelDatabase, JkIdTable jkIdTable)
         {
             this.channelDatabase = channelDatabase;
             this.jkIdTable = jkIdTable;
@@ -21,7 +19,7 @@ namespace TVTComment.Model.NiconicoUtils
         /// </summary>
         /// <param name="networkId">ネットワークID 不明なら0</param>
         /// <param name="serviceId">サービスID</param>
-        public int Resolve(ushort networkId,ushort serviceId)
+        public int Resolve(ushort networkId, ushort serviceId)
         {
             if (networkId == 0)
             {

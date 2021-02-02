@@ -41,7 +41,7 @@ namespace TVTComment.Model.ChatService
         {
             public string Title { get; }
             public Uri Uri { get; }
-            public BoardInfo(string title,Uri uri)
+            public BoardInfo(string title, Uri uri)
             {
                 Title = title;
                 Uri = uri;
@@ -53,16 +53,16 @@ namespace TVTComment.Model.ChatService
         public IReadOnlyList<IChatTrendServiceEntry> ChatTrendServiceEntries { get; }
         public IEnumerable<BoardInfo> BoardList { get; }
 
-        public TimeSpan ResCollectInterval => this.resCollectInterval.Value;
-        public TimeSpan ThreadSearchInterval => this.threadSearchInterval.Value;
-        public string GochanApiHmKey => this.nichanApiClient.Value.HmKey;
-        public string GochanApiAppKey => this.nichanApiClient.Value.AppKey;
-        public string GochanApiUserId => this.nichanApiClient.Value.UserId;
-        public string GochanApiPassword => this.nichanApiClient.Value.Password;
-        public string GochanApiAuthUserAgent => this.nichanApiClient.Value.AuthUserAgent;
-        public string GochanApiAuthX2UA => this.nichanApiClient.Value.AuthX2chUA;
-        public string GochanApiUserAgent => this.nichanApiClient.Value.UserAgent;
-        public TimeSpan PastCollectServiceBackTime => this.pastCollectServiceBackTime.Value;
+        public TimeSpan ResCollectInterval => resCollectInterval.Value;
+        public TimeSpan ThreadSearchInterval => threadSearchInterval.Value;
+        public string GochanApiHmKey => nichanApiClient.Value.HmKey;
+        public string GochanApiAppKey => nichanApiClient.Value.AppKey;
+        public string GochanApiUserId => nichanApiClient.Value.UserId;
+        public string GochanApiPassword => nichanApiClient.Value.Password;
+        public string GochanApiAuthUserAgent => nichanApiClient.Value.AuthUserAgent;
+        public string GochanApiAuthX2UA => nichanApiClient.Value.AuthX2chUA;
+        public string GochanApiUserAgent => nichanApiClient.Value.UserAgent;
+        public TimeSpan PastCollectServiceBackTime => pastCollectServiceBackTime.Value;
 
         //このChatServiceに行われた設定変更が子のChatServiceEntryに伝わるようにするためにObservableValueで包む
         private readonly ObservableValue<TimeSpan> resCollectInterval = new ObservableValue<TimeSpan>();
@@ -108,28 +108,28 @@ namespace TVTComment.Model.ChatService
             boardDatabase = new NichanUtils.BoardDatabase(boardSetting.BoardEntries, boardSetting.ThreadMappingRuleEntries);
             threadResolver = new NichanUtils.ThreadResolver(channelDatabase, boardDatabase);
 
-            this.resCollectInterval.Value = settings.ThreadUpdateInterval;
-            this.threadSearchInterval.Value = settings.ThreadListUpdateInterval;
-            this.nichanApiClient.Value = new Nichan.ApiClient(
+            resCollectInterval.Value = settings.ThreadUpdateInterval;
+            threadSearchInterval.Value = settings.ThreadListUpdateInterval;
+            nichanApiClient.Value = new Nichan.ApiClient(
                 settings.GochanApi.HmKey, settings.GochanApi.AppKey,
                 settings.GochanApi.UserId, settings.GochanApi.Password,
                 settings.GochanApi.AuthUserAgent, settings.GochanApi.AuthX2chUA, settings.GochanApi.UserAgent
             );
-            this.pastCollectServiceBackTime.Value = settings.PastCollectServiceBackTime;
+            pastCollectServiceBackTime.Value = settings.PastCollectServiceBackTime;
 
             ChatCollectServiceEntries = new ChatCollectServiceEntry.IChatCollectServiceEntry[] {
                 new ChatCollectServiceEntry.DATNichanChatCollectServiceEntry(this, resCollectInterval, threadSearchInterval, threadResolver, nichanApiClient),
                 new ChatCollectServiceEntry.PastNichanChatCollectServiceEntry(this, threadResolver, pastCollectServiceBackTime),
             };
-            ChatTrendServiceEntries = new IChatTrendServiceEntry[0];
+            ChatTrendServiceEntries = Array.Empty<IChatTrendServiceEntry>();
 
             BoardList = boardDatabase.BoardList.Select(x => new BoardInfo(x.Title, x.Uri));
         }
 
         public void SetIntervalValues(TimeSpan resCollectInterval, TimeSpan threadSearchInterval)
         {
-            this.settings.ThreadUpdateInterval = resCollectInterval;
-            this.settings.ThreadListUpdateInterval = threadSearchInterval;
+            settings.ThreadUpdateInterval = resCollectInterval;
+            settings.ThreadListUpdateInterval = threadSearchInterval;
 
             this.resCollectInterval.Value = resCollectInterval;
             this.threadSearchInterval.Value = threadSearchInterval;
@@ -140,17 +140,17 @@ namespace TVTComment.Model.ChatService
             string authUserAgent, string authX2chUA, string userAgent
         )
         {
-            using (this.nichanApiClient.Value)
+            using (nichanApiClient.Value)
             {
-                this.settings.GochanApi.HmKey = hmKey;
-                this.settings.GochanApi.AppKey = appKey;
-                this.settings.GochanApi.UserId = userId;
-                this.settings.GochanApi.Password = password;
-                this.settings.GochanApi.AuthUserAgent = authUserAgent;
-                this.settings.GochanApi.AuthX2chUA = authX2chUA;
-                this.settings.GochanApi.UserAgent = userAgent;
+                settings.GochanApi.HmKey = hmKey;
+                settings.GochanApi.AppKey = appKey;
+                settings.GochanApi.UserId = userId;
+                settings.GochanApi.Password = password;
+                settings.GochanApi.AuthUserAgent = authUserAgent;
+                settings.GochanApi.AuthX2chUA = authX2chUA;
+                settings.GochanApi.UserAgent = userAgent;
 
-                this.nichanApiClient.Value = new Nichan.ApiClient(
+                nichanApiClient.Value = new Nichan.ApiClient(
                     hmKey, appKey, userId, password,
                     authUserAgent, authX2chUA, userAgent
                 );
@@ -159,8 +159,8 @@ namespace TVTComment.Model.ChatService
 
         public void SetPastCollectServiceBackTime(TimeSpan value)
         {
-            this.settings.PastCollectServiceBackTime = value;
-            this.pastCollectServiceBackTime.Value = value;
+            settings.PastCollectServiceBackTime = value;
+            pastCollectServiceBackTime.Value = value;
         }
 
         public void Dispose()

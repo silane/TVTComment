@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TVTComment.Model.IPC.IPCMessage
 {
@@ -14,7 +12,7 @@ namespace TVTComment.Model.IPC.IPCMessage
 
         public void Decode(IEnumerable<string> content)
         {
-            ChannelInfo channelInfo=null;
+            ChannelInfo channelInfo = null;
             List<ChannelInfo> channelList = new List<ChannelInfo>();
 
             try
@@ -24,23 +22,24 @@ namespace TVTComment.Model.IPC.IPCMessage
                     switch (item.Index % 11)
                     {
                         case 0:
-                            channelInfo = new ChannelInfo();
-
-                            channelInfo.SpaceIndex = int.Parse(item.Value);
+                            channelInfo = new ChannelInfo
+                            {
+                                SpaceIndex = int.Parse(item.Value)
+                            };
                             break;
                         case 1:
                             channelInfo.ChannelIndex = int.Parse(item.Value);
                             break;
 
                         case 2:
-                            switch (item.Value)
+                            channelInfo.TuningSpace = item.Value switch
                             {
-                                case "Unknown":channelInfo.TuningSpace = ChannelInfo.TuningSpaceType.Unknown;break;
-                                case "Terrestrial": channelInfo.TuningSpace = ChannelInfo.TuningSpaceType.Terrestrial; break;
-                                case "BS": channelInfo.TuningSpace = ChannelInfo.TuningSpaceType.BS; break;
-                                case "CS": channelInfo.TuningSpace = ChannelInfo.TuningSpaceType.CS; break;
-                                default: throw new IPCMessageDecodeException("ChannelListのTuningSpaceの値が不正です");
-                            }
+                                "Unknown" => ChannelInfo.TuningSpaceType.Unknown,
+                                "Terrestrial" => ChannelInfo.TuningSpaceType.Terrestrial,
+                                "BS" => ChannelInfo.TuningSpaceType.BS,
+                                "CS" => ChannelInfo.TuningSpaceType.CS,
+                                _ => throw new IPCMessageDecodeException("ChannelListのTuningSpaceの値が不正です"),
+                            };
                             break;
                         case 3:
                             channelInfo.RemoteControlKeyId = int.Parse(item.Value);
@@ -75,7 +74,7 @@ namespace TVTComment.Model.IPC.IPCMessage
                     }
                 }
             }
-            catch(FormatException e)
+            catch (FormatException e)
             {
                 throw new IPCMessageDecodeException("ChannelListのフォーマットが異常です", e);
             }

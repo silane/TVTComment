@@ -1,9 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.IO.Pipes;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,14 +9,14 @@ namespace TVTComment.Model.IPC
     /// <summary>
     /// 表示側（プラグイン側）とやり取りする通信トンネル
     /// </summary>
-    class IPCTunnel:IDisposable
+    class IPCTunnel : IDisposable
     {
-        IPCProtocolStream upStream;
-        IPCProtocolStream downStream;
-        
-        public IPCTunnel(string sendPipeName,string receivePipeName)
+        readonly IPCProtocolStream upStream;
+        readonly IPCProtocolStream downStream;
+
+        public IPCTunnel(string sendPipeName, string receivePipeName)
         {
-            upStream = new IPCProtocolStream(new NamedPipeClientStream(".",sendPipeName,PipeDirection.InOut));
+            upStream = new IPCProtocolStream(new NamedPipeClientStream(".", sendPipeName, PipeDirection.InOut));
             downStream = new IPCProtocolStream(new NamedPipeClientStream(".", receivePipeName, PipeDirection.InOut));
         }
 
@@ -29,10 +26,10 @@ namespace TVTComment.Model.IPC
             await ((NamedPipeClientStream)downStream.BaseStream).ConnectAsync(cancellationToken);
         }
 
-        public async Task Send(IPCMessage.IIPCMessage msg,CancellationToken cancellationToken)
+        public async Task Send(IPCMessage.IIPCMessage msg, CancellationToken cancellationToken)
         {
             RawIPCMessage rawMsg = new RawIPCMessage { MessageName = msg.MessageName, Contents = msg.Encode() };
-            await upStream.Write(rawMsg,cancellationToken).ConfigureAwait(false);
+            await upStream.Write(rawMsg, cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -45,7 +42,7 @@ namespace TVTComment.Model.IPC
             RawIPCMessage rawmsg;
             rawmsg = await downStream.Read(cancellationToken).ConfigureAwait(false);
 
-            if(rawmsg==null)
+            if (rawmsg == null)
             {
                 //接続が切れた
                 throw new EndOfStreamException("Connection to server was down");
@@ -61,7 +58,7 @@ namespace TVTComment.Model.IPC
             {
                 ((IDisposable)upStream).Dispose();
             }
-            catch(IOException) { }
+            catch (IOException) { }
             catch (InvalidOperationException) { }
             try
             {

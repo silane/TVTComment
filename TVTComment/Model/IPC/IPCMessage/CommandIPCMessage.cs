@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TVTComment.Model.IPC.IPCMessage
 {
-    class CommandIPCMessage:IIPCMessage
+    class CommandIPCMessage : IIPCMessage
     {
-        public string MessageName=>"Command";
+        public string MessageName => "Command";
 
         public string CommandId { get; private set; }
 

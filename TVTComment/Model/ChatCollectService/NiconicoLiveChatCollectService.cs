@@ -54,26 +54,26 @@ namespace TVTComment.Model.ChatCollectService
             NiconicoUtils.NiconicoLoginSession session
         )
         {
-            this.ServiceEntry = serviceEntry;
-            this.originalLiveId = liveId;
+            ServiceEntry = serviceEntry;
+            originalLiveId = liveId;
 
             var assembly = Assembly.GetExecutingAssembly().GetName();
             var ua = assembly.Name + "/" + assembly.Version.ToString(3);
 
             var handler = new HttpClientHandler();
             handler.CookieContainer.Add(session.Cookie);
-            this.httpClient = new HttpClient(handler);
-            this.httpClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", ua);
+            httpClient = new HttpClient(handler);
+            httpClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", ua);
 
-            this.commentReceiver = new NiconicoUtils.NicoLiveCommentReceiver(session);
-            this.commentSender = new NiconicoUtils.NicoLiveCommentSender(session);
+            commentReceiver = new NiconicoUtils.NicoLiveCommentReceiver(session);
+            commentSender = new NiconicoUtils.NicoLiveCommentSender(session);
 
-            this.chatCollectTask = this.collectChat(this.cancel.Token);
+            chatCollectTask = CollectChat(cancel.Token);
         }
 
         public string GetInformationText()
         {
-            return $"生放送ID: {this.originalLiveId}" + (this.liveId != "" ? $" ({this.liveId})" : "");
+            return $"生放送ID: {originalLiveId}" + (liveId != "" ? $" ({liveId})" : "");
         }
 
         public IEnumerable<Chat> GetChats(ChannelInfo channel, DateTime time)
@@ -93,43 +93,41 @@ namespace TVTComment.Model.ChatCollectService
             }
 
             // Heartbeat送信
-            if(DateTime.Now >= this.lastHeartbeatTime.AddSeconds(60))
+            if (DateTime.Now >= lastHeartbeatTime.AddSeconds(60))
             {
-                this.lastHeartbeatTime = DateTime.Now;
-                this.heartbeat(this.cancel.Token);
+                lastHeartbeatTime = DateTime.Now;
+                Heartbeat(cancel.Token);
             }
 
             //非同期部分で集めたデータからチャットを生成
             var ret = new List<Chat>();
-            while(this.commentTagQueue.TryDequeue(out var tag))
+            while (commentTagQueue.TryDequeue(out var tag))
             {
-                var chatTag = tag as NiconicoUtils.ChatNiconicoCommentXmlTag;
-                var leaveThreadTag = tag as NiconicoUtils.LeaveThreadNiconicoCommentXmlTag;
-                if (chatTag != null)
-                    ret.Add(NiconicoUtils.ChatNiconicoCommentXmlTagToChat.Convert(chatTag));
-                else if (leaveThreadTag != null)
+                if (tag as NiconicoUtils.ChatNiconicoCommentXmlTag != null)
+                    ret.Add(NiconicoUtils.ChatNiconicoCommentXmlTagToChat.Convert(tag as NiconicoUtils.ChatNiconicoCommentXmlTag));
+                else if (tag is NiconicoUtils.LeaveThreadNiconicoCommentXmlTag)
                     cancel.Cancel();
             }
             return ret;
         }
 
-        private async Task collectChat(CancellationToken cancel)
+        private async Task CollectChat(CancellationToken cancel)
         {
             Stream playerStatusStr;
             try
             {
                 if (!originalLiveId.StartsWith("lv")) // 代替えAPIではコミュニティ・チャンネルにおけるコメント鯖取得ができないのでlvを取得しに行く
                 {
-                    var getLiveId = await httpClient.GetStreamAsync($"https://live2.nicovideo.jp/unama/tool/v1/broadcasters/social_group/{originalLiveId}/program").ConfigureAwait(false);
+                    var getLiveId = await httpClient.GetStreamAsync($"https://live2.nicovideo.jp/unama/tool/v1/broadcasters/social_group/{originalLiveId}/program", cancel).ConfigureAwait(false);
                     var liveIdJson = await JsonDocument.ParseAsync(getLiveId, cancellationToken: cancel).ConfigureAwait(false);
                     var liveIdRoot = liveIdJson.RootElement;
                     if (!liveIdRoot.GetProperty("meta").GetProperty("errorCode").GetString().Equals("OK")) throw new ChatReceivingException("コミュニティ・チャンネルが見つかりませんでした");
                     originalLiveId = liveIdRoot.GetProperty("data").GetProperty("nicoliveProgramId").GetString(); // lvから始まるLiveIDに置き換え
 
                 }
-                playerStatusStr = await httpClient.GetStreamAsync($"https://live2.nicovideo.jp/unama/watch/{originalLiveId}/programinfo").ConfigureAwait(false);
+                playerStatusStr = await httpClient.GetStreamAsync($"https://live2.nicovideo.jp/unama/watch/{originalLiveId}/programinfo", cancel).ConfigureAwait(false);
             }
-            catch(HttpRequestException e)
+            catch (HttpRequestException e)
             {
                 throw new ChatReceivingException("サーバーとの通信でエラーが発生しました", e);
             }
@@ -154,45 +152,45 @@ namespace TVTComment.Model.ChatCollectService
 
             try
             {
-                await foreach (NiconicoUtils.NiconicoCommentXmlTag tag in this.commentReceiver.Receive(originalLiveId, cancel))
+                await foreach (NiconicoUtils.NiconicoCommentXmlTag tag in commentReceiver.Receive(originalLiveId, cancel))
                 {
-                    this.commentTagQueue.Enqueue(tag);
+                    commentTagQueue.Enqueue(tag);
                 }
             }
-            catch(NiconicoUtils.InvalidPlayerStatusNicoLiveCommentReceiverException e)
+            catch (NiconicoUtils.InvalidPlayerStatusNicoLiveCommentReceiverException e)
             {
                 throw new ChatReceivingException("サーバーから予期しないPlayerStatusが返されました:\n" + e.PlayerStatus, e);
             }
-            catch(NiconicoUtils.NetworkNicoLiveCommentReceiverException e)
+            catch (NiconicoUtils.NetworkNicoLiveCommentReceiverException e)
             {
-                throw new ChatReceivingException("サーバーとの通信でエラーが発生しました"+ liveId, e);
+                throw new ChatReceivingException("サーバーとの通信でエラーが発生しました" + liveId, e);
             }
-            catch(NiconicoUtils.ConnectionClosedNicoLiveCommentReceiverException e)
+            catch (NiconicoUtils.ConnectionClosedNicoLiveCommentReceiverException e)
             {
                 throw new ChatReceivingException("サーバーとの通信が切断されました", e);
             }
         }
 
-        private async void heartbeat(CancellationToken cancel)
+        private async void Heartbeat(CancellationToken cancel)
         {
-            if (this.liveId == "")
+            if (liveId == "")
                 return;
             // async void なのでこの関数内の例外は無視される
-            await this.httpClient.PostAsync(
+            await httpClient.PostAsync(
                 "http://ow.live.nicovideo.jp/api/heartbeat",
-                new FormUrlEncodedContent(new Dictionary<string, string> { { "v", this.liveId } }),
+                new FormUrlEncodedContent(new Dictionary<string, string> { { "v", liveId } }),
                 cancel
             );
         }
 
         public async Task PostChat(BasicChatPostObject chatPostObject)
         {
-            if (this.liveId == "")
+            if (liveId == "")
                 throw new ChatPostException("コメントが投稿できる状態にありません。しばらく待ってから再試行してください。");
 
             try
             {
-                await this.commentSender.Send(this.liveId, chatPostObject.Text, (chatPostObject as ChatPostObject)?.Mail ?? "");
+                await commentSender.Send(liveId, chatPostObject.Text, (chatPostObject as ChatPostObject)?.Mail ?? "");
             }
             catch (NiconicoUtils.NetworkNicoLiveCommentSenderException e)
             {
@@ -202,11 +200,11 @@ namespace TVTComment.Model.ChatCollectService
             {
                 throw new ChatPostException($"サーバーから無効な PlayerStatus が返されました\n\n{e.PlayerStatus}", e);
             }
-            catch(NiconicoUtils.ResponseFormatNicoLiveCommentSenderException e)
+            catch (NiconicoUtils.ResponseFormatNicoLiveCommentSenderException e)
             {
                 throw new ChatPostException($"サーバーから予期しない形式の応答がありました\n\n{e.Response}", e);
             }
-            catch(NiconicoUtils.ResponseErrorNicoLiveCommentSenderException e)
+            catch (NiconicoUtils.ResponseErrorNicoLiveCommentSenderException e)
             {
                 throw new ChatPostException($"サーバーからエラーが返されました", e);
             }
@@ -214,9 +212,9 @@ namespace TVTComment.Model.ChatCollectService
 
         public void Dispose()
         {
-            using (this.commentReceiver)
-            using (this.commentSender)
-            using (this.httpClient)
+            using (commentReceiver)
+            using (commentSender)
+            using (httpClient)
             {
                 cancel.Cancel();
                 try

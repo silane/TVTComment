@@ -1,22 +1,20 @@
-﻿using System;
+﻿using ObservableUtils;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Threading;
-using ObservableUtils;
 
 namespace TVTComment.Model
 {
     /// <summary>
     /// <seealso cref="IChatCollectService"/>周りの処理をする
     /// </summary>
-    class ChatCollectServiceModule:IDisposable
+    class ChatCollectServiceModule : IDisposable
     {
-        private ChannelInformationModule channelInformationManager;
-        private Timer timer;
-        private ObservableCollection<ChatCollectService.IChatCollectService> registeredServices=new ObservableCollection<ChatCollectService.IChatCollectService>();
+        private readonly ChannelInformationModule channelInformationManager;
+        private readonly Timer timer;
+        private readonly ObservableCollection<ChatCollectService.IChatCollectService> registeredServices = new ObservableCollection<ChatCollectService.IChatCollectService>();
 
         /// <summary>
         /// 取得する時刻の調整
@@ -63,11 +61,11 @@ namespace TVTComment.Model
         public ChatCollectServiceModule(ChannelInformationModule channelInformationManager)
         {
             this.channelInformationManager = channelInformationManager;
-            timer = new Timer(timerCallback, null, 100, 50);
+            timer = new Timer(TimerCallback, null, 100, 50);
             RegisteredServices = new ReadOnlyObservableCollection<ChatCollectService.IChatCollectService>(registeredServices);
         }
 
-        private void timerCallback(object state)
+        private void TimerCallback(object state)
         {
             var channel = channelInformationManager.CurrentChannel.Value;
             var time = channelInformationManager.CurrentTime.Value;
@@ -75,18 +73,18 @@ namespace TVTComment.Model
             {
                 SynchronizationContext.Post((_) =>
                 {
-                    for (int i=RegisteredServices.Count-1;i>=0;i--)
+                    for (int i = RegisteredServices.Count - 1; i >= 0; i--)
                     {
-                        ChatCollectService.IChatCollectService service=RegisteredServices[i];
+                        ChatCollectService.IChatCollectService service = RegisteredServices[i];
                         try
                         {
-                            NewChatProduced?.Invoke(service.GetChats(channel, time.Value+TimeAdjustment.Value).Select(chat =>
-                            {
-                                chat.SetSourceService(service.ServiceEntry);
-                                return chat;
-                            }));
+                            NewChatProduced?.Invoke(service.GetChats(channel, time.Value + TimeAdjustment.Value).Select(chat =>
+                              {
+                                  chat.SetSourceService(service.ServiceEntry);
+                                  return chat;
+                              }));
                         }
-                        catch(ChatCollectService.ChatCollectException e)
+                        catch (ChatCollectService.ChatCollectException e)
                         {
                             registeredServices.Remove(service);
                             ErrorOccurredInChatCollecting?.Invoke(service, e.Message);

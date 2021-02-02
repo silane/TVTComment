@@ -1,14 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TVTComment.Model.Serialization
 {
     [Serializable]
-    public class ChatCollectServiceCreationPresetEntity:ISerializable
+    public class ChatCollectServiceCreationPresetEntity : ISerializable
     {
         public string Name { get; set; }
         public string ServiceEntryId { get; set; }
@@ -16,9 +12,9 @@ namespace TVTComment.Model.Serialization
 
         public ChatCollectServiceCreationPresetEntity(string name, string serviceEntryId, ChatCollectServiceEntry.IChatCollectServiceCreationOption creationOption)
         {
-            this.Name = name;
-            this.ServiceEntryId = serviceEntryId;
-            this.CreationOption = creationOption;
+            Name = name;
+            ServiceEntryId = serviceEntryId;
+            CreationOption = creationOption;
         }
         protected ChatCollectServiceCreationPresetEntity(SerializationInfo info, StreamingContext context)
         {

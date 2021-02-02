@@ -1,15 +1,13 @@
-﻿using ObservableUtils;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 namespace TVTComment.Model
 {
-    class NiconicoChatTrendServiceEntry:IChatTrendServiceEntry
+    class NiconicoChatTrendServiceEntry : IChatTrendServiceEntry
     {
         public string Name => "ニコニコ実況";
         public string Description => "ニコニコ実況の勢いを表示します";
 
-        private NiconicoUtils.JkIdResolver jkIdResolver;
+        private readonly NiconicoUtils.JkIdResolver jkIdResolver;
 
         public NiconicoChatTrendServiceEntry(NiconicoUtils.JkIdResolver jkIdResolver)
         {

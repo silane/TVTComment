@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Xml.Linq;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.IO;
 using System.Net.Http;
-using System.Security;
+using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace TVTComment.Model
 {
@@ -15,14 +11,14 @@ namespace TVTComment.Model
         public string Name => "ニコニコ実況";
         public TimeSpan UpdateInterval => new TimeSpan(0, 0, 0, 50);
 
-        private NiconicoUtils.JkIdResolver jkIdResolver;
-        private static HttpClient httpClient = new HttpClient();
+        private readonly NiconicoUtils.JkIdResolver jkIdResolver;
+        private static readonly HttpClient httpClient = new HttpClient();
 
         public NiconicoChatTrendService(NiconicoUtils.JkIdResolver jkIdResolver)
         {
             this.jkIdResolver = jkIdResolver;
         }
-                
+
         public async Task<IForceValueData> GetForceValueData()
         {
             XDocument doc;
@@ -31,11 +27,11 @@ namespace TVTComment.Model
                 Stream stream = await httpClient.GetStreamAsync(@"http://jk.nicovideo.jp/api/v2_app/getchannels");
                 doc = XDocument.Load(stream);
             }
-            catch(HttpRequestException e)
+            catch (HttpRequestException e)
             {
-                throw new ChatTrendServiceException("勢い値データのタウンロードに失敗しました",e);
+                throw new ChatTrendServiceException("勢い値データのタウンロードに失敗しました", e);
             }
-            return new NiconicoForceValueData(doc,jkIdResolver);
+            return new NiconicoForceValueData(doc, jkIdResolver);
         }
 
         public void Dispose()

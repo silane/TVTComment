@@ -15,18 +15,18 @@ namespace Nichan
     class ArchivedThreadListRetriever
     {
         public string Board { get; }
-        public bool IsPrepared => this.rangeAndUrls != null;
+        public bool IsPrepared => rangeAndUrls != null;
 
         public ArchivedThreadListRetriever(string board, string oneOfTheServer)
         {
-            this.Board = board;
-            this.server = oneOfTheServer;
+            Board = board;
+            server = oneOfTheServer;
         }
 
         public async Task Prepare(CancellationToken cancellationToken)
         {
-            string mainDocumentUrl = $"https://{this.server}.5ch.net/{this.Board}/kako/";
-            var mainDocument = await getHtml(mainDocumentUrl, cancellationToken).ConfigureAwait(false);
+            string mainDocumentUrl = $"https://{server}.5ch.net/{Board}/kako/";
+            var mainDocument = await GetHtml(mainDocumentUrl, cancellationToken).ConfigureAwait(false);
             List<string> serverList = mainDocument.XPathSelectElements(
                 @"//*[contains(@class, ""menu"")]/*"
             ).SkipWhile(x => x.Name != "h2").Skip(1).SkipWhile(x => x.Name != "h2").Skip(1).TakeWhile(x => x.Name != "h2").Where(
@@ -41,7 +41,7 @@ namespace Nichan
             var startTimeToUrlMapping = new SortedList<long, IEnumerable<(string url, (long start, long end) range)>>();
             foreach (var server in serverList)
             {
-                (long start, long end) getThreadRange(string str)
+                static (long start, long end) getThreadRange(string str)
                 {
                     var strs = str.Split('-');
                     if (strs.Length != 2)
@@ -52,25 +52,26 @@ namespace Nichan
                     return (nums[1], nums[0]);
                 }
 
-                var otherServerDocument = await getHtml(server, cancellationToken).ConfigureAwait(false);
-                var urlAndRanges = new List<(string url, (long start, long end) range)>();
-
-                urlAndRanges.Add((
+                var otherServerDocument = await GetHtml(server, cancellationToken).ConfigureAwait(false);
+                var urlAndRanges = new List<(string url, (long start, long end) range)>
+                {
+                    (
                     "",
                     getThreadRange(((XText)otherServerDocument.XPathSelectElement(
                         @"//*[contains(@class, ""menu"")]/*[contains(@class, ""menu_here"")]"
                     ).Nodes().First(x => x.NodeType == XmlNodeType.Text)).Value)
-                ));
+                )
+                };
                 urlAndRanges.AddRange(otherServerDocument.XPathSelectElements(
                         @"//*[contains(@class, ""menu"")]/*"
                     ).SkipWhile(x => x.Name != "h2").Skip(1).TakeWhile(x => x.Name != "h2").Where(
                         x => x.Attribute("class")?.Value == "menu_link"
                     ).Select(x => x.Element("a")).Select(x => (x.Attribute("href").Value, getThreadRange(x.Value)))
                 );
-                foreach(var x in urlAndRanges)
+                foreach (var x in urlAndRanges)
                 {
                     var url = new Uri(new Uri(server), x.url).ToString();
-                    if(!startTimeToUrlMapping.TryGetValue(x.range.start, out var value))
+                    if (!startTimeToUrlMapping.TryGetValue(x.range.start, out var value))
                     {
                         value = new List<(string url, (long start, long end) range)>();
                         startTimeToUrlMapping.Add(x.range.start, value);
@@ -79,7 +80,7 @@ namespace Nichan
                 }
             }
 
-            this.rangeAndUrls = startTimeToUrlMapping;
+            rangeAndUrls = startTimeToUrlMapping;
         }
 
         /// <summary>
@@ -93,12 +94,12 @@ namespace Nichan
         {
             if (startTime > endTime)
                 throw new ArgumentException(@$"""{nameof(startTime)}"" must be earlier than ""{nameof(endTime)}""");
-            if (!this.IsPrepared)
+            if (!IsPrepared)
                 throw new InvalidOperationException(@$"""{nameof(Prepare)}"" must be called beforehand");
 
             long start = startTime.ToUnixTimeSeconds();
-            int startUrlIdx = Array.BinarySearch(this.rangeAndUrls.Keys.ToArray(), start);
-            if(startUrlIdx < 0)
+            int startUrlIdx = Array.BinarySearch(rangeAndUrls.Keys.ToArray(), start);
+            if (startUrlIdx < 0)
             {
                 startUrlIdx = ~startUrlIdx - 1;
                 if (startUrlIdx == -1)
@@ -106,22 +107,21 @@ namespace Nichan
             }
 
             long end = endTime.ToUnixTimeSeconds();
-            int endUrlIdx = Array.BinarySearch(this.rangeAndUrls.Keys.ToArray(), end);
-            if(endUrlIdx < 0)
+            int endUrlIdx = Array.BinarySearch(rangeAndUrls.Keys.ToArray(), end);
+            if (endUrlIdx < 0)
             {
                 endUrlIdx = ~endUrlIdx;
             }
 
-            var urlList = this.rangeAndUrls.Values.ToArray()[startUrlIdx..endUrlIdx].SelectMany(x => x.Select(x => x.url));
+            var urlList = rangeAndUrls.Values.ToArray()[startUrlIdx..endUrlIdx].SelectMany(x => x.Select(x => x.url));
             var ret = new List<(long threadId, Thread thread)>(); // スレの作成時間とスレのリスト
             foreach (string url in urlList)
             {
-                IEnumerable<(long threadId, Thread thread)> threads;
                 // キャッシュになければ取得しにいく
-                if (!this.threadListCache.TryGetValue(url, out threads))
+                if (!threadListCache.TryGetValue(url, out IEnumerable<(long threadId, Thread thread)> threads))
                 {
                     var threadList = new List<(long threadId, Thread thread)>();
-                    XDocument doc = await getHtml(url, cancellationToken).ConfigureAwait(false);
+                    XDocument doc = await GetHtml(url, cancellationToken).ConfigureAwait(false);
                     foreach (var elem in doc.XPathSelectElements(
                         @"//*[contains(@class, ""main"")]/*[contains(@class, ""main_odd"") or contains(@class, ""main_even"")]"
                     ))
@@ -139,12 +139,16 @@ namespace Nichan
                         if (threadUrl == "" || threadTitle == "" || resCount == 0)
                             continue;
 
-                        threadList.Add((threadId, new Thread() {
-                            Uri = new Uri(new Uri(url), threadUrl), Name = threadId.ToString(), Title = threadTitle, ResCount = resCount,
+                        threadList.Add((threadId, new Thread()
+                        {
+                            Uri = new Uri(new Uri(url), threadUrl),
+                            Name = threadId.ToString(),
+                            Title = threadTitle,
+                            ResCount = resCount,
                         }));
                     }
 
-                    this.threadListCache.Add(url, threadList);
+                    threadListCache.Add(url, threadList);
 
                     threads = threadList;
                 }
@@ -165,7 +169,7 @@ namespace Nichan
         /// </summary>
         private readonly Dictionary<string, IEnumerable<(long, Thread)>> threadListCache = new Dictionary<string, IEnumerable<(long, Thread)>>();
 
-        private static async Task<XDocument> getHtml(string url, CancellationToken cancellationToken)
+        private static async Task<XDocument> GetHtml(string url, CancellationToken cancellationToken)
         {
             System.Diagnostics.Debug.WriteLine($"[ArchivedThreadListRetriever] HTTP Get {url}");
             string response;
@@ -173,7 +177,7 @@ namespace Nichan
             {
                 response = await httpClient.GetStringAsync(url, cancellationToken);
             }
-            catch(HttpRequestException e)
+            catch (HttpRequestException e)
             {
                 if (e.StatusCode == null)
                     throw new NetworkException(url, null, e);
@@ -201,23 +205,23 @@ namespace Nichan
             public KeyEqualityComparer(Func<T, TKey> keyExtractor)
             {
                 this.keyExtractor = keyExtractor;
-                this.comparer = Comparer<TKey>.Default;
-                this.equalityComparer = EqualityComparer<TKey>.Default;
+                comparer = Comparer<TKey>.Default;
+                equalityComparer = EqualityComparer<TKey>.Default;
             }
 
             public int Compare(T x, T y)
             {
-                return this.comparer.Compare(this.keyExtractor(x), this.keyExtractor(y));
+                return comparer.Compare(keyExtractor(x), keyExtractor(y));
             }
 
             public bool Equals(T x, T y)
             {
-                return this.equalityComparer.Equals(this.keyExtractor(x), this.keyExtractor(y));
+                return equalityComparer.Equals(keyExtractor(x), keyExtractor(y));
             }
 
             public int GetHashCode(T obj)
             {
-                return this.equalityComparer.GetHashCode(this.keyExtractor(obj));
+                return equalityComparer.GetHashCode(keyExtractor(obj));
             }
         }
     }

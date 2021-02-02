@@ -1,15 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TVTComment.Model;
 
 namespace TVTComment.ViewModels.ChatCollectServiceCreationOptionControl
 {
-    class FileChatCollectServiceCreationOptionControlViewModel:ChatCollectServiceCreationOptionControlViewModel
+    class FileChatCollectServiceCreationOptionControlViewModel : ChatCollectServiceCreationOptionControlViewModel
     {
-        private string filePath="";
+        private string filePath = "";
         public string FilePath
         {
             get { return filePath; }
@@ -23,7 +18,9 @@ namespace TVTComment.ViewModels.ChatCollectServiceCreationOptionControl
             set { SetProperty(ref relativeTime, value); }
         }
 
+#pragma warning disable CS0067 // イベント 'FileChatCollectServiceCreationOptionControlViewModel.Finished' は使用されていません
         public override event EventHandler Finished;
+#pragma warning restore CS0067 // イベント 'FileChatCollectServiceCreationOptionControlViewModel.Finished' は使用されていません
 
         public FileChatCollectServiceCreationOptionControlViewModel()
         {

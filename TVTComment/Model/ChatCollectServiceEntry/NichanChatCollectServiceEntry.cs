@@ -35,12 +35,12 @@ namespace TVTComment.Model.ChatCollectServiceEntry
             public string Title { get; }
             public string[] Keywords { get; }
 
-            public ChatCollectServiceCreationOption(ThreadSelectMethod method,Uri uri,string title,string[] keywords)
+            public ChatCollectServiceCreationOption(ThreadSelectMethod method, Uri uri, string title, string[] keywords)
             {
-                this.Method = method;
-                this.Uri = uri;
-                this.Title = title;
-                this.Keywords = keywords;
+                Method = method;
+                Uri = uri;
+                Title = title;
+                Keywords = keywords;
             }
         }
 
@@ -60,7 +60,7 @@ namespace TVTComment.Model.ChatCollectServiceEntry
             NichanUtils.ThreadResolver threadResolver
         )
         {
-            this.Owner = owner;
+            Owner = owner;
             this.resCollectInterval = resCollectInterval;
             this.threadSearchInterval = threadSearchInterval;
             this.threadResolver = threadResolver;
@@ -68,7 +68,7 @@ namespace TVTComment.Model.ChatCollectServiceEntry
 
         public ChatCollectService.IChatCollectService GetNewService(IChatCollectServiceCreationOption creationOption)
         {
-            creationOption ??= new ChatCollectServiceCreationOption(ChatCollectServiceCreationOption.ThreadSelectMethod.Auto, null, null,null);
+            creationOption ??= new ChatCollectServiceCreationOption(ChatCollectServiceCreationOption.ThreadSelectMethod.Auto, null, null, null);
 
             if (creationOption is not ChatCollectServiceCreationOption co)
                 throw new ArgumentException($"Type of {nameof(creationOption)} must be {nameof(NichanChatCollectServiceEntry)}.{nameof(ChatCollectServiceCreationOption)}", nameof(creationOption));
@@ -82,10 +82,10 @@ namespace TVTComment.Model.ChatCollectServiceEntry
                 _ => throw new ArgumentOutOfRangeException(nameof(creationOption), "((ChatCollectServiceCreationOption)creationOption).Method is out of range"),
             };
 
-            return this.getNichanChatCollectService(selector);
+            return GetNichanChatCollectService(selector);
         }
 
-        protected abstract ChatCollectService.IChatCollectService getNichanChatCollectService(
+        protected abstract ChatCollectService.IChatCollectService GetNichanChatCollectService(
             NichanUtils.INichanThreadSelector threadSelector
         );
     }
@@ -106,11 +106,11 @@ namespace TVTComment.Model.ChatCollectServiceEntry
         {
         }
 
-        protected override ChatCollectService.IChatCollectService getNichanChatCollectService(NichanUtils.INichanThreadSelector threadSelector)
+        protected override ChatCollectService.IChatCollectService GetNichanChatCollectService(NichanUtils.INichanThreadSelector threadSelector)
         {
             return new ChatCollectService.HTMLNichanChatCollectService(
-                this, this.resCollectInterval.Value,
-                this.threadSearchInterval.Value, threadSelector
+                this, resCollectInterval.Value,
+                threadSearchInterval.Value, threadSelector
             );
         }
     }
@@ -131,14 +131,14 @@ namespace TVTComment.Model.ChatCollectServiceEntry
             ObservableValue<Nichan.ApiClient> nichanApiClient
         ) : base(owner, resCollectInterval, threadSearchInterval, threadResolver)
         {
-            this.apiClient = nichanApiClient;
+            apiClient = nichanApiClient;
         }
 
-        protected override ChatCollectService.IChatCollectService getNichanChatCollectService(NichanUtils.INichanThreadSelector threadSelector)
+        protected override ChatCollectService.IChatCollectService GetNichanChatCollectService(NichanUtils.INichanThreadSelector threadSelector)
         {
             return new ChatCollectService.DATNichanChatCollectService(
-                this, this.resCollectInterval.Value,
-                this.threadSearchInterval.Value, threadSelector, this.apiClient.Value
+                this, resCollectInterval.Value,
+                threadSearchInterval.Value, threadSelector, apiClient.Value
             );
         }
     }

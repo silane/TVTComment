@@ -1,36 +1,30 @@
-﻿using Microsoft.Practices.ServiceLocation;
-using Prism.Commands;
-using Prism.Common;
+﻿using Prism.Commands;
 using Prism.Interactivity.InteractionRequest;
 using Prism.Mvvm;
 using Prism.Regions;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Input;
 using TVTComment.ViewModels.ChatCollectServiceCreationOptionControl;
 
 namespace TVTComment.ViewModels
 {
-    class ChatCollectServiceCreationSettingsControlViewModel:BindableBase,IInteractionRequestAware
+    class ChatCollectServiceCreationSettingsControlViewModel : BindableBase, IInteractionRequestAware
     {
-        private IRegionManager regionManager;
+        private readonly IRegionManager regionManager;
 
         private Notifications.ChatCollectServiceCreationSettingsConfirmation confirmation;
         public Action FinishInteraction { get; set; }
         public INotification Notification
         {
             get { return confirmation; }
-            set { confirmation = (Notifications.ChatCollectServiceCreationSettingsConfirmation)value; initialize(); }
+            set { confirmation = (Notifications.ChatCollectServiceCreationSettingsConfirmation)value; Initialize(); }
         }
 
         private ChatCollectServiceCreationOptionControlViewModel creationOptionRegionViewModel;
         public ChatCollectServiceCreationOptionControlViewModel CreationOptionRegionViewModel
         {
             get { return creationOptionRegionViewModel; }
-            set { RegionChanged(creationOptionRegionViewModel, value);creationOptionRegionViewModel = value; }
+            set { RegionChanged(creationOptionRegionViewModel, value); creationOptionRegionViewModel = value; }
         }
 
         public ICommand OkCommand { get; }
@@ -39,7 +33,7 @@ namespace TVTComment.ViewModels
         public ChatCollectServiceCreationSettingsControlViewModel(IRegionManager regionManager)
         {
             this.regionManager = regionManager;
-            
+
             OkCommand = new DelegateCommand(() =>
             {
                 var option = CreationOptionRegionViewModel.GetChatCollectServiceCreationOption();
@@ -54,7 +48,7 @@ namespace TVTComment.ViewModels
             });
         }
 
-        private void initialize()
+        private void Initialize()
         {
             confirmation.Confirmed = false;
             confirmation.ChatCollectServiceCreationOption = null;
@@ -72,9 +66,9 @@ namespace TVTComment.ViewModels
 
         private void RegionChanged(ChatCollectServiceCreationOptionControlViewModel oldViewModel, ChatCollectServiceCreationOptionControlViewModel newViewModel)
         {
-            if(oldViewModel!=null)
+            if (oldViewModel != null)
                 oldViewModel.Finished -= ContentViewModel_Finished;
-            if(newViewModel!=null)
+            if (newViewModel != null)
                 newViewModel.Finished += ContentViewModel_Finished;
         }
 

@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace TVTComment.Model
@@ -24,7 +21,7 @@ namespace TVTComment.Model
     /// <summary>
     /// チャンネルごとのコメントの勢い値を提供するサービス
     /// </summary>
-    public interface IChatTrendService:IDisposable
+    public interface IChatTrendService : IDisposable
     {
         /// <summary>
         /// ユーザーに表示するサービスの名前

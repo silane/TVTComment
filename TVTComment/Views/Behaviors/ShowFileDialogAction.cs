@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Forms;
-using System.Windows.Interactivity;
 
 namespace TVTComment.Views.Behaviors
 {
-    abstract class ShowFileDialogAction:ShowCommonDialogAction
+    abstract class ShowFileDialogAction : ShowCommonDialogAction
     {
         public bool AddExtension
         {
@@ -115,7 +109,7 @@ namespace TVTComment.Views.Behaviors
 
         // Using a DependencyProperty as the backing store for FileNames.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty FileNamesProperty =
-            DependencyProperty.Register("FileNames", typeof(string[]), typeof(ShowFileDialogAction), new PropertyMetadata(new string[0]));
+            DependencyProperty.Register("FileNames", typeof(string[]), typeof(ShowFileDialogAction), new PropertyMetadata(System.Array.Empty<string>()));
 
 
 
@@ -213,10 +207,10 @@ namespace TVTComment.Views.Behaviors
             fileDialog.DefaultExt = DefaultExt;
             fileDialog.DereferenceLinks = DereferenceLinks;
             fileDialog.FileName = FileName;
-            fileDialog.Filter=Filter;
+            fileDialog.Filter = Filter;
             fileDialog.FilterIndex = FilterIndex;
             fileDialog.InitialDirectory = InitialDirectory;
-            fileDialog.RestoreDirectory=RestoreDirectory;
+            fileDialog.RestoreDirectory = RestoreDirectory;
             fileDialog.SupportMultiDottedExtensions = SupportMultiDottedExtensions;
             fileDialog.Title = Title;
             fileDialog.ValidateNames = ValidateNames;

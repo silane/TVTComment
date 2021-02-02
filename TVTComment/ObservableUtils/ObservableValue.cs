@@ -1,15 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reactive.Subjects;
-using System.Collections.Generic;
 
 namespace ObservableUtils
 {
-    class ObservableValue<T>:INotifyPropertyChanged,IObservable<T>
+    class ObservableValue<T> : INotifyPropertyChanged, IObservable<T>
     {
-        private T initialValue;
+        private readonly T initialValue;
         private T val;
-        private BehaviorSubject<T> subject;
+        private readonly BehaviorSubject<T> subject;
 
         public T Value
         {
@@ -21,9 +21,9 @@ namespace ObservableUtils
 
                 if (val != null && value != null && EqualityComparer<T>.Default.Equals(val, value))
                     return;
-                    
+
                 val = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Value"));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Value)));
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
                 subject.OnNext(value);
             }
@@ -31,7 +31,7 @@ namespace ObservableUtils
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public ObservableValue(T initialValue=default(T))
+        public ObservableValue(T initialValue = default)
         {
             subject = new BehaviorSubject<T>(Value);
             this.initialValue = initialValue;
@@ -45,7 +45,7 @@ namespace ObservableUtils
 
         public void ForceNotify()
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Value"));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Value)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
             subject.OnNext(val);
         }
@@ -58,8 +58,8 @@ namespace ObservableUtils
 
     static class ObservableValueExtensions
     {
-        public static ObservableValue<TResult> MakeLinkedObservableValue<TSource,TResult>(this ObservableValue<TSource> source,
-            Func<TSource,TResult> convert,Func<TResult,TSource> convertBack)
+        public static ObservableValue<TResult> MakeLinkedObservableValue<TSource, TResult>(this ObservableValue<TSource> source,
+            Func<TSource, TResult> convert, Func<TResult, TSource> convertBack)
         {
             var ret = new ObservableValue<TResult>(convert(source.Value));
             source.Subscribe(x => ret.Value = convert(x));
@@ -68,25 +68,25 @@ namespace ObservableUtils
         }
     }
 
-    class ReadOnlyObservableValue<T>:INotifyPropertyChanged,IObservable<T>,IDisposable
+    class ReadOnlyObservableValue<T> : INotifyPropertyChanged, IObservable<T>, IDisposable
     {
-        private IObservable<T> source;
+        private readonly IObservable<T> source;
         private T val;
-        private IDisposable disposable;
+        private readonly IDisposable disposable;
 
         public T Value => val;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public ReadOnlyObservableValue(IObservable<T> source,T initialValue=default(T))
+        public ReadOnlyObservableValue(IObservable<T> source, T initialValue = default)
         {
             this.source = source;
-            this.val = initialValue;
+            val = initialValue;
 
-            this.disposable = source.Subscribe(val =>
+            disposable = source.Subscribe(val =>
               {
                   this.val = val;
-                  PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Value"));
+                  PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Value)));
                   PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
               });
         }

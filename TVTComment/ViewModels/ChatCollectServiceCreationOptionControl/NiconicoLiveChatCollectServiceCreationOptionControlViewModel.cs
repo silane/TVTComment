@@ -11,8 +11,8 @@ namespace TVTComment.ViewModels.ChatCollectServiceCreationOptionControl
 
         public string LiveId
         {
-            get { return this.liveId; }
-            set { SetProperty(ref this.liveId, value); }
+            get { return liveId; }
+            set { SetProperty(ref liveId, value); }
         }
 
         public ICommand OkCommand { get; }
@@ -21,14 +21,14 @@ namespace TVTComment.ViewModels.ChatCollectServiceCreationOptionControl
 
         public NiconicoLiveChatCollectServiceCreationOptionControlViewModel()
         {
-            this.OkCommand = new DelegateCommand(() => this.Finished(this, new EventArgs()));
+            OkCommand = new DelegateCommand(() => Finished(this, new EventArgs()));
         }
 
         public override IChatCollectServiceCreationOption GetChatCollectServiceCreationOption()
         {
-            if (string.IsNullOrWhiteSpace(this.LiveId))
+            if (string.IsNullOrWhiteSpace(LiveId))
                 return null;
-            return new NiconicoLiveChatCollectServiceEntry.ChatCollectServiceCreationOption(this.LiveId);
+            return new NiconicoLiveChatCollectServiceEntry.ChatCollectServiceCreationOption(LiveId);
         }
     }
 }

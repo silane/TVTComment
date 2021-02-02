@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TVTComment.Model.IPC.IPCMessage
 {
@@ -31,8 +28,8 @@ namespace TVTComment.Model.IPC.IPCMessage
     interface IIPCMessage
     {
         string MessageName { get; }
-        
-        
+
+
         /// <summary>
         /// エンコードされたContentを返す
         /// </summary>

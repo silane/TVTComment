@@ -16,18 +16,18 @@ namespace TVTComment.Model.IPC.IPCMessage
         public DateTime Time;
 
         public string MessageName => "Time";
-       
+
         public void Decode(IEnumerable<string> content)
         {
             try
             {
                 Time = DateTimeOffset.FromUnixTimeSeconds(long.Parse(content.First())).DateTime.ToLocalTime();
             }
-            catch(FormatException e)
+            catch (FormatException e)
             {
                 throw new IPCMessageDecodeException("Timeのフォーマットが不正です", e);
             }
-            catch(InvalidOperationException e)
+            catch (InvalidOperationException e)
             {
                 throw new IPCMessageDecodeException("Timeのcontentの数が0です", e);
             }

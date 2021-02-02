@@ -1,12 +1,12 @@
-﻿using System;
+﻿using Sgml;
+using System;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Web;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
-using Sgml;
-using System.Web;
-using System.IO;
 
 namespace Nichan
 {
@@ -27,10 +27,10 @@ namespace Nichan
     /// <summary>
     /// 1行目が&lt;!DOCTYPE html&gt;から始まり、&lt;meta name="viewport" /&gt;が設定されていないスレ用パーサ
     /// </summary>
-    class Type1ThreadParser :IThreadParser
+    class Type1ThreadParser : IThreadParser
     {
         static private readonly Regex reDate = new Regex(@"(\d+)/(\d+)/(\d+)[^ ]* (\d+):(\d+):(\d+)\.(\d+)");
-        private static DateTime? getDate(string str)
+        private static DateTime? GetDate(string str)
         {
             Match m = reDate.Match(str);
             if (m.Success)
@@ -42,19 +42,23 @@ namespace Nichan
 
         public Thread Parse(XDocument doc)
         {
-            var ret = new Thread();
-            ret.Title = HttpUtility.HtmlDecode( doc.XPathSelectElement(@"/html/body/h1[@class=""title""]")?.Value);
-            if (ret.Title == null) throw new ThreadParserException();
-            foreach(XElement elem in doc.XPathSelectElements(@"/html/body/div[@class=""thread""]/div[@class=""post""]"))
+            var ret = new Thread
             {
-                var res = new Res();
-                res.Number = (int)elem.Attribute("id");
-                res.Name = HttpUtility.HtmlDecode(elem.XPathSelectElement(@"div[@class=""name""]/b").Value);
-                res.Mail = HttpUtility.HtmlDecode(elem.XPathSelectElement(@"div[@class=""name""]/b/a")?.Attribute("href").Value);
+                Title = HttpUtility.HtmlDecode(doc.XPathSelectElement(@"/html/body/h1[@class=""title""]")?.Value)
+            };
+            if (ret.Title == null) throw new ThreadParserException();
+            foreach (XElement elem in doc.XPathSelectElements(@"/html/body/div[@class=""thread""]/div[@class=""post""]"))
+            {
+                var res = new Res
+                {
+                    Number = (int)elem.Attribute("id"),
+                    Name = HttpUtility.HtmlDecode(elem.XPathSelectElement(@"div[@class=""name""]/b").Value),
+                    Mail = HttpUtility.HtmlDecode(elem.XPathSelectElement(@"div[@class=""name""]/b/a")?.Attribute("href").Value)
+                };
                 string dateStr = elem.XPathSelectElement(@"div[@class=""date""]").Value;
                 int idx = dateStr.IndexOf("ID:");
-                res.UserId=idx!=-1 ? dateStr[(idx + 3)..] :null;
-                res.Date = getDate(dateStr);
+                res.UserId = idx != -1 ? dateStr[(idx + 3)..] : null;
+                res.Date = GetDate(dateStr);
                 res.Text = elem.XPathSelectElement(@"div[@class=""message""]");
                 ret.Res.Add(res);
             }
@@ -66,10 +70,10 @@ namespace Nichan
     /// <summary>
     /// 1行目が&lt;html prefix="og: http://ogp.me/ns#"&gt;から始まるスレ用パーサ
     /// </summary>
-    class Type2ThreadParser:IThreadParser
+    class Type2ThreadParser : IThreadParser
     {
         static private readonly Regex reDate = new Regex(@"(\d+)/(\d+)/(\d+)[^ ]* (\d+):(\d+):(\d+)\.(\d+)");
-        private static DateTime? getDate(string str)
+        private static DateTime? GetDate(string str)
         {
             Match m = reDate.Match(str);
             if (m.Success)
@@ -81,23 +85,25 @@ namespace Nichan
 
         public Thread Parse(XDocument doc)
         {
-            var ret = new Thread();
-            ret.Title = HttpUtility.HtmlDecode(doc.XPathSelectElement(@"/html/body/div/span/h1")?.Value);
+            var ret = new Thread
+            {
+                Title = HttpUtility.HtmlDecode(doc.XPathSelectElement(@"/html/body/div/span/h1")?.Value)
+            };
             if (ret.Title == null) throw new ThreadParserException();
-            
-            foreach(XElement elem in doc.XPathSelectElements(@"/html/body/div/span/div/dl[@class=""thread""]/dt"))
+
+            foreach (XElement elem in doc.XPathSelectElements(@"/html/body/div/span/div/dl[@class=""thread""]/dt"))
             {
                 var res = new Res();
                 string str = (string)elem.XPathEvaluate(@"string(text()[1])");
-                res.Number=int.Parse(str.Substring(0, str.IndexOf(' ')));
+                res.Number = int.Parse(str.Substring(0, str.IndexOf(' ')));
                 res.Name = HttpUtility.HtmlDecode(elem.XPathSelectElement(@"//b").Value);
                 res.Mail = elem.Element("a")?.Attribute("href")?.Value;
                 if (res.Mail != null)
                     res.Mail = HttpUtility.HtmlDecode(res.Mail);
-                str=(string)elem.XPathEvaluate(@"string(text()[last()])");
-                int idx=str.IndexOf("ID:");
+                str = (string)elem.XPathEvaluate(@"string(text()[last()])");
+                int idx = str.IndexOf("ID:");
                 res.UserId = idx == -1 ? null : str[(idx + 3)..];
-                res.Date = getDate(str);
+                res.Date = GetDate(str);
                 res.Text = elem.XPathSelectElement(@"following-sibling::dd[1]");
                 XElement[] brs = res.Text.Elements("br").ToArray();
                 brs[^2].Remove();
@@ -115,7 +121,7 @@ namespace Nichan
     class Type3ThreadParser : IThreadParser
     {
         static private readonly Regex reDate = new Regex(@"(\d+)/(\d+)/(\d+)[^ ]* (\d+):(\d+):(\d+)\.(\d+)");
-        private static DateTime? getDate(string str)
+        private static DateTime? GetDate(string str)
         {
             Match m = reDate.Match(str);
             if (m.Success)
@@ -127,20 +133,24 @@ namespace Nichan
 
         public Thread Parse(XDocument doc)
         {
-            var ret = new Thread();
-            ret.Title = HttpUtility.HtmlDecode(doc.XPathSelectElement(@"/html/head/title")?.Value);
+            var ret = new Thread
+            {
+                Title = HttpUtility.HtmlDecode(doc.XPathSelectElement(@"/html/head/title")?.Value)
+            };
             if (ret.Title == null) throw new ThreadParserException();
 
             foreach (XElement elem in doc.XPathSelectElements(@"/html/body/div/div[@class=""thread""]/div[@class=""post""]"))
             {
-                var res = new Res();
-                res.Number = (int)elem.Attribute("id");
-                res.Name = HttpUtility.HtmlDecode(elem.XPathSelectElement(@"div[@class=""meta""]/span[@class=""name""]/b").Value);
-                res.Mail = HttpUtility.HtmlDecode(elem.XPathSelectElement(@"div[@class=""meta""]/span[@class=""name""]/b/a")?.Attribute("href").Value);
-                res.UserId = elem.Attribute("data-userid").Value;
+                var res = new Res
+                {
+                    Number = (int)elem.Attribute("id"),
+                    Name = HttpUtility.HtmlDecode(elem.XPathSelectElement(@"div[@class=""meta""]/span[@class=""name""]/b").Value),
+                    Mail = HttpUtility.HtmlDecode(elem.XPathSelectElement(@"div[@class=""meta""]/span[@class=""name""]/b/a")?.Attribute("href").Value),
+                    UserId = elem.Attribute("data-userid").Value
+                };
                 if (res.UserId.Length > 3) res.UserId = res.UserId[3..];
                 string dateStr = elem.XPathSelectElement(@"div[@class=""meta""]/span[@class=""date""]").Value;
-                res.Date = getDate(dateStr);
+                res.Date = GetDate(dateStr);
                 res.Text = elem.XPathSelectElement(@"div[@class=""message""]/span");
                 ret.Res.Add(res);
             }

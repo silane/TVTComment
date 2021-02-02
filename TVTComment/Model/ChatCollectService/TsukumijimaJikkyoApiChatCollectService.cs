@@ -17,8 +17,8 @@ namespace TVTComment.Model.ChatCollectService
 
         public override string GetInformationText()
         {
-            if (this.jkId != 0)
-                return $"現在の実況ID: {this.jkId}";
+            if (jkId != 0)
+                return $"現在の実況ID: {jkId}";
             else
                 return $"現在の実況ID: [対応なし]";
         }
@@ -31,7 +31,7 @@ namespace TVTComment.Model.ChatCollectService
             NiconicoUtils.JkIdResolver jkIdResolver
         ) : base(TimeSpan.FromSeconds(10))
         {
-            this.ServiceEntry = serviceEntry;
+            ServiceEntry = serviceEntry;
             this.jkIdResolver = jkIdResolver;
         }
 
@@ -39,46 +39,46 @@ namespace TVTComment.Model.ChatCollectService
         {
             int jkId = jkIdResolver.Resolve(channel.NetworkId, channel.ServiceId);
 
-            if(
+            if (
                 jkId != this.jkId ||
-                time >= this.lastGetStartTime + TimeSpan.FromMinutes(14) ||
-                time < this.lastGetStartTime
+                time >= lastGetStartTime + TimeSpan.FromMinutes(14) ||
+                time < lastGetStartTime
             )
             {
                 // 前回の取得から14分以上経っている（未来へのシークを含む）か、
                 // 前回の取得時刻を超えて過去にシークしたか、実況IDが違うなら再収集
-                this.chatCollectTaskCancellation?.Cancel();
+                chatCollectTaskCancellation?.Cancel();
                 try
                 {
-                    this.chatCollectTask?.Wait();
+                    chatCollectTask?.Wait();
                 }
-                catch(AggregateException e)
+                catch (AggregateException e)
                 {
-                    this.chatCollectTask = null;
-                    chatCollectTaskExceptionHandler(e);
+                    chatCollectTask = null;
+                    ChatCollectTaskExceptionHandler(e);
                 }
-                this.chatCollectTask = null;
+                chatCollectTask = null;
 
                 if (jkId != this.jkId)
                 {
-                    lock (this.chats)
+                    lock (chats)
                     {
-                        this.chats.Clear();
+                        chats.Clear();
                     }
                 }
 
                 if (jkId != 0)
                 {
-                    this.chatCollectTaskCancellation = new CancellationTokenSource();
+                    chatCollectTaskCancellation = new CancellationTokenSource();
                     var startTime = new DateTimeOffset(time, TimeSpan.FromHours(9));
                     var endTime = startTime + TimeSpan.FromMinutes(15);
-                    this.chatCollectTask = Task.Run(() => this.collectChat(jkId, startTime, endTime, this.chatCollectTaskCancellation.Token));
-                    this.lastGetStartTime = startTime;
+                    chatCollectTask = Task.Run(() => CollectChat(jkId, startTime, endTime, chatCollectTaskCancellation.Token));
+                    lastGetStartTime = startTime;
                 }
                 else
                 {
-                    this.chatCollectTaskCancellation = null;
-                    this.chatCollectTask = null;
+                    chatCollectTaskCancellation = null;
+                    chatCollectTask = null;
                 }
 
                 this.jkId = jkId;
@@ -86,18 +86,18 @@ namespace TVTComment.Model.ChatCollectService
 
             try
             {
-                this.chatCollectTask?.Wait();
+                chatCollectTask?.Wait();
             }
-            catch(AggregateException e)
+            catch (AggregateException e)
             {
-                this.chatCollectTask = null;
-                chatCollectTaskExceptionHandler(e);
+                chatCollectTask = null;
+                ChatCollectTaskExceptionHandler(e);
             }
-            this.chatCollectTask = null;
+            chatCollectTask = null;
 
-            lock (this.chats)
+            lock (chats)
             {
-                IEnumerable<Chat> ret = this.chats.Where(x => time <= x.Chat.Time && x.Chat.Time < time + TimeSpan.FromSeconds(1)).Select(x => x.Chat);
+                IEnumerable<Chat> ret = chats.Where(x => time <= x.Chat.Time && x.Chat.Time < time + TimeSpan.FromSeconds(1)).Select(x => x.Chat);
                 return ret;
             }
         }
@@ -109,27 +109,27 @@ namespace TVTComment.Model.ChatCollectService
 
         public override void Dispose()
         {
-            this.chatCollectTaskCancellation?.Cancel();
+            chatCollectTaskCancellation?.Cancel();
             try
             {
-                this.chatCollectTask?.Wait();
+                chatCollectTask?.Wait();
             }
-            catch(AggregateException e)
+            catch (AggregateException e)
             {
                 try
                 {
-                    chatCollectTaskExceptionHandler(e);
+                    ChatCollectTaskExceptionHandler(e);
                 }
-                catch(ChatCollectException)
+                catch (ChatCollectException)
                 { }
             }
             finally
             {
-                this.chatCollectTask = null;
+                chatCollectTask = null;
             }
         }
 
-        private async Task collectChat(int jkId, DateTimeOffset startTime, DateTimeOffset endTime, CancellationToken cancellationToken)
+        private async Task CollectChat(int jkId, DateTimeOffset startTime, DateTimeOffset endTime, CancellationToken cancellationToken)
         {
             string url = $"https://jikkyo.tsukumijima.net/api/kakolog/jk{jkId}?starttime={startTime.ToUnixTimeSeconds()}&endtime={endTime.ToUnixTimeSeconds()}&format=json";
 
@@ -138,7 +138,7 @@ namespace TVTComment.Model.ChatCollectService
             {
                 response = await httpClient.GetStreamAsync(url, cancellationToken).ConfigureAwait(false);
             }
-            catch(HttpRequestException e)
+            catch (HttpRequestException e)
             {
                 if (e.StatusCode == null)
                     throw new ChatCollectException($"接続できませんでした\nURL: {url}", e);
@@ -151,23 +151,22 @@ namespace TVTComment.Model.ChatCollectService
             {
                 jsonDocument = await JsonDocument.ParseAsync(response, cancellationToken: cancellationToken).ConfigureAwait(false);
             }
-            catch(JsonException e)
+            catch (JsonException e)
             {
                 throw new ChatCollectException($"不正な応答が返りました\nURL: {url}", e);
             }
 
             try
             {
-                JsonElement elem;
-                string error = jsonDocument.RootElement.TryGetProperty("error", out elem) ? elem.ValueKind == JsonValueKind.String ? elem.GetString() : null : null;
+                string error = jsonDocument.RootElement.TryGetProperty("error", out JsonElement elem) ? elem.ValueKind == JsonValueKind.String ? elem.GetString() : null : null;
                 if (error != null)
                     throw new ChatCollectException($"エラー応答が返されました\nサーバーからのメッセージ: {error}");
 
                 JsonElement packet = jsonDocument.RootElement.GetProperty("packet");
 
                 (string thread, int no)[] threadNoList;
-                lock(this.chats)
-                    threadNoList = this.chats.Select(x => (x.Thread, x.Chat.Number)).ToArray();
+                lock (chats)
+                    threadNoList = chats.Select(x => (x.Thread, x.Chat.Number)).ToArray();
 
                 for (int i = 0; i < packet.GetArrayLength(); ++i)
                 {
@@ -192,9 +191,9 @@ namespace TVTComment.Model.ChatCollectService
                         content, 0, no, vpos, date, dateUsec, mail, userId, premium, anonymity, abone
                     );
 
-                    lock (this.chats)
+                    lock (chats)
                     {
-                        this.chats.Add((thread, NiconicoUtils.ChatNiconicoCommentXmlTagToChat.Convert(chatTag)));
+                        chats.Add((thread, NiconicoUtils.ChatNiconicoCommentXmlTagToChat.Convert(chatTag)));
                     }
                 }
             }
@@ -210,7 +209,7 @@ namespace TVTComment.Model.ChatCollectService
             }
         }
 
-        private static void chatCollectTaskExceptionHandler(AggregateException e)
+        private static void ChatCollectTaskExceptionHandler(AggregateException e)
         {
             if (e.InnerExceptions.All(x => x is OperationCanceledException))
                 return;

@@ -38,42 +38,44 @@ namespace TVTComment.ViewModels.ShellContents
         public ChatPostControlViewModel(Model.TVTComment model)
         {
             this.model = model;
-            this.model.Initialize().ContinueWith(task => {
+            this.model.Initialize().ContinueWith(task =>
+            {
                 if (!task.IsCompletedSuccessfully) return;
-                this.initialize();
+                Initialize();
             }, TaskScheduler.FromCurrentSynchronizationContext());
         }
 
-        private void initialize()
+        private void Initialize()
         {
-            this.ChatOpacity = model.ChatOpacity.MakeLinkedObservableValue(x => (byte)(x / 16), x => (byte)(x * 16));
-            this.PostServices = model.ChatCollectServiceModule?.RegisteredServices?.MakeOneWayLinkedCollectionMany(x => {
+            ChatOpacity = model.ChatOpacity.MakeLinkedObservableValue(x => (byte)(x / 16), x => (byte)(x * 16));
+            PostServices = model.ChatCollectServiceModule?.RegisteredServices?.MakeOneWayLinkedCollectionMany(x =>
+            {
                 if (x.CanPost) return new[] { x };
-                else return new Model.ChatCollectService.IChatCollectService[0];
+                else return Array.Empty<Model.ChatCollectService.IChatCollectService>();
             });
-            this.IsShowingNiconicoPostForm = new ReadOnlyObservableValue<bool>(
-                this.SelectedPostService.Select(x =>
+            IsShowingNiconicoPostForm = new ReadOnlyObservableValue<bool>(
+                SelectedPostService.Select(x =>
                     x is Model.ChatCollectService.NiconicoChatCollectService ||
                     x is Model.ChatCollectService.NiconicoLiveChatCollectService ||
                     x is Model.ChatCollectService.NewNiconicoJikkyouChatCollectService ||
                     x is Model.ChatCollectService.TwitterLiveChatCollectService
                 )
             );
-            this.IsShowingNichanPostForm = new ReadOnlyObservableValue<bool>(
-                this.SelectedPostService.Select(x => x is Model.ChatCollectService.NichanChatCollectService)
+            IsShowingNichanPostForm = new ReadOnlyObservableValue<bool>(
+                SelectedPostService.Select(x => x is Model.ChatCollectService.NichanChatCollectService)
             );
 
-            this.PostCommand = new DelegateCommand(PostChat);
-            this.UpdateNichanCurrentThreadsCommand = new DelegateCommand(() =>
+            PostCommand = new DelegateCommand(PostChat);
+            UpdateNichanCurrentThreadsCommand = new DelegateCommand(() =>
             {
-                if (this.SelectedPostService.Value is not Model.ChatCollectService.NichanChatCollectService nichanChatCollectService)
+                if (SelectedPostService.Value is not Model.ChatCollectService.NichanChatCollectService nichanChatCollectService)
                     return;
-                this.NichanCurrentThreads.Clear();
+                NichanCurrentThreads.Clear();
                 foreach (var thread in nichanChatCollectService.CurrentThreads)
-                    this.NichanCurrentThreads.Add(thread);
+                    NichanCurrentThreads.Add(thread);
             });
-            this.AddPostMailTextExampleCommand = new DelegateCommand<string>(AddPostMailTextExample);
-            this.RemovePostMailTextExampleCommand = new DelegateCommand<string>(RemovePostMailTextExample);
+            AddPostMailTextExampleCommand = new DelegateCommand<string>(AddPostMailTextExample);
+            RemovePostMailTextExampleCommand = new DelegateCommand<string>(RemovePostMailTextExample);
 
             PropertyChanged(this, new PropertyChangedEventArgs(null));
         }
@@ -86,7 +88,7 @@ namespace TVTComment.ViewModels.ShellContents
                 return;
             }
 
-            string mail184 = this.PostMailText.Value;
+            string mail184 = PostMailText.Value;
             if (mail184 == "")
                 mail184 = "184";
             else
@@ -121,11 +123,11 @@ namespace TVTComment.ViewModels.ShellContents
             }
             else if (SelectedPostService.Value is Model.ChatCollectService.NichanChatCollectService)
             {
-                if (this.SelectedNichanCurrentThread.Value == null)
+                if (SelectedNichanCurrentThread.Value == null)
                     return;
                 model.ChatCollectServiceModule.PostChat(
                     SelectedPostService.Value,
-                    new Model.ChatCollectService.NichanChatCollectService.ChatPostObject(this.SelectedNichanCurrentThread.Value.Uri.ToString())
+                    new Model.ChatCollectService.NichanChatCollectService.ChatPostObject(SelectedNichanCurrentThread.Value.Uri.ToString())
                 );
             }
             else if (SelectedPostService.Value is Model.ChatCollectService.TwitterLiveChatCollectService)

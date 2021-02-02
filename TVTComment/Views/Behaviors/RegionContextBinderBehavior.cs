@@ -1,10 +1,5 @@
 ﻿using Prism.Common;
 using Prism.Regions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Interactivity;
 
@@ -14,13 +9,13 @@ namespace TVTComment.Views.Behaviors
     {
         public object Binding
         {
-            get { return (object)GetValue(BindingProperty); }
+            get { return GetValue(BindingProperty); }
             set { SetValue(BindingProperty, value); }
         }
 
         // Using a DependencyProperty as the backing store for Binding.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty BindingProperty =
-            DependencyProperty.Register("Binding", typeof(object), typeof(RegionContextBinderBehavior), new PropertyMetadata(null,BindingPropertyChanged));
+            DependencyProperty.Register("Binding", typeof(object), typeof(RegionContextBinderBehavior), new PropertyMetadata(null, BindingPropertyChanged));
 
         private ObservableObject<object> regionContext;
 
@@ -47,8 +42,8 @@ namespace TVTComment.Views.Behaviors
         private void Element_Loaded(object sender, RoutedEventArgs e)
         {
             var regionContext = this.regionContext;
-            if (regionContext.Value != this.Binding)
-                regionContext.Value = this.Binding;
+            if (regionContext.Value != Binding)
+                regionContext.Value = Binding;
         }
 
         private static void BindingPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)

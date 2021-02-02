@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using TVTComment.Model.NiconicoUtils;
 
 namespace TVTComment.Model.ChatService
 {
@@ -20,19 +19,19 @@ namespace TVTComment.Model.ChatService
 
         //このChatServiceに行われた設定変更が子のChatServiceEntryに伝わるようにするためにObservableValueで包む
         //private ObservableValue<Dictionary<uint, int>> jkIdTable = new ObservableValue<Dictionary<uint, int>>();
-        private ObservableValue<NiconicoUtils.NiconicoLoginSession> loginSession = new ObservableValue<NiconicoUtils.NiconicoLoginSession>();
+        private readonly ObservableValue<NiconicoUtils.NiconicoLoginSession> loginSession = new ObservableValue<NiconicoUtils.NiconicoLoginSession>();
 
-        private NiconicoUtils.LiveIdResolver liveIdResolver;
-        private NiconicoUtils.JkIdResolver jkIdResolver;
-        private NiconicoChatServiceSettings settings;
+        private readonly NiconicoUtils.LiveIdResolver liveIdResolver;
+        private readonly NiconicoUtils.JkIdResolver jkIdResolver;
+        private readonly NiconicoChatServiceSettings settings;
 
         public string UserId
         {
-            get { return this.settings.UserId; }
+            get { return settings.UserId; }
         }
         public string UserPassword
         {
-            get { return this.settings.Password; }
+            get { return settings.Password; }
         }
         public bool IsLoggedin { get; private set; }
 
@@ -42,12 +41,12 @@ namespace TVTComment.Model.ChatService
         )
         {
             this.settings = settings; this.settings = settings;
-            this.jkIdResolver = new NiconicoUtils.JkIdResolver(channelDatabase, new NiconicoUtils.JkIdTable(jikkyouIdTableFilePath));
-            this.liveIdResolver = new NiconicoUtils.LiveIdResolver(channelDatabase, new NiconicoUtils.LiveIdTable(liveIdTableFilePath));
+            jkIdResolver = new NiconicoUtils.JkIdResolver(channelDatabase, new NiconicoUtils.JkIdTable(jikkyouIdTableFilePath));
+            liveIdResolver = new NiconicoUtils.LiveIdResolver(channelDatabase, new NiconicoUtils.LiveIdTable(liveIdTableFilePath));
 
             try
             {
-                if(!string.IsNullOrWhiteSpace(UserId) && !string.IsNullOrWhiteSpace(UserPassword))
+                if (!string.IsNullOrWhiteSpace(UserId) && !string.IsNullOrWhiteSpace(UserPassword))
                     SetUser(UserId, UserPassword).Wait();
             }
             catch (AggregateException e)
@@ -55,9 +54,9 @@ namespace TVTComment.Model.ChatService
             { }
 
             ChatCollectServiceEntries = new ChatCollectServiceEntry.IChatCollectServiceEntry[] {
-                new ChatCollectServiceEntry.NewNiconicoJikkyouChatCollectServiceEntry(this, this.liveIdResolver, this.loginSession),
-                new ChatCollectServiceEntry.NiconicoLiveChatCollectServiceEntry(this, this.loginSession),
-                new ChatCollectServiceEntry.TsukumijimaJikkyoApiChatCollectServiceEntry(this, this.jkIdResolver)
+                new ChatCollectServiceEntry.NewNiconicoJikkyouChatCollectServiceEntry(this, liveIdResolver, loginSession),
+                new ChatCollectServiceEntry.NiconicoLiveChatCollectServiceEntry(this, loginSession),
+                new ChatCollectServiceEntry.TsukumijimaJikkyoApiChatCollectServiceEntry(this, jkIdResolver)
             };
             ChatTrendServiceEntries = new IChatTrendServiceEntry[] { new NewNiconicoChatTrendServiceEntry(liveIdResolver) };
         }
@@ -82,18 +81,18 @@ namespace TVTComment.Model.ChatService
             await tmpSession.Login().ConfigureAwait(false);
 
             //成功したら設定、セッションを置き換える
-            this.IsLoggedin = true;
-            this.settings.UserId = userId;
-            this.settings.Password = userPassword;
+            IsLoggedin = true;
+            settings.UserId = userId;
+            settings.Password = userPassword;
             try
             {
-                await (this.loginSession.Value?.Logout() ?? Task.CompletedTask);
+                await (loginSession.Value?.Logout() ?? Task.CompletedTask);
             }
-            catch(NiconicoUtils.NiconicoLoginSessionException)
+            catch (NiconicoUtils.NiconicoLoginSessionException)
             { }
-            this.loginSession.Value = tmpSession;
+            loginSession.Value = tmpSession;
         }
 
-        public void Dispose(){ }
+        public void Dispose() { }
     }
 }

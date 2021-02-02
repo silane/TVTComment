@@ -19,7 +19,7 @@ namespace TVTComment.Model.NichanUtils
 
         public async Task<IEnumerable<string>> Get(ChannelInfo channel, DateTimeOffset time, CancellationToken cancellationToken)
         {
-            MatchingThread matchingThread = this.threadResolver.Resolve(channel, true);
+            MatchingThread matchingThread = threadResolver.Resolve(channel, true);
             if (matchingThread == null)
                 return Enumerable.Empty<string>();
 
@@ -28,16 +28,16 @@ namespace TVTComment.Model.NichanUtils
             ).ToArray() ?? Array.Empty<string>();
             (string server, string board) = GetServerAndBoardFromBoardUrl(matchingThread.BoardUri.ToString());
 
-            if (!this.pastThreadListerCache.TryGetValue(board, out var threadLister))
+            if (!pastThreadListerCache.TryGetValue(board, out var threadLister))
             {
-                threadLister = new Nichan.PastThreadLister(board, server, this.backTime);
+                threadLister = new Nichan.PastThreadLister(board, server, backTime);
                 await threadLister.Initialize(cancellationToken).ConfigureAwait(false);
-                this.pastThreadListerCache.Add(board, threadLister);
+                pastThreadListerCache.Add(board, threadLister);
             }
 
             DateTimeOffset startTime = time;
             IEnumerable<Nichan.Thread> threads = await threadLister.GetBetween(
-                startTime, startTime + this.getTimeSpan, cancellationToken
+                startTime, startTime + getTimeSpan, cancellationToken
             ).ConfigureAwait(false);
 
             return threads.Where(x => keywords.All(

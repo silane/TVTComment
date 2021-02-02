@@ -11,9 +11,9 @@ namespace TVTComment.Model.ChatTrendService
     {
         public string Name => "新ニコニコ実況";
         public TimeSpan UpdateInterval => new TimeSpan(0, 0, 1, 0);
-        private static HttpClient httpClient = new HttpClient();
-        private LiveIdResolver liveIdResolver;
-        private Dictionary<string, int[]> forces = new Dictionary<string, int[]>();
+        private static readonly HttpClient httpClient = new HttpClient();
+        private readonly LiveIdResolver liveIdResolver;
+        private readonly Dictionary<string, int[]> forces = new Dictionary<string, int[]>();
 
         public NewNiconicoChatTrendService(LiveIdResolver liveIdResolver)
         {
@@ -27,22 +27,22 @@ namespace TVTComment.Model.ChatTrendService
 
         public async Task<IForceValueData> GetForceValueData()
         {
-            var lives = liveIdResolver.GetLiveIdList().Where(x => x.Contains("ch")).Select(x => x.Replace("ch","")).Distinct();
+            var lives = liveIdResolver.GetLiveIdList().Where(x => x.Contains("ch")).Select(x => x.Replace("ch", "")).Distinct();
             try
             {
-                foreach(var id in lives)
+                foreach (var id in lives)
                 {
                     var jk = await httpClient.GetStreamAsync(@$"https://public.api.nicovideo.jp/v1/channel/channelapp/channels/{id}/lives.json?sort=channelpage");
                     var obj = TrendJsonUtils.ToObject<NewNiconicoTrendJson>(jk);
 
-                    var canAdded = !forces.ContainsKey(obj.data[0].socialGroupId);
+                    var canAdded = !forces.ContainsKey(obj.Data[0].SocialGroupId);
                     if (canAdded)
                     {
-                        forces.Add(obj.data[0].socialGroupId, new int[] { obj.data[0].commentCount, obj.data[0].commentCount });
+                        forces.Add(obj.Data[0].SocialGroupId, new int[] { obj.Data[0].CommentCount, obj.Data[0].CommentCount });
                     }
                     else
                     {
-                        forces[obj.data[0].socialGroupId] = new int[] { forces[obj.data[0].socialGroupId][1], obj.data[0].commentCount };
+                        forces[obj.Data[0].SocialGroupId] = new int[] { forces[obj.Data[0].SocialGroupId][1], obj.Data[0].CommentCount };
                     }
                 }
             }

@@ -26,7 +26,7 @@ namespace Nichan
         public static async Task<IEnumerable<Thread>> ParseFromStream(TextReader reader)
         {
             var ret = new List<Thread>();
-            while(true)
+            while (true)
             {
                 string line = await reader.ReadLineAsync();
                 if (line == null) break;
@@ -37,7 +37,7 @@ namespace Nichan
                 string dat = line[..sepIdx];
                 string title = line[(sepIdx + 2)..];
 
-                if(!dat.EndsWith(".dat"))
+                if (!dat.EndsWith(".dat"))
                 {
                     throw new BoardSubjectParserException();
                 }

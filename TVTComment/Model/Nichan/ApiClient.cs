@@ -57,9 +57,9 @@ namespace Nichan
         private string sessionID = "";
 
         private readonly HttpClient httpClient = new HttpClient(
-            //new HttpClientHandler() {
-            //    AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
-            //}
+        //new HttpClientHandler() {
+        //    AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
+        //}
         );
 
         public ApiClient(
@@ -67,23 +67,23 @@ namespace Nichan
             string authUserAgent, string authX2chUA, string userAgent
         )
         {
-            this.HmKey = hmKey;
-            this.AppKey = appKey;
-            this.UserId = userId;
-            this.Password = password;
-            this.AuthUserAgent = authUserAgent;
-            this.AuthX2chUA = authX2chUA;
-            this.UserAgent = userAgent;
+            HmKey = hmKey;
+            AppKey = appKey;
+            UserId = userId;
+            Password = password;
+            AuthUserAgent = authUserAgent;
+            AuthX2chUA = authX2chUA;
+            UserAgent = userAgent;
         }
 
-        private string getHash(string message)
+        private string GetHash(string message)
         {
-            using HMACSHA256 hs256 = new HMACSHA256(Encoding.UTF8.GetBytes(this.HmKey));
+            using HMACSHA256 hs256 = new HMACSHA256(Encoding.UTF8.GetBytes(HmKey));
             byte[] hash = hs256.ComputeHash(Encoding.UTF8.GetBytes(message));
             return BitConverter.ToString(hash).Replace("-", "").ToLower();
         }
 
-        private async Task authorize()
+        private async Task Authorize()
         {
             //string ct = string.Join("", Enumerable.Range(0, 10).Select(_ => ctChars[random.Next(ctChars.Length)]));
 
@@ -91,38 +91,38 @@ namespace Nichan
             //string hb =this.getHash(message);
 
             var request = new HttpRequestMessage(HttpMethod.Post, "https://api.5ch.net/v1/auth/");
-            request.Headers.TryAddWithoutValidation("User-Agent", this.AuthUserAgent);
-            request.Headers.TryAddWithoutValidation("X-2ch-UA", this.AuthX2chUA);
+            request.Headers.TryAddWithoutValidation("User-Agent", AuthUserAgent);
+            request.Headers.TryAddWithoutValidation("X-2ch-UA", AuthX2chUA);
             request.Content = new FormUrlEncodedContent(new Dictionary<string, string> {
-                { "KY", this.AppKey }, { "ID", this.UserId}, { "PW", this.Password },
+                { "KY", AppKey }, { "ID", UserId}, { "PW", Password },
             });
             HttpResponseMessage response;
             try
             {
-                response = await this.httpClient.SendAsync(request);
+                response = await httpClient.SendAsync(request);
             }
-            catch(HttpRequestException e)
+            catch (HttpRequestException e)
             {
                 throw new NetworkApiClientException(e);
             }
 
-            if(response.StatusCode != HttpStatusCode.OK)
+            if (response.StatusCode != HttpStatusCode.OK)
             {
                 throw new AuthorizationApiClientException();
             }
             string responseContent = await response.Content.ReadAsStringAsync();
             int idx = responseContent.IndexOf(':');
-            if(idx == -1)
+            if (idx == -1)
             {
-                this.sessionID = "";
+                sessionID = "";
                 throw new AuthorizationApiClientException();
             }
-            this.sessionID = responseContent[(idx + 1)..];
+            sessionID = responseContent[(idx + 1)..];
         }
 
         public async Task<string> GetDat(string server, string board, string threadId)
         {
-            HttpResponseMessage response = await this.GetDatResponse(server, board, threadId, new (string, string)[0]);
+            HttpResponseMessage response = await GetDatResponse(server, board, threadId, Array.Empty<(string, string)>());
             if (response.StatusCode != HttpStatusCode.OK)
             {
                 throw new ResponseApiClientException();
@@ -136,22 +136,22 @@ namespace Nichan
 
         public async Task<HttpResponseMessage> GetDatResponse(string server, string board, string threadId, IEnumerable<(string name, string value)> additionalHeaders)
         {
-            if (this.sessionID == "")
+            if (sessionID == "")
             {
-                await this.authorize();
+                await Authorize();
             }
-            string message = $"/v1/{server}/{board}/{threadId}{this.sessionID}{this.AppKey}";
-            string hobo = this.getHash(message);
+            string message = $"/v1/{server}/{board}/{threadId}{sessionID}{AppKey}";
+            string hobo = GetHash(message);
 
             var request = new HttpRequestMessage(HttpMethod.Post, $"https://api.5ch.net/v1/{server}/{board}/{threadId}");
-            request.Headers.TryAddWithoutValidation("User-Agent", this.UserAgent);
+            request.Headers.TryAddWithoutValidation("User-Agent", UserAgent);
             request.Headers.TryAddWithoutValidation("Connection", "close");
-            foreach(var (name, value) in additionalHeaders)
+            foreach (var (name, value) in additionalHeaders)
             {
                 request.Headers.TryAddWithoutValidation(name, value);
             }
             request.Content = new FormUrlEncodedContent(
-                new Dictionary<string, string> { { "sid", this.sessionID }, { "hobo", hobo }, { "appkey", this.AppKey } }
+                new Dictionary<string, string> { { "sid", sessionID }, { "hobo", hobo }, { "appkey", AppKey } }
             );
 
             async Task<HttpResponseMessage> post()
@@ -159,7 +159,7 @@ namespace Nichan
                 HttpResponseMessage response;
                 try
                 {
-                    response = await this.httpClient.SendAsync(request);
+                    response = await httpClient.SendAsync(request);
                 }
                 catch (HttpRequestException e)
                 {
@@ -179,7 +179,7 @@ namespace Nichan
             }
             catch (AuthorizationApiClientException)
             {
-                await this.authorize();
+                await Authorize();
                 response = await post();
             }
 
@@ -188,7 +188,8 @@ namespace Nichan
 
         public void Dispose()
         {
-            this.httpClient.Dispose();
+            httpClient.Dispose();
+            GC.SuppressFinalize(this);
         }
     }
 }

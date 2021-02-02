@@ -1,15 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ObservableUtils;
+﻿using ObservableUtils;
+using System;
 
 namespace TVTComment.Model.ChatCollectServiceEntry
 {
-    class NiconicoLogChatCollectServiceEntry:IChatCollectServiceEntry
+    class NiconicoLogChatCollectServiceEntry : IChatCollectServiceEntry
     {
-        public class ChatCollectServiceCreationOption:IChatCollectServiceCreationOption
+        public class ChatCollectServiceCreationOption : IChatCollectServiceCreationOption
         {
         }
 
@@ -19,18 +15,18 @@ namespace TVTComment.Model.ChatCollectServiceEntry
         public string Description => "ニコニコ実況過去ログを自動で表示";
         public bool CanUseDefaultCreationOption => true;
 
-        private NiconicoUtils.JkIdResolver jkIdResolver;
-        private ObservableValue<NiconicoUtils.NiconicoLoginSession> session;
+        private readonly NiconicoUtils.JkIdResolver jkIdResolver;
+        private readonly ObservableValue<NiconicoUtils.NiconicoLoginSession> session;
 
-        public NiconicoLogChatCollectServiceEntry(ChatService.NiconicoChatService owner,NiconicoUtils.JkIdResolver jkIdResolver, ObservableValue<NiconicoUtils.NiconicoLoginSession> loginSession)
+        public NiconicoLogChatCollectServiceEntry(ChatService.NiconicoChatService owner, NiconicoUtils.JkIdResolver jkIdResolver, ObservableValue<NiconicoUtils.NiconicoLoginSession> loginSession)
         {
-            this.Owner = owner;
+            Owner = owner;
             this.jkIdResolver = jkIdResolver;
             session = loginSession;
         }
         public ChatCollectService.IChatCollectService GetNewService(IChatCollectServiceCreationOption creationOption)
         {
-            if(creationOption!=null && !(creationOption is ChatCollectServiceCreationOption))
+            if (creationOption != null && !(creationOption is ChatCollectServiceCreationOption))
                 throw new ArgumentException($"Type of {nameof(creationOption)} must be {nameof(NiconicoLogChatCollectServiceEntry)}.{nameof(ChatCollectServiceCreationOption)}", nameof(creationOption));
 
             if (session.Value == null || !session.Value.IsLoggedin)

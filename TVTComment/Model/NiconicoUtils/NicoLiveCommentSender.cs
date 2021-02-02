@@ -8,7 +8,6 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Unicode;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 
 namespace TVTComment.Model.NiconicoUtils
 {
@@ -29,7 +28,7 @@ namespace TVTComment.Model.NiconicoUtils
         public string PlayerStatus { get; }
         public InvalidPlayerStatusNicoLiveCommentSenderException(string playerStatus)
         {
-            this.PlayerStatus = playerStatus;
+            PlayerStatus = playerStatus;
         }
     }
 
@@ -45,7 +44,7 @@ namespace TVTComment.Model.NiconicoUtils
 
         public ResponseFormatNicoLiveCommentSenderException(string response)
         {
-            this.Response = response;
+            Response = response;
         }
     }
 
@@ -61,7 +60,7 @@ namespace TVTComment.Model.NiconicoUtils
         {
             var handler = new HttpClientHandler();
             handler.CookieContainer.Add(niconicoSession.Cookie);
-            this.httpClient = new HttpClient(handler);
+            httpClient = new HttpClient(handler);
             var assembly = Assembly.GetExecutingAssembly().GetName();
             var ua = assembly.Name + "/" + assembly.Version.ToString(3);
             httpClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", ua);
@@ -88,9 +87,9 @@ namespace TVTComment.Model.NiconicoUtils
                     liveId = liveIdRoot.GetProperty("data").GetProperty("nicoliveProgramId").GetString(); // lvから始まるLiveIDに置き換え
 
                 }
-                str = await this.httpClient.GetStreamAsync($"https://live2.nicovideo.jp/unama/watch/{liveId}/programinfo").ConfigureAwait(false);
+                str = await httpClient.GetStreamAsync($"https://live2.nicovideo.jp/unama/watch/{liveId}/programinfo").ConfigureAwait(false);
             }
-            catch(HttpRequestException e)
+            catch (HttpRequestException e)
             {
                 throw new NetworkNicoLiveCommentSenderException(e);
             }
@@ -99,8 +98,8 @@ namespace TVTComment.Model.NiconicoUtils
             var playerStatusRoot = playerStatus.RootElement;
 
             playerStatusRoot.GetProperty("data").GetProperty("beginAt").TryGetInt64(out long openTime);
-            
-            if(liveId == null || openTime == 0)
+
+            if (liveId == null || openTime == 0)
             {
                 throw new InvalidPlayerStatusNicoLiveCommentSenderException(playerStatus.ToString());
             }
@@ -115,7 +114,7 @@ namespace TVTComment.Model.NiconicoUtils
             HttpResponseMessage response;
             try
             {
-                response = await this.httpClient.PostAsync(
+                response = await httpClient.PostAsync(
                     $"https://api.cas.nicovideo.jp/v1/services/live/programs/{liveId}/comments",
                     new StringContent(JsonSerializer.Serialize(new Dictionary<string, string> {
                         { "message", message },
@@ -124,7 +123,7 @@ namespace TVTComment.Model.NiconicoUtils
                     }, options), Encoding.UTF8, "application/json")
                 );
             }
-            catch(HttpRequestException e)
+            catch (HttpRequestException e)
             {
                 throw new NetworkNicoLiveCommentSenderException(e);
             }
@@ -134,12 +133,12 @@ namespace TVTComment.Model.NiconicoUtils
             {
                 responseBodyJson = JsonDocument.Parse(responseBody);
             }
-            catch(JsonException)
+            catch (JsonException)
             {
                 throw new ResponseFormatNicoLiveCommentSenderException(responseBody);
             }
 
-            using(responseBodyJson)
+            using (responseBodyJson)
             {
                 int status;
                 try
@@ -159,7 +158,7 @@ namespace TVTComment.Model.NiconicoUtils
 
         public void Dispose()
         {
-            this.httpClient.Dispose();
+            httpClient.Dispose();
         }
     }
 }

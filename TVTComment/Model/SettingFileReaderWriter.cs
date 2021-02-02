@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.Json;
@@ -29,17 +28,17 @@ namespace TVTComment.Model
         public string FilePath { get; }
         public SettingFileReaderWriter(string filepath, bool appendFileExtension)
         {
-            this.FilePath = filepath;
+            FilePath = filepath;
             if (appendFileExtension)
-                this.FilePath = this.FilePath + ".json";
+                FilePath += ".json";
 
-            this.jsonSerializerOptions = new JsonSerializerOptions()
+            jsonSerializerOptions = new JsonSerializerOptions()
             {
                 NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals |
                                  JsonNumberHandling.AllowReadingFromString
             };
-            this.jsonSerializerOptions.Converters.Add(new TimeSpanConverter());
-            this.jsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+            jsonSerializerOptions.Converters.Add(new TimeSpanConverter());
+            jsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
         }
 
         public async Task<SettingT> Read()
@@ -47,9 +46,9 @@ namespace TVTComment.Model
             StreamReader reader;
             try
             {
-                reader = new StreamReader(this.FilePath, Encoding.UTF8);
+                reader = new StreamReader(FilePath, Encoding.UTF8);
             }
-            catch(Exception e) when(e is DirectoryNotFoundException || e is FileNotFoundException)
+            catch (Exception e) when (e is DirectoryNotFoundException || e is FileNotFoundException)
             {
                 return new SettingT();
             }
@@ -57,7 +56,7 @@ namespace TVTComment.Model
             {
                 return JsonSerializer.Deserialize<SettingT>(await reader.ReadToEndAsync(), jsonSerializerOptions);
             }
-            catch(JsonException e)
+            catch (JsonException e)
             {
                 throw new FormatException(null, e);
             }
@@ -69,9 +68,9 @@ namespace TVTComment.Model
 
         public async Task Write(SettingT setting)
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(this.FilePath));
+            Directory.CreateDirectory(Path.GetDirectoryName(FilePath));
 
-            using var writer = new StreamWriter(this.FilePath, false, Encoding.UTF8);
+            using var writer = new StreamWriter(FilePath, false, Encoding.UTF8);
             await writer.WriteAsync(JsonSerializer.Serialize(setting, jsonSerializerOptions));
         }
     }

@@ -28,7 +28,7 @@ namespace TVTComment.Model.ChatCollectService
 
         public string Name => "Twitterリアルタイム実況";
 
-        public  IChatCollectServiceEntry ServiceEntry { get; }
+        public IChatCollectServiceEntry ServiceEntry { get; }
 
         public bool CanPost => true;
 
@@ -41,7 +41,7 @@ namespace TVTComment.Model.ChatCollectService
         private readonly ModeSelectMethod ModeSelect;
 
 
-        public TwitterLiveChatCollectService(IChatCollectServiceEntry serviceEntry, string searchWord, ModeSelectMethod modeSelect,SearchWordResolver searchWordResolver, TwitterAuthentication twitter)
+        public TwitterLiveChatCollectService(IChatCollectServiceEntry serviceEntry, string searchWord, ModeSelectMethod modeSelect, SearchWordResolver searchWordResolver, TwitterAuthentication twitter)
         {
             ServiceEntry = serviceEntry;
             SearchWord.Value = searchWord;
@@ -51,7 +51,7 @@ namespace TVTComment.Model.ChatCollectService
             switch (modeSelect)
             {
                 case ModeSelectMethod.Auto:
-                    SearchWord.Where(x => x!=null && !x.Equals("")).Subscribe(res => chatCollectTask = SearchStreamAsync(res, cancel.Token));
+                    SearchWord.Where(x => x != null && !x.Equals("")).Subscribe(res => chatCollectTask = SearchStreamAsync(res, cancel.Token));
                     break;
 
                 case ModeSelectMethod.Manual:
@@ -98,7 +98,7 @@ namespace TVTComment.Model.ChatCollectService
                 {
                     throw new ChatCollectException("TwitterのAPI制限に達したか問題が発生したため切断されました");
                 }
-            }            
+            }
 
             var list = new List<Chat>();
             while (statusQueue.TryDequeue(out var status))
@@ -110,8 +110,9 @@ namespace TVTComment.Model.ChatCollectService
 
         public async Task PostChat(BasicChatPostObject postObject)
         {
-            try { 
-                var suffix = "\n"+(postObject as ChatPostObject)?.SuffixText ?? "";
+            try
+            {
+                var suffix = "\n" + (postObject as ChatPostObject)?.SuffixText ?? "";
                 await Twitter.Token.Statuses.UpdateAsync(postObject.Text + suffix);
             }
             catch

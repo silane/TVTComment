@@ -17,19 +17,19 @@ namespace TVTComment.Model.ChatCollectService
         public IEnumerable<Chat> GetChats(ChannelInfo channel, DateTime time)
         {
             List<Chat> ret = new List<Chat>();
-            if(this.lastTime <= time && time < this.lastTime + this.continuousCallLimit)
+            if (lastTime <= time && time < lastTime + continuousCallLimit)
             {
-                for(DateTime t = this.lastTime.AddSeconds(1); t <= time; t = t.AddSeconds(1))
+                for (DateTime t = lastTime.AddSeconds(1); t <= time; t = t.AddSeconds(1))
                 {
-                    ret.AddRange(this.GetOnceASecond(channel, t));
-                    this.lastTime = t;
+                    ret.AddRange(GetOnceASecond(channel, t));
+                    lastTime = t;
                 }
             }
             else
             {
                 //過去に戻るか指定時間以上間隔があいてる（シークした？）
-                ret.AddRange(this.GetOnceASecond(channel, time));
-                this.lastTime = time;
+                ret.AddRange(GetOnceASecond(channel, time));
+                lastTime = time;
             }
             return ret;
         }

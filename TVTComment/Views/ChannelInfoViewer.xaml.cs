@@ -1,18 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Prism.Mvvm;
+using System;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using Prism.Mvvm;
 
 namespace TVTComment.Views
 {
@@ -29,12 +18,12 @@ namespace TVTComment.Views
             private Model.EventInfo _event;
             public Model.EventInfo Event { get { return _event; } set { SetProperty(ref _event, value); OnPropertyChanged(nameof(EventEndTime)); } }
 
-            public DateTime? EventEndTime { get { return Event?.StartTime+Event?.Duration; } }
+            public DateTime? EventEndTime { get { return Event?.StartTime + Event?.Duration; } }
         }
         public ChannelInfoViewer()
         {
             InitializeComponent();
-            this.OuterMostGrid.DataContext = new ViewModel();
+            OuterMostGrid.DataContext = new ViewModel();
         }
 
         public static readonly DependencyProperty ChannelInfoProperty = DependencyProperty.Register("ChannelInfo", typeof(Model.ChannelInfo), typeof(ChannelInfoViewer),
@@ -50,23 +39,23 @@ namespace TVTComment.Views
 
         public Model.ChannelInfo ChannelInfo
         {
-            get { return (Model.ChannelInfo)this.GetValue(ChannelInfoProperty); }
-            set { this.SetValue(ChannelInfoProperty, value); }
+            get { return (Model.ChannelInfo)GetValue(ChannelInfoProperty); }
+            set { SetValue(ChannelInfoProperty, value); }
         }
 
         public Model.EventInfo EventInfo
         {
-            get { return (Model.EventInfo)this.GetValue(EventInfoProperty); }
-            set { this.SetValue(EventInfoProperty, value); }
+            get { return (Model.EventInfo)GetValue(EventInfoProperty); }
+            set { SetValue(EventInfoProperty, value); }
         }
 
         private void OnChannelInfoPropertyChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e)
         {
-            (this.OuterMostGrid.DataContext as ViewModel).Channel = (Model.ChannelInfo)e.NewValue;
+            (OuterMostGrid.DataContext as ViewModel).Channel = (Model.ChannelInfo)e.NewValue;
         }
         private void OnEventInfoPropertyChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e)
         {
-            (this.OuterMostGrid.DataContext as ViewModel).Event = (Model.EventInfo)e.NewValue;
+            (OuterMostGrid.DataContext as ViewModel).Event = (Model.EventInfo)e.NewValue;
         }
     }
 }

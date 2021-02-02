@@ -7,8 +7,8 @@ namespace TVTComment.Model.NiconicoUtils
     /// </summary>
     class SearchWordResolver
     {
-        private ChannelDatabase channelDatabase;
-        private SearchWordTable searchWordTable;
+        private readonly ChannelDatabase channelDatabase;
+        private readonly SearchWordTable searchWordTable;
 
         public SearchWordResolver(ChannelDatabase channelDatabase, SearchWordTable searchWordTable)
         {
@@ -21,7 +21,7 @@ namespace TVTComment.Model.NiconicoUtils
         /// </summary>
         /// <param name="networkId">ネットワークID 不明なら0</param>
         /// <param name="serviceId">サービスID</param>
-        public string Resolve(ushort networkId,ushort serviceId)
+        public string Resolve(ushort networkId, ushort serviceId)
         {
             if (networkId == 0)
             {

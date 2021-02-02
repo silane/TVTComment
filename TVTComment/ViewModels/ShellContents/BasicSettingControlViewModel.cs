@@ -31,7 +31,7 @@ namespace TVTComment.ViewModels.ShellContents
             this.model = model;
 
             var assembly = Assembly.GetExecutingAssembly().GetName();
-            this.Version = assembly.Version.ToString(4);
+            Version = assembly.Version.ToString(4);
         }
 
         public async Task Initialize()
@@ -54,8 +54,8 @@ namespace TVTComment.ViewModels.ShellContents
 
             ChatCollectTimeAdjustment = model.ChatCollectServiceModule.TimeAdjustment;
 
-            AddChatCollectTimeAdjustment = new DelegateCommand<int?>(time => { if(time.HasValue) ChatCollectTimeAdjustment.Value = ChatCollectTimeAdjustment.Value.Add(TimeSpan.FromSeconds(time.Value)); },_=>true);
-            SetChatCollectTimeAdjustment = new DelegateCommand<int?>(time => { if(time.HasValue) ChatCollectTimeAdjustment.Value = TimeSpan.FromSeconds(time.Value); },_=>true);
+            AddChatCollectTimeAdjustment = new DelegateCommand<int?>(time => { if (time.HasValue) ChatCollectTimeAdjustment.Value = ChatCollectTimeAdjustment.Value.Add(TimeSpan.FromSeconds(time.Value)); }, _ => true);
+            SetChatCollectTimeAdjustment = new DelegateCommand<int?>(time => { if (time.HasValue) ChatCollectTimeAdjustment.Value = TimeSpan.FromSeconds(time.Value); }, _ => true);
 
             PropertyChanged(this, new PropertyChangedEventArgs(null));
         }
@@ -63,7 +63,7 @@ namespace TVTComment.ViewModels.ShellContents
         public void Dispose()
         {
             // アプリケーションが終了するとき（それ以外ないが）は現状呼ばれない
-            this.compositeDisposable.Dispose();
+            compositeDisposable.Dispose();
         }
     }
 }

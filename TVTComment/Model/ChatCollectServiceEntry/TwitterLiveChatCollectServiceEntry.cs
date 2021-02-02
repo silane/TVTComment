@@ -11,7 +11,7 @@ namespace TVTComment.Model.ChatCollectServiceEntry
     {
         public class ChatCollectServiceCreationOption : IChatCollectServiceCreationOption
         {
-            public enum ModeSelectMethod { Auto, Manual}
+            public enum ModeSelectMethod { Auto, Manual }
             public string SearchWord { get; }
             public ModeSelectMethod Method;
             public ChatCollectServiceCreationOption(ModeSelectMethod method, string searchWord)
@@ -45,7 +45,7 @@ namespace TVTComment.Model.ChatCollectServiceEntry
             var session = Session.Value;
             if (session == null)
                 throw new ChatCollectServiceCreationException("Twiiterリアルタイム実況にはTwitterへのログインが必要です");
-            return new TwitterLiveChatCollectService(this, co.SearchWord, co.Method ,searchWordResolver, session);
+            return new TwitterLiveChatCollectService(this, co.SearchWord, co.Method, searchWordResolver, session);
         }
     }
 }

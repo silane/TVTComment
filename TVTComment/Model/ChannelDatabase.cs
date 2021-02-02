@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TVTComment.Model
 {
@@ -11,36 +8,36 @@ namespace TVTComment.Model
     /// チャンネルの付加情報フラグ（主に放送局系列情報）
     /// </summary>
     [Flags]
-    enum ChannelFlags:ushort
+    enum ChannelFlags : ushort
     {
         /// <summary>
         /// NHK総合
         /// </summary>
-        NHK=1,
+        NHK = 1,
         /// <summary>
         /// NHKEテレ
         /// </summary>
-        ETV=2,
+        ETV = 2,
         /// <summary>
         /// 日本テレビ系
         /// </summary>
-        NTV=4,
+        NTV = 4,
         /// <summary>
         /// TBSテレビ系
         /// </summary>
-        TBS=8,
+        TBS = 8,
         /// <summary>
         /// フジテレビ系
         /// </summary>
-        CX=16,
+        CX = 16,
         /// <summary>
         /// テレビ朝日系
         /// </summary>
-        EX=32,
+        EX = 32,
         /// <summary>
         /// テレビ東京系
         /// </summary>
-        TX=64,
+        TX = 64,
     }
 
     /// <summary>
@@ -66,19 +63,19 @@ namespace TVTComment.Model
         public string Name { get; }
         public ChannelFlags Flags { get; }
 
-        public ChannelEntry(ushort networkId,ushort serviceId,string region,string name,ChannelFlags flags)
+        public ChannelEntry(ushort networkId, ushort serviceId, string region, string name, ChannelFlags flags)
         {
-            this.NetworkId = networkId;
-            this.ServiceId = serviceId;
-            this.Region = region;
-            this.Name = name;
-            this.Flags = flags;
+            NetworkId = networkId;
+            ServiceId = serviceId;
+            Region = region;
+            Name = name;
+            Flags = flags;
         }
     }
 
     class ChannelDatabase
     {
-        private class ChannelComparer:Comparer<ChannelEntry>
+        private class ChannelComparer : Comparer<ChannelEntry>
         {
             public override int Compare(ChannelEntry x, ChannelEntry y)
             {
@@ -89,29 +86,27 @@ namespace TVTComment.Model
                 return x.NetworkId.CompareTo(y.NetworkId);
             }
         }
-        private static ChannelComparer channelComparer=new ChannelComparer();
+        private static readonly ChannelComparer channelComparer = new ChannelComparer();
 
-        private List<ChannelEntry> channelList=new List<ChannelEntry>();//効率化のためにサービスID,ネットワークIDの順でソートしておく
+        private readonly List<ChannelEntry> channelList = new List<ChannelEntry>();//効率化のためにサービスID,ネットワークIDの順でソートしておく
         public IReadOnlyList<ChannelEntry> ChannelList => channelList;
 
         public ChannelDatabase(string dataFilePath)
         {
-            using (StreamReader reader = new StreamReader(dataFilePath))
-            {
-                Utils.SimpleCsvReader.ReadByLine(reader, cols =>
-                 {
-                     if (cols.Length != 5) return true;
+            using StreamReader reader = new StreamReader(dataFilePath);
+            Utils.SimpleCsvReader.ReadByLine(reader, cols =>
+             {
+                 if (cols.Length != 5) return true;
 
-                     ushort nid = Utils.PrefixedIntegerParser.ParseToUInt16(cols[0]);
-                     if (nid == 0)
-                         throw new Exception();
-                     var newItem = new ChannelEntry(nid, Utils.PrefixedIntegerParser.ParseToUInt16(cols[1]), cols[2] == "*" ? null : cols[2], cols[3], (ChannelFlags)Utils.PrefixedIntegerParser.ParseToUInt16(cols[4]));
-                     int idx = channelList.BinarySearch(newItem, channelComparer);
-                     if (idx < 0) idx = ~idx;//サービスIDが被っている
-                     channelList.Insert(idx, newItem);
-                     return true;
-                 }, new char[] { '\t' });
-            }
+                 ushort nid = Utils.PrefixedIntegerParser.ParseToUInt16(cols[0]);
+                 if (nid == 0)
+                     throw new Exception();
+                 var newItem = new ChannelEntry(nid, Utils.PrefixedIntegerParser.ParseToUInt16(cols[1]), cols[2] == "*" ? null : cols[2], cols[3], (ChannelFlags)Utils.PrefixedIntegerParser.ParseToUInt16(cols[4]));
+                 int idx = channelList.BinarySearch(newItem, channelComparer);
+                 if (idx < 0) idx = ~idx;//サービスIDが被っている
+                 channelList.Insert(idx, newItem);
+                 return true;
+             }, new char[] { '\t' });
         }
 
         /// <summary>
@@ -119,14 +114,14 @@ namespace TVTComment.Model
         /// </summary>
         /// <param name="networkId">ネットワークID 地上波の場合0xFでもいい</param>
         /// <param name="serviceId">サービスID</param>
-        public ChannelEntry GetByNetworkIdAndServiceId(ushort networkId,ushort serviceId)
+        public ChannelEntry GetByNetworkIdAndServiceId(ushort networkId, ushort serviceId)
         {
             if (networkId == 0) throw new ArgumentOutOfRangeException(nameof(networkId), networkId, $"{nameof(networkId)} must not be 0");
 
             if (IsTerrestrial(networkId))
                 networkId = 0xF;
 
-            int idx=channelList.BinarySearch(new ChannelEntry(networkId, serviceId, null, null, 0), channelComparer);
+            int idx = channelList.BinarySearch(new ChannelEntry(networkId, serviceId, null, null, 0), channelComparer);
             if (idx < 0)
                 return null;
             return channelList[idx];
@@ -135,9 +130,9 @@ namespace TVTComment.Model
         public IEnumerable<ChannelEntry> GetByServiceId(ushort serviceId)
         {
             int idx = ~channelList.BinarySearch(new ChannelEntry(0, serviceId, null, null, 0), channelComparer);
-            
+
             var ret = new List<ChannelEntry>();
-            for (; channelList[idx].ServiceId==serviceId; idx++)
+            for (; channelList[idx].ServiceId == serviceId; idx++)
             {
                 ret.Add(channelList[idx]);
             }

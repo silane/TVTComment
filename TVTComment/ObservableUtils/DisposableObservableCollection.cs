@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ObservableUtils
 {
-    class DisposableObservableCollection<T>:ObservableCollection<T>,IDisposable
+    class DisposableObservableCollection<T> : ObservableCollection<T>, IDisposable
     {
-        private List<IDisposable> disposables=new List<IDisposable>();
+        private readonly List<IDisposable> disposables = new List<IDisposable>();
 
         public DisposableObservableCollection() { }
         public DisposableObservableCollection(List<T> list) : base(list) { }
@@ -43,10 +40,10 @@ namespace ObservableUtils
         }
     }
 
-    class DisposableReadOnlyObservableCollection<T>:ReadOnlyObservableCollection<T>,IDisposable
+    class DisposableReadOnlyObservableCollection<T> : ReadOnlyObservableCollection<T>, IDisposable
     {
-        private DisposableObservableCollection<T> list;
-        public DisposableReadOnlyObservableCollection(DisposableObservableCollection<T> list):base(list)
+        private readonly DisposableObservableCollection<T> list;
+        public DisposableReadOnlyObservableCollection(DisposableObservableCollection<T> list) : base(list)
         {
             this.list = list;
         }

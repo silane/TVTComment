@@ -47,7 +47,7 @@ namespace TVTComment.Model
         /// こちらからClose要求をした時に相手からの返事を待つのに使う
         /// 返事を待っている期間だけresetになる
         /// </summary>
-        private ManualResetEventSlim closingResetEvent = new ManualResetEventSlim(true);
+        private readonly ManualResetEventSlim closingResetEvent = new ManualResetEventSlim(true);
         private readonly SettingFileReaderWriter<TVTCommentSettings> settingReaderWriter;
 
         public TVTCommentSettings Settings { get; private set; }
@@ -60,13 +60,13 @@ namespace TVTComment.Model
         /// アプリを閉じたいときに<see cref="Initialize"/>を呼んだのと同じ同期コンテキスト上で呼ばれるので、絶対に登録し、thisのDisposeを呼ぶようにする
         /// </summary>
         public event Action ApplicationClose;
-      
+
         public TVTComment()
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-            string baseDir = Path.GetDirectoryName(getExePath());
-            this.settingReaderWriter = new SettingFileReaderWriter<TVTCommentSettings>(Path.Combine(baseDir, "settings"), true);
+            string baseDir = Path.GetDirectoryName(GetExePath());
+            settingReaderWriter = new SettingFileReaderWriter<TVTCommentSettings>(Path.Combine(baseDir, "settings"), true);
 
             State = TVTCommentState.NotInitialized;
         }
@@ -78,10 +78,10 @@ namespace TVTComment.Model
         /// </summary>
         public Task Initialize()
         {
-            return initializeTask ?? (initializeTask = initialize());
+            return initializeTask ??= InitializeAsnyc();
         }
 
-        private async Task initialize()
+        private async Task InitializeAsnyc()
         {
             if (State != TVTCommentState.NotInitialized)
                 throw new InvalidOperationException("This object is already initialized");
@@ -92,35 +92,35 @@ namespace TVTComment.Model
             {
                 try
                 {
-                    this.Settings = await this.settingReaderWriter.Read();
+                    Settings = await settingReaderWriter.Read();
                     break;
                 }
                 catch (FormatException)
                 {
-                    this.Settings = new TVTCommentSettings();
+                    Settings = new TVTCommentSettings();
                     break;
                 }
                 catch (IOException)
                 {
                     const int retryCount = 6;
-                    if(i >= retryCount)
+                    if (i >= retryCount)
                         throw;
                 }
                 await Task.Delay(500);
             }
 
-            string baseDir = Path.GetDirectoryName(getExePath());
-            this.channelDatabase = new ChannelDatabase(Path.Combine(baseDir, "channels.txt"));
-            this.ChatServices = new ReadOnlyCollection<ChatService.IChatService>(new ChatService.IChatService[] {
+            string baseDir = Path.GetDirectoryName(GetExePath());
+            channelDatabase = new ChannelDatabase(Path.Combine(baseDir, "channels.txt"));
+            ChatServices = new ReadOnlyCollection<ChatService.IChatService>(new ChatService.IChatService[] {
                 new ChatService.NiconicoChatService(
-                    Settings.Niconico, this.channelDatabase, Path.Combine(baseDir, "niconicojikkyouids.txt"), Path.Combine(baseDir, "niconicoliveids.txt")
+                    Settings.Niconico, channelDatabase, Path.Combine(baseDir, "niconicojikkyouids.txt"), Path.Combine(baseDir, "niconicoliveids.txt")
                 ),
-                new ChatService.NichanChatService(Settings.Nichan, this.channelDatabase, Path.Combine(baseDir, "2chthreads.txt")),
+                new ChatService.NichanChatService(Settings.Nichan, channelDatabase, Path.Combine(baseDir, "2chthreads.txt")),
                 new ChatService.FileChatService(),
                 new ChatService.TwitterChatService(Settings.Twitter, channelDatabase, Path.Combine(baseDir, "twittersearchword.txt"))
             });
 
-            var chatCollectServiceEntryIds = this.ChatServices.SelectMany(x => x.ChatCollectServiceEntries).Select(x => x.Id);
+            var chatCollectServiceEntryIds = ChatServices.SelectMany(x => x.ChatCollectServiceEntries).Select(x => x.Id);
             System.Diagnostics.Debug.Assert(
                 chatCollectServiceEntryIds.Distinct().Count() == chatCollectServiceEntryIds.Count(),
                 "IDs of ChatCollectServiceEntries are not unique"
@@ -129,58 +129,58 @@ namespace TVTComment.Model
             //Viewerとの接続
             string[] commandLine = Environment.GetCommandLineArgs();
             if (commandLine.Length == 3)
-                ipcModule = new IPCModule(commandLine[1], commandLine[2],SynchronizationContext.Current);
+                ipcModule = new IPCModule(commandLine[1], commandLine[2], SynchronizationContext.Current);
             else
-                ipcModule = new IPCModule("TVTComment_Up", "TVTComment_Down",SynchronizationContext.Current);
+                ipcModule = new IPCModule("TVTComment_Up", "TVTComment_Down", SynchronizationContext.Current);
 
-            ipcModule.Disposed -= ipcManager_Disposed;
-            ipcModule.Disposed += ipcManager_Disposed;
+            ipcModule.Disposed -= IpcManager_Disposed;
+            ipcModule.Disposed += IpcManager_Disposed;
             try
             {
                 await ipcModule.Connect();
             }
             catch (IPCModule.ConnectException) { return; }
-            ipcModule.MessageReceived += ipcManager_MessageReceived;
+            ipcModule.MessageReceived += IpcManager_MessageReceived;
 
             //各種SubModule作成
             ChannelInformationModule = new ChannelInformationModule(ipcModule);
             ChatCollectServiceModule = new ChatCollectServiceModule(ChannelInformationModule);
             ChatTrendServiceModule = new ChatTrendServiceModule(SynchronizationContext.Current);
             ChatModule = new ChatModule(
-                this.Settings, ChatServices,ChatCollectServiceModule, ipcModule,ChannelInformationModule
+                Settings, ChatServices, ChatCollectServiceModule, ipcModule, ChannelInformationModule
             );
             DefaultChatCollectServiceModule = new DefaultChatCollectServiceModule(
-                this.Settings, ChannelInformationModule, ChatCollectServiceModule,ChatServices.SelectMany(x=>x.ChatCollectServiceEntries)
+                Settings, ChannelInformationModule, ChatCollectServiceModule, ChatServices.SelectMany(x => x.ChatCollectServiceEntries)
             );
             CommandModule = new CommandModule(
                 ipcModule, SynchronizationContext.Current
             );
             ChatCollectServiceCreationPresetModule = new ChatCollectServiceCreationPresetModule(
-                this.Settings, ChatServices.SelectMany(x => x.ChatCollectServiceEntries)
+                Settings, ChatServices.SelectMany(x => x.ChatCollectServiceEntries)
             );
 
             //コメント透過度設定処理
-            ChatOpacity = new ObservableValue<byte>(this.Settings.ChatOpacity);
+            ChatOpacity = new ObservableValue<byte>(Settings.ChatOpacity);
             ChatOpacity.Subscribe(async opacity =>
             {
-                this.Settings.ChatOpacity = opacity;
+                Settings.ChatOpacity = opacity;
                 await ipcModule.Send(new IPC.IPCMessage.SetChatOpacityIPCMessage { Opacity = opacity });
             });
 
             //メール欄例設定
-            var chatPostMailTextExamples = this.Settings.ChatPostMailTextExamples;
+            var chatPostMailTextExamples = Settings.ChatPostMailTextExamples;
             ChatPostMailTextExamples.AddRange(chatPostMailTextExamples);
-            
+
             ipcModule.StartReceiving();
             State = TVTCommentState.Working;
         }
 
-        private void ipcManager_Disposed(Exception exception)
+        private void IpcManager_Disposed(Exception exception)
         {
             if (ipcModule.DisposeReason == IPCModuleDisposeReason.DisposeCalled)
                 return;
 
-            if(ipcModule.DisposeReason==IPCModuleDisposeReason.ConnectionTerminated)
+            if (ipcModule.DisposeReason == IPCModuleDisposeReason.ConnectionTerminated)
             {
                 //Viewer側から切断するのは異常
                 quickDispose = true;
@@ -193,13 +193,13 @@ namespace TVTComment.Model
             }
         }
 
-        private async void ipcManager_MessageReceived(IPC.IPCMessage.IIPCMessage message)
+        private async void IpcManager_MessageReceived(IPC.IPCMessage.IIPCMessage message)
         {
-            if(message is IPC.IPCMessage.SetChatOpacityIPCMessage)
+            if (message is IPC.IPCMessage.SetChatOpacityIPCMessage)
             {
                 await ipcModule.Send(message);
             }
-            else if(message is IPC.IPCMessage.CloseIPCMessage)
+            else if (message is IPC.IPCMessage.CloseIPCMessage)
             {
                 isClosing = true;
                 if (!closingResetEvent.IsSet)
@@ -231,13 +231,13 @@ namespace TVTComment.Model
                 catch { }
             }
 
-            foreach(var chatService in ChatServices)
+            foreach (var chatService in ChatServices)
             {
                 chatService.Dispose();
             }
 
             //メール欄例保存
-            this.Settings.ChatPostMailTextExamples = this.ChatPostMailTextExamples.ToArray();
+            Settings.ChatPostMailTextExamples = ChatPostMailTextExamples.ToArray();
 
             //各種SubModule破棄
             CommandModule?.Dispose();
@@ -246,20 +246,20 @@ namespace TVTComment.Model
             ChatModule?.Dispose();
             ChatTrendServiceModule?.Dispose();
             ChatCollectServiceModule?.Dispose();
-            if(ipcModule!=null)
+            if (ipcModule != null)
             {
-                ipcModule.Disposed -= ipcManager_Disposed;
-                ipcModule.MessageReceived -= ipcManager_MessageReceived;
+                ipcModule.Disposed -= IpcManager_Disposed;
+                ipcModule.MessageReceived -= IpcManager_MessageReceived;
                 ipcModule.Dispose();
             }
 
             // 設定保存。asyncだがawaitせずに例外は無視。
-            this.settingReaderWriter.Write(this.Settings).Wait(5000);
+            settingReaderWriter.Write(Settings).Wait(5000);
 
             State = TVTCommentState.Disposed;
         }
 
-        private static string getExePath()
+        private static string GetExePath()
         {
             return System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName;
         }

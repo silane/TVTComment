@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Net;
 using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace TVTComment.Model.NiconicoUtils
 {
@@ -40,8 +38,8 @@ namespace TVTComment.Model.NiconicoUtils
 
     class NiconicoLoginSession
     {
-        private string mail;
-        private string password;
+        private readonly string mail;
+        private readonly string password;
         private CookieCollection cookie = null;
 
         public bool IsLoggedin => cookie != null;
@@ -53,8 +51,8 @@ namespace TVTComment.Model.NiconicoUtils
         {
             get
             {
-                if (this.IsLoggedin)
-                    return this.cookie;
+                if (IsLoggedin)
+                    return cookie;
                 else
                     throw new InvalidOperationException("ログインしていません");
             }
@@ -74,7 +72,7 @@ namespace TVTComment.Model.NiconicoUtils
         /// <exception cref="NetworkNiconicoLoginSessionException"></exception>
         public async Task Login()
         {
-            if (this.IsLoggedin)
+            if (IsLoggedin)
                 throw new InvalidOperationException("すでにログインしています");
 
             const string loginUrl = "https://secure.nicovideo.jp/secure/login?site=niconico";
@@ -85,15 +83,15 @@ namespace TVTComment.Model.NiconicoUtils
             var content = new FormUrlEncodedContent(new Dictionary<string, string>
             {
                 { "next_url", "" },
-                { "mail", this.mail },
-                { "password", this.password }
+                { "mail", mail },
+                { "password", password }
             });
-            
+
             try
             {
                 await client.PostAsync(loginUrl, content).ConfigureAwait(false);
             }
-            catch(HttpRequestException e)
+            catch (HttpRequestException e)
             {
                 throw new NetworkNiconicoLoginSessionException(e);
             }
@@ -102,7 +100,7 @@ namespace TVTComment.Model.NiconicoUtils
             if (cookieCollection.All(x => x.Name != "user_session"))
                 throw new LoginFailureNiconicoLoginSessionException();
 
-            this.cookie = cookieCollection;
+            cookie = cookieCollection;
         }
 
         /// <summary>
@@ -112,22 +110,22 @@ namespace TVTComment.Model.NiconicoUtils
         /// <exception cref="NetworkNiconicoLoginSessionException"></exception>
         public async Task Logout()
         {
-            if (!this.IsLoggedin)
+            if (!IsLoggedin)
                 throw new InvalidOperationException("ログインしていません");
 
             var handler = new HttpClientHandler();
             using var client = new HttpClient(handler);
 
-            handler.CookieContainer.Add(this.cookie);
+            handler.CookieContainer.Add(cookie);
             try
             {
                 await client.GetAsync("https://secure.nicovideo.jp/secure/logout").ConfigureAwait(false);
             }
-            catch(HttpRequestException e)
+            catch (HttpRequestException e)
             {
                 throw new NetworkNiconicoLoginSessionException(e);
             }
-            this.cookie = null;
+            cookie = null;
         }
     }
 }

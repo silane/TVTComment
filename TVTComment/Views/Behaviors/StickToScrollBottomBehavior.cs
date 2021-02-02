@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Specialized;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -19,7 +18,7 @@ namespace TVTComment.Views.Behaviors
     public class StickToScrollBottomBehavior : Behavior<Selector>
     {
         private ScrollViewer scrollViewer;
-        private bool isSticking=true;
+        private bool isSticking = true;
         private bool lastIsAtBottom = false;
 
         protected override void OnAttached()
@@ -37,7 +36,7 @@ namespace TVTComment.Views.Behaviors
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
             AssociatedObject.SelectionChanged += AssociatedObject_SelectionChanged;
-            
+
             if (VisualTreeHelper.GetChildrenCount(AssociatedObject) > 0)
             {
                 var border = VisualTreeHelper.GetChild(AssociatedObject, 0);
@@ -51,7 +50,7 @@ namespace TVTComment.Views.Behaviors
 
         private void OnUnLoaded(object sender, RoutedEventArgs e)
         {
-            if(scrollViewer!=null)//なぜかヌルポで落ちたことがあったから
+            if (scrollViewer != null)//なぜかヌルポで落ちたことがあったから
                 scrollViewer.ScrollChanged -= ScrollViewer_ScrollChanged;
             AssociatedObject.SelectionChanged -= AssociatedObject_SelectionChanged;
             scrollViewer = null;
@@ -62,7 +61,7 @@ namespace TVTComment.Views.Behaviors
             if (isSticking)
                 scrollViewer.ScrollToBottom();
 
-            bool isAtBottom =Math.Abs(scrollViewer.ExtentHeight - (scrollViewer.VerticalOffset + scrollViewer.ViewportHeight)) <= 2.0;
+            bool isAtBottom = Math.Abs(scrollViewer.ExtentHeight - (scrollViewer.VerticalOffset + scrollViewer.ViewportHeight)) <= 2.0;
             if (!lastIsAtBottom && isAtBottom)
                 isSticking = true;
             lastIsAtBottom = isAtBottom;

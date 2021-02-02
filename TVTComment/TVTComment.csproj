@@ -11,6 +11,13 @@
     <Copyright>© 2017 silane / © 2020 noriokun4649</Copyright>
     <Authors>silane edit by noriokun4649</Authors>
     <Company>silane</Company>
+    <NeutralLanguage>ja-JP</NeutralLanguage>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <NoWarn>NU1701; NU1702</NoWarn>
+    <WarningLevel>1</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="AttachedCommandBehavior" Version="2.0.0" />

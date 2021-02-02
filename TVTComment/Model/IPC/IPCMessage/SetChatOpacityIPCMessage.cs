@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TVTComment.Model.IPC.IPCMessage
 {
-    class SetChatOpacityIPCMessage:IIPCMessage
+    class SetChatOpacityIPCMessage : IIPCMessage
     {
         public string MessageName => "SetChatOpacity";
 

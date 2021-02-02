@@ -17,23 +17,21 @@ namespace TVTComment.Model.NiconicoUtils
 
         public LiveIdTable(string filePath)
         {
-            using (var reader = new StreamReader(filePath))
+            using var reader = new StreamReader(filePath);
+            Utils.SimpleCsvReader.ReadByLine(reader, cols =>
             {
-                Utils.SimpleCsvReader.ReadByLine(reader, cols =>
+                if (cols.Length != 3) return true;
+                RuleTarget target;
+                switch (cols[0])
                 {
-                    if (cols.Length != 3) return true;
-                    RuleTarget target;
-                    switch (cols[0])
-                    {
-                        case "flags": target = RuleTarget.Flags; break;
-                        case "nsid": target = RuleTarget.NSId; break;
-                        case "nid": target = RuleTarget.NId; break;
-                        default: return true;
-                    }
-                    rules.Add(new Tuple<RuleTarget, uint, string>(target, Utils.PrefixedIntegerParser.ParseToUInt32(cols[1]), cols[2]));
-                    return true;
-                }, new char[] { '\t' });
-            }
+                    case "flags": target = RuleTarget.Flags; break;
+                    case "nsid": target = RuleTarget.NSId; break;
+                    case "nid": target = RuleTarget.NId; break;
+                    default: return true;
+                }
+                rules.Add(new Tuple<RuleTarget, uint, string>(target, Utils.PrefixedIntegerParser.ParseToUInt32(cols[1]), cols[2]));
+                return true;
+            }, new char[] { '\t' });
         }
 
         /// <summary>
@@ -41,12 +39,11 @@ namespace TVTComment.Model.NiconicoUtils
         /// </summary>
         public string GetLiveId(ChannelEntry channel)
         {
-            string ret;
-            if (this.tableCache.TryGetValue(channel, out ret))
+            if (tableCache.TryGetValue(channel, out string ret))
                 return ret;
 
             ret = "";
-            foreach (Tuple<RuleTarget, uint, string> rule in this.rules)
+            foreach (Tuple<RuleTarget, uint, string> rule in rules)
             {
                 switch (rule.Item1)
                 {
@@ -71,7 +68,7 @@ namespace TVTComment.Model.NiconicoUtils
                 }
             }
 
-            this.tableCache.Add(channel, ret);
+            tableCache.Add(channel, ret);
             return ret;
         }
 

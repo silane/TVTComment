@@ -37,7 +37,7 @@ namespace TVTComment.ViewModels.ChatCollectServiceCreationOptionControl
         {
             if (string.IsNullOrWhiteSpace(searchWord) && ModeSelectMethod.Manual == Method)
                 return null;
-            return new TwitterLiveChatCollectServiceEntry.ChatCollectServiceCreationOption(Method ,searchWord);
+            return new TwitterLiveChatCollectServiceEntry.ChatCollectServiceCreationOption(Method, searchWord);
         }
     }
 }

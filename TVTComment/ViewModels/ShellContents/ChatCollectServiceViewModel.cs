@@ -1,15 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reactive;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TVTComment.ViewModels.ShellContents
 {
-    class ChatCollectServiceViewModel:Prism.Mvvm.BindableBase
+    class ChatCollectServiceViewModel : Prism.Mvvm.BindableBase
     {
-        private IDisposable disposable;
+        private readonly IDisposable disposable;
         private string informationText;
 
         public Model.ChatCollectService.IChatCollectService Service { get; }
@@ -19,10 +15,10 @@ namespace TVTComment.ViewModels.ShellContents
             set { SetProperty(ref informationText, value); }
         }
 
-        public ChatCollectServiceViewModel(Model.ChatCollectService.IChatCollectService service,IObservable<Unit> update)
+        public ChatCollectServiceViewModel(Model.ChatCollectService.IChatCollectService service, IObservable<Unit> update)
         {
-            this.Service = service;
-            this.InformationText = service.GetInformationText();
+            Service = service;
+            InformationText = service.GetInformationText();
 
             disposable = update.Subscribe(_ =>
             {

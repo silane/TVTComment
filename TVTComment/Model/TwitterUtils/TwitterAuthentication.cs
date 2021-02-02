@@ -34,7 +34,8 @@ namespace TVTComment.Model.TwitterUtils
 
         public Tokens Token
         {
-            get {
+            get
+            {
                 return token;
             }
         }
@@ -53,7 +54,7 @@ namespace TVTComment.Model.TwitterUtils
             authSession = Authorize(apikey, apiseecret);
         }
 
-        public TwitterAuthentication(string apikey, string apiseecret,string apiaccesstoken, string apiaccesssecret)
+        public TwitterAuthentication(string apikey, string apiseecret, string apiaccesstoken, string apiaccesssecret)
         {
             this.apikey = apikey;
             this.apiseecret = apiseecret;

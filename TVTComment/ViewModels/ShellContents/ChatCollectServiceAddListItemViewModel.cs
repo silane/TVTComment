@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TVTComment.ViewModels.ShellContents
 {
@@ -14,12 +10,12 @@ namespace TVTComment.ViewModels.ShellContents
         public Model.ChatCollectServiceEntry.IChatCollectServiceEntry ServiceEntry { get; }
         public Model.ChatCollectServiceCreationPreset Preset { get; }
 
-        public ChatCollectServiceAddListItemViewModel(Model.ChatCollectServiceEntry.IChatCollectServiceEntry serviceEntry,Model.ChatCollectServiceCreationPreset preset)
+        public ChatCollectServiceAddListItemViewModel(Model.ChatCollectServiceEntry.IChatCollectServiceEntry serviceEntry, Model.ChatCollectServiceCreationPreset preset)
         {
-            if (preset!=null && serviceEntry != preset.ServiceEntry)
+            if (preset != null && serviceEntry != preset.ServiceEntry)
                 throw new ArgumentException($"{preset}.{preset.ServiceEntry} must be same as {serviceEntry}");
             IsPreset = preset != null;
-            if(!IsPreset)
+            if (!IsPreset)
             {
                 Title = serviceEntry.Name;
                 Subtitle = serviceEntry.Description;

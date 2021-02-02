@@ -24,7 +24,7 @@ namespace TVTComment.Model.NiconicoUtils
         public string PlayerStatus { get; }
         public InvalidPlayerStatusNicoLiveCommentReceiverException(string playerStatus)
         {
-            this.PlayerStatus = playerStatus;
+            PlayerStatus = playerStatus;
         }
     }
 
@@ -47,11 +47,11 @@ namespace TVTComment.Model.NiconicoUtils
 
         public NicoLiveCommentReceiver(NiconicoLoginSession niconicoLoginSession)
         {
-            this.NiconicoLoginSession = niconicoLoginSession;
+            NiconicoLoginSession = niconicoLoginSession;
 
             var handler = new HttpClientHandler();
             handler.CookieContainer.Add(niconicoLoginSession.Cookie);
-            this.httpClient = new HttpClient(handler);
+            httpClient = new HttpClient(handler);
             var assembly = Assembly.GetExecutingAssembly().GetName();
             var ua = assembly.Name + "/" + assembly.Version.ToString(3);
             httpClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", ua);
@@ -64,19 +64,19 @@ namespace TVTComment.Model.NiconicoUtils
         /// <exception cref="InvalidPlayerStatusNicoLiveCommentReceiverException"></exception>
         /// <exception cref="NetworkNicoLiveCommentReceiverException"></exception>
         /// <exception cref="ConnectionClosedNicoLiveCommentReceiverException"></exception>
-        public async IAsyncEnumerable<NiconicoCommentXmlTag> Receive(string liveId, [EnumeratorCancellation]CancellationToken cancellationToken)
+        public async IAsyncEnumerable<NiconicoCommentXmlTag> Receive(string liveId, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            using var _  = cancellationToken.Register(() =>
-            {
-                this.httpClient.CancelPendingRequests();
-            });
+            using var _ = cancellationToken.Register(() =>
+           {
+               httpClient.CancelPendingRequests();
+           });
 
             for (int disconnectedCount = 0; disconnectedCount < 5; ++disconnectedCount)
             {
                 Stream str;
                 try
                 {
-                    str = await this.httpClient.GetStreamAsync($"https://live2.nicovideo.jp/unama/watch/{liveId}/programinfo").ConfigureAwait(false);
+                    str = await httpClient.GetStreamAsync($"https://live2.nicovideo.jp/unama/watch/{liveId}/programinfo", cancellationToken).ConfigureAwait(false);
                 }
                 // httpClient.CancelPendingRequestsが呼ばれた、もしくはタイムアウト
                 catch (TaskCanceledException e)
@@ -85,7 +85,7 @@ namespace TVTComment.Model.NiconicoUtils
                         throw new OperationCanceledException(null, e, cancellationToken);
                     throw new NetworkNicoLiveCommentReceiverException(e);
                 }
-                catch(HttpRequestException e)
+                catch (HttpRequestException e)
                 {
                     throw new NetworkNicoLiveCommentReceiverException(e);
                 }
@@ -94,12 +94,12 @@ namespace TVTComment.Model.NiconicoUtils
 
                 var threadId = playerStatusRoot.GetProperty("data").GetProperty("rooms")[0].GetProperty("threadId").GetString();
                 var msUriStr = playerStatusRoot.GetProperty("data").GetProperty("rooms")[0].GetProperty("xmlSocketUri").GetString();
-                if(threadId == null || msUriStr == null)
+                if (threadId == null || msUriStr == null)
                 {
                     throw new InvalidPlayerStatusNicoLiveCommentReceiverException(str.ToString());
                 }
                 var msUri = new Uri(msUriStr);
-                using var tcpClinet = new TcpClient(msUri.Host,msUri.Port);
+                using var tcpClinet = new TcpClient(msUri.Host, msUri.Port);
                 var socketStream = tcpClinet.GetStream();
                 using var socketReader = new StreamReader(socketStream, Encoding.UTF8);
 
@@ -112,9 +112,9 @@ namespace TVTComment.Model.NiconicoUtils
                 byte[] bodyEncoded = Encoding.UTF8.GetBytes(body);
                 try
                 {
-                    await socketStream.WriteAsync(bodyEncoded, 0, bodyEncoded.Length, cancellationToken).ConfigureAwait(false);
+                    await socketStream.WriteAsync(bodyEncoded.AsMemory(0, bodyEncoded.Length), cancellationToken).ConfigureAwait(false);
                 }
-                catch(Exception e) when(e is ObjectDisposedException || e is SocketException || e is IOException)
+                catch (Exception e) when (e is ObjectDisposedException || e is SocketException || e is IOException)
                 {
                     if (cancellationToken.IsCancellationRequested)
                         throw new OperationCanceledException(null, e, cancellationToken);
@@ -145,9 +145,9 @@ namespace TVTComment.Model.NiconicoUtils
                     if (receivedByte == 0)
                         break; // 4時リセットかもしれない→もう一度試す
 
-                    this.parser.Push(new string(buf[..receivedByte]));
-                    while(this.parser.DataAvailable())
-                        yield return this.parser.Pop();
+                    parser.Push(new string(buf[..receivedByte]));
+                    while (parser.DataAvailable())
+                        yield return parser.Pop();
                 }
             }
             throw new ConnectionClosedNicoLiveCommentReceiverException();
@@ -155,7 +155,7 @@ namespace TVTComment.Model.NiconicoUtils
 
         public void Dispose()
         {
-            this.httpClient.Dispose();
+            httpClient.Dispose();
         }
 
         private readonly HttpClient httpClient;

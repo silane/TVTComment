@@ -1,10 +1,10 @@
-﻿using System;
-using Prism.Mvvm;
+﻿using Prism.Mvvm;
 using Prism.Regions;
+using System;
 
 namespace TVTComment.ViewModels.ChatCollectServiceCreationOptionControl
 {
-    abstract class ChatCollectServiceCreationOptionControlViewModel : BindableBase,INavigationAware
+    abstract class ChatCollectServiceCreationOptionControlViewModel : BindableBase, INavigationAware
     {
         public abstract Model.ChatCollectServiceEntry.IChatCollectServiceCreationOption GetChatCollectServiceCreationOption();
         public abstract event EventHandler Finished;

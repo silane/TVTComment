@@ -26,8 +26,8 @@ namespace Nichan
             $"Communication error on \"{url}\"" + (details == null ? "" : $" ({details})"), inner
         )
         {
-            this.Url = url;
-            this.Details = details;
+            Url = url;
+            Details = details;
         }
     }
 
@@ -49,7 +49,7 @@ namespace Nichan
         public ResponseException(string url) : base(url) { }
         public ResponseException(string response, string url, string details, Exception inner) : base(url, details, inner)
         {
-            this.Response = response;
+            Response = response;
         }
     }
 
@@ -77,7 +77,7 @@ namespace Nichan
         public int HttpStatusCode { get; }
         public HttpErrorResponseException(int httpStatusCode, string response, string url, string details, Exception inner) : base(response, url, details, inner)
         {
-            this.HttpStatusCode = httpStatusCode;
+            HttpStatusCode = httpStatusCode;
         }
     }
 }

@@ -79,7 +79,7 @@ namespace TVTComment.Model.ChatService
         /// <param name="apiAccessSecret">TwitterAPIのAccessSecret</param>
         /// <exception cref="ArgumentException"><paramref name="apiKey"/>または<paramref name="apiSecret"/>または<paramref name="apiAccessToken"/>または<paramref name="apiAccessSecret"/>がnull若しくはホワイトスペースだった時</exception>
         /// <exception cref="TwiiterAuthException">TwitterAPIで認証に失敗した時</exception>
-        public async Task LoginAccessTokens(string apiKey, string apiSecret,string apiAccessToken,string apiAccessSecret)
+        public async Task LoginAccessTokens(string apiKey, string apiSecret, string apiAccessToken, string apiAccessSecret)
         {
             if (string.IsNullOrWhiteSpace(apiKey))
                 throw new ArgumentException($"{nameof(apiKey)} が空白もしくは不正です", nameof(apiKey));
@@ -127,7 +127,7 @@ namespace TVTComment.Model.ChatService
         {
             if (string.IsNullOrWhiteSpace(pin))
                 throw new ArgumentException($"{nameof(pin)} が空白もしくは不正です", nameof(pin));
-            if (twitterAuthentication == null) 
+            if (twitterAuthentication == null)
                 throw new TwiiterAuthException("まずは「OAuth画面を開く」を押してPINコードを表示させてください");
             await twitterAuthentication.Login(pin).ConfigureAwait(false);
             var tokens = twitterAuthentication.Token;

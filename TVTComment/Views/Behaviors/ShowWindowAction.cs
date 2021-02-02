@@ -1,16 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Microsoft.Practices.ServiceLocation;
+using System;
 using System.Windows;
 using System.Windows.Interactivity;
-using Microsoft.Practices.ServiceLocation;
-using System.Windows.Markup;
 
 namespace TVTComment.Views.Behaviors
 {
-    class ShowWindowAction: TriggerAction<FrameworkElement>
+    class ShowWindowAction : TriggerAction<FrameworkElement>
     {
         /// <summary>
         /// 表示するウィンドウの型
@@ -29,7 +24,7 @@ namespace TVTComment.Views.Behaviors
         /// </summary>
         public object WindowDataContext
         {
-            get { return (object)GetValue(WindowDataContextProperty); }
+            get { return GetValue(WindowDataContextProperty); }
             set { SetValue(WindowDataContextProperty, value); }
         }
 
@@ -94,37 +89,37 @@ namespace TVTComment.Views.Behaviors
                 return;
             }
 
-            Window window=(Window)ServiceLocator.Current.GetInstance(WindowType);
+            Window window = (Window)ServiceLocator.Current.GetInstance(WindowType);
             showingWindow = window;
             window.Closed += Window_Closed;
             window.Owner = Window.GetWindow(AssociatedObject);
-            if(WindowDataContext!=null)
+            if (WindowDataContext != null)
                 window.DataContext = WindowDataContext;
-            if(WindowStyle!=null)
+            if (WindowStyle != null)
                 window.Style = WindowStyle;
 
-            if(CenterOverAssociatedWindow && window.Owner!=null)
+            if (CenterOverAssociatedWindow && window.Owner != null)
             {
-                SizeChangedEventHandler sizeHandler=null;
-                sizeHandler = (sender, e) =>
-                  {
-                      window.SizeChanged -= sizeHandler;
+                void sizeHandler(object sender, SizeChangedEventArgs e)
+                {
+                    window.SizeChanged -= sizeHandler;
 
-                      Window ownerWindow = window.Owner;
-                      if (ownerWindow.WindowState == WindowState.Minimized)
-                      {
-                          window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
-                          return;
-                      }
+                    Window ownerWindow = window.Owner;
+                    if (ownerWindow.WindowState == WindowState.Minimized)
+                    {
+                        window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+                        return;
+                    }
 
-                      FrameworkElement view = ownerWindow ;
-                      Point position = view.PointToScreen(new Point(0, 0));
-                      PresentationSource source = PresentationSource.FromVisual(view);
-                      position = source.CompositionTarget.TransformFromDevice.Transform(position);
-                      Point middleOfView = new Point(position.X + view.ActualWidth / 2, position.Y + view.ActualHeight / 2);
-                      window.Left = middleOfView.X - window.ActualWidth / 2;
-                      window.Top = middleOfView.Y - window.ActualHeight / 2;
-                  };
+                    FrameworkElement view = ownerWindow;
+                    Point position = view.PointToScreen(new Point(0, 0));
+                    PresentationSource source = PresentationSource.FromVisual(view);
+                    position = source.CompositionTarget.TransformFromDevice.Transform(position);
+                    Point middleOfView = new Point(position.X + view.ActualWidth / 2, position.Y + view.ActualHeight / 2);
+                    window.Left = middleOfView.X - window.ActualWidth / 2;
+                    window.Top = middleOfView.Y - window.ActualHeight / 2;
+                }
+
                 window.SizeChanged += sizeHandler;
             }
 

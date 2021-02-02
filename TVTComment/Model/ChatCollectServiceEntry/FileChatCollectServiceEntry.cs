@@ -1,26 +1,22 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TVTComment.Model.ChatCollectServiceEntry
 {
-    class FileChatCollectServiceEntry:IChatCollectServiceEntry
+    class FileChatCollectServiceEntry : IChatCollectServiceEntry
     {
-        public class ChatCollectServiceCreationOption:IChatCollectServiceCreationOption
+        public class ChatCollectServiceCreationOption : IChatCollectServiceCreationOption
         {
             public string FilePath { get; }
             public bool RelativeTime { get; }
-            public ChatCollectServiceCreationOption(string filePath,bool relativeTime)
+            public ChatCollectServiceCreationOption(string filePath, bool relativeTime)
             {
                 FilePath = filePath;
                 RelativeTime = relativeTime;
             }
         }
 
-        public ChatService.IChatService Owner { get;}
+        public ChatService.IChatService Owner { get; }
         public string Id => "File";
         public string Name => "ファイル";
         public string Description => "ニコニコ実況形式のコメントファイルからコメントを表示";
@@ -34,17 +30,16 @@ namespace TVTComment.Model.ChatCollectServiceEntry
         public ChatCollectService.IChatCollectService GetNewService(IChatCollectServiceCreationOption creationOption)
         {
             if (creationOption == null) throw new ArgumentNullException(nameof(creationOption));
-            var option = creationOption as ChatCollectServiceCreationOption;
-            if (option == null) throw new ArgumentException($"Type of {nameof(creationOption)} must be {nameof(FileChatCollectServiceEntry)}.{nameof(ChatCollectServiceCreationOption)}",nameof(creationOption));
+            if (creationOption is not ChatCollectServiceCreationOption option) throw new ArgumentException($"Type of {nameof(creationOption)} must be {nameof(FileChatCollectServiceEntry)}.{nameof(ChatCollectServiceCreationOption)}", nameof(creationOption));
             try
             {
                 return new ChatCollectService.FileChatCollectService(this, new StreamReader(option.FilePath), option.RelativeTime);
             }
-            catch(ArgumentException e)
+            catch (ArgumentException e)
             {
                 throw new ChatCollectServiceCreationException($"コメントファイルのパスが不正です: {option.FilePath}", e);
             }
-            catch(FileNotFoundException e)
+            catch (FileNotFoundException e)
             {
                 throw new ChatCollectServiceCreationException($"コメントファイルが見つかりません: {option.FilePath}", e);
             }

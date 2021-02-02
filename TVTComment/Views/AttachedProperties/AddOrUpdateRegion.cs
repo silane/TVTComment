@@ -1,11 +1,5 @@
 ﻿using Prism.Regions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Interactivity;
 
 namespace TVTComment.Views.AttachedProperties
 {
@@ -27,13 +21,13 @@ namespace TVTComment.Views.AttachedProperties
 
         // Using a DependencyProperty as the backing store for RegionName.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty RegionNameProperty =
-            DependencyProperty.RegisterAttached("RegionName", typeof(string), typeof(AddOrUpdateRegion), new PropertyMetadata(null,OnRegionNamePropertyChanged));
+            DependencyProperty.RegisterAttached("RegionName", typeof(string), typeof(AddOrUpdateRegion), new PropertyMetadata(null, OnRegionNamePropertyChanged));
 
-        private static void OnRegionNamePropertyChanged(DependencyObject d,DependencyPropertyChangedEventArgs e)
+        private static void OnRegionNamePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var regionName = (string)e.NewValue;
             IRegionManager regionManager = FindRegionManager(d);
-            if (regionManager!=null && regionManager.Regions.ContainsRegionWithName(regionName))
+            if (regionManager != null && regionManager.Regions.ContainsRegionWithName(regionName))
                 regionManager.Regions.Remove(regionName);
             RegionManager.SetRegionName(d, regionName);
         }

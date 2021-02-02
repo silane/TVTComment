@@ -4,7 +4,7 @@ using System.Reactive.Disposables;
 
 namespace TVTComment.ViewModels.ShellContents
 {
-    class ChannelListItemViewModel:BindableBase,IDisposable
+    class ChannelListItemViewModel : BindableBase, IDisposable
     {
         public Model.ChannelInfo Channel { get; }
 
@@ -22,9 +22,9 @@ namespace TVTComment.ViewModels.ShellContents
             set { SetProperty(ref watching, value); }
         }
 
-        private CompositeDisposable disposables = new CompositeDisposable();
+        private readonly CompositeDisposable disposables = new CompositeDisposable();
 
-        public ChannelListItemViewModel(Model.ChannelInfo channel,IObservable<Model.ChannelInfo> currentChannel,IObservable<Model.IForceValueData> forceValueData)
+        public ChannelListItemViewModel(Model.ChannelInfo channel, IObservable<Model.ChannelInfo> currentChannel, IObservable<Model.IForceValueData> forceValueData)
         {
             Channel = channel;
             disposables.Add(currentChannel.Subscribe(current =>

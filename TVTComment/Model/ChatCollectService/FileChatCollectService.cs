@@ -3,36 +3,34 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace TVTComment.Model.ChatCollectService
 {
-    class FileChatCollectService:OnceASecondChatCollectService
+    class FileChatCollectService : OnceASecondChatCollectService
     {
         public override string Name => "ファイル";
         public override ChatCollectServiceEntry.IChatCollectServiceEntry ServiceEntry { get; }
         public override bool CanPost => false;
 
-        private StreamReader reader;
-        private bool relativeTime;
+        private readonly StreamReader reader;
+        private readonly bool relativeTime;
         private DateTime? baseTime;
-        private Task readTask;
-        private NiconicoUtils.NiconicoCommentXmlParser parser = new NiconicoUtils.NiconicoCommentXmlParser(false);
-        private ConcurrentQueue<NiconicoUtils.ChatAndVpos> chats = new ConcurrentQueue<NiconicoUtils.ChatAndVpos>();
+        private readonly Task readTask;
+        private readonly NiconicoUtils.NiconicoCommentXmlParser parser = new NiconicoUtils.NiconicoCommentXmlParser(false);
+        private readonly ConcurrentQueue<NiconicoUtils.ChatAndVpos> chats = new ConcurrentQueue<NiconicoUtils.ChatAndVpos>();
 
         public override string GetInformationText()
         {
             return $"全コメント数: {chats.Count}  最初のコメントの時刻: {chats.FirstOrDefault()?.Chat.Time.ToString() ?? ""}";
         }
 
-        public FileChatCollectService(ChatCollectServiceEntry.IChatCollectServiceEntry serviceEntry,StreamReader reader,bool relativeTime):base(TimeSpan.FromSeconds(10))
+        public FileChatCollectService(ChatCollectServiceEntry.IChatCollectServiceEntry serviceEntry, StreamReader reader, bool relativeTime) : base(TimeSpan.FromSeconds(10))
         {
-            this.ServiceEntry = serviceEntry;
+            ServiceEntry = serviceEntry;
             this.reader = reader;
-            this.relativeTime=relativeTime;
-            readTask=Read();
+            this.relativeTime = relativeTime;
+            readTask = Read();
         }
 
         private async Task Read()
@@ -43,8 +41,7 @@ namespace TVTComment.Model.ChatCollectService
                 parser.Push(line);
                 while (parser.DataAvailable())
                 {
-                    var chatTag = parser.Pop() as NiconicoUtils.ChatNiconicoCommentXmlTag;
-                    if (chatTag == null) continue;
+                    if (parser.Pop() is not NiconicoUtils.ChatNiconicoCommentXmlTag chatTag) continue;
                     chats.Enqueue(new NiconicoUtils.ChatAndVpos(
                         NiconicoUtils.ChatNiconicoCommentXmlTagToChat.Convert(chatTag), chatTag.Vpos
                     ));
@@ -59,7 +56,7 @@ namespace TVTComment.Model.ChatCollectService
 
             if (relativeTime)
             {
-                if (chats.IsEmpty) return new Chat[0];
+                if (chats.IsEmpty) return Array.Empty<Chat>();
                 time = chats.First().Chat.Time + (time - baseTime.Value);
             }
             return chats.Where(x => time <= x.Chat.Time && x.Chat.Time < time.AddSeconds(1)).Select(x => x.Chat);
@@ -72,7 +69,7 @@ namespace TVTComment.Model.ChatCollectService
             {
                 readTask.Wait();
             }
-            catch(AggregateException e)when(e.InnerException is ObjectDisposedException)
+            catch (AggregateException e) when (e.InnerException is ObjectDisposedException)
             {
             }
         }

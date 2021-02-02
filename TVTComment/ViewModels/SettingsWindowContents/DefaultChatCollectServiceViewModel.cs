@@ -3,28 +3,28 @@ using System.Collections.Generic;
 
 namespace TVTComment.ViewModels.ShellContents
 {
-    class DefaultChatCollectServiceViewModel:BindableBase
+    class DefaultChatCollectServiceViewModel : BindableBase
     {
-        private IList<Model.ChatCollectServiceEntry.IChatCollectServiceEntry> enabledServiceEntries;
+        private readonly IList<Model.ChatCollectServiceEntry.IChatCollectServiceEntry> enabledServiceEntries;
 
         private bool isEnabled;
         public bool IsEnabled
         {
             get { return isEnabled; }
-            set { SetProperty(ref isEnabled, value); update(); }
+            set { SetProperty(ref isEnabled, value); Update(); }
         }
 
         public Model.ChatCollectServiceEntry.IChatCollectServiceEntry ServiceEntry { get; }
-        
-        public DefaultChatCollectServiceViewModel(IList<Model.ChatCollectServiceEntry.IChatCollectServiceEntry> enableChatCollectServiceEntry,Model.ChatCollectServiceEntry.IChatCollectServiceEntry serviceEntry,bool isEnabled)
+
+        public DefaultChatCollectServiceViewModel(IList<Model.ChatCollectServiceEntry.IChatCollectServiceEntry> enableChatCollectServiceEntry, Model.ChatCollectServiceEntry.IChatCollectServiceEntry serviceEntry, bool isEnabled)
         {
-            this.isEnabled=isEnabled;
-            this.enabledServiceEntries = enableChatCollectServiceEntry;
-            this.ServiceEntry = serviceEntry;
-            update();
+            this.isEnabled = isEnabled;
+            enabledServiceEntries = enableChatCollectServiceEntry;
+            ServiceEntry = serviceEntry;
+            Update();
         }
 
-        private void update()
+        private void Update()
         {
             if (isEnabled)
             {

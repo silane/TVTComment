@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace TVTComment.Model.ChatModRules
 {
-    class JyougeIroKomeNgChatModRule:IChatModRule
+    class JyougeIroKomeNgChatModRule : IChatModRule
     {
         public string Description => "上下コメかつ色コメNG";
         public IEnumerable<ChatCollectServiceEntry.IChatCollectServiceEntry> TargetChatCollectServiceEntries { get; }

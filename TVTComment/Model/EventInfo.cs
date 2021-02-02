@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TVTComment.Model
 {
@@ -15,7 +11,7 @@ namespace TVTComment.Model
         public DateTime StartTime { get; }
         public TimeSpan Duration { get; }
 
-        public EventInfo(ushort eventId,string eventName,string eventText,string eventExtText,DateTime startTime,TimeSpan duration)
+        public EventInfo(ushort eventId, string eventName, string eventText, string eventExtText, DateTime startTime, TimeSpan duration)
         {
             EventId = eventId;
             EventName = eventName;

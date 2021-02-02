@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace TVTComment.Model.NiconicoUtils
 {
@@ -29,9 +27,9 @@ namespace TVTComment.Model.NiconicoUtils
             {
                 //録画ファイルではネットワークIDが分からないのでサービスIDだけで検索
                 //ニコニコ実況に対応しているチャンネルで同じサービスIDのものはないはずなので普通はこれで大丈夫
-                foreach (ChannelEntry channel in this.channelDatabase.GetByServiceId(serviceId))
+                foreach (ChannelEntry channel in channelDatabase.GetByServiceId(serviceId))
                 {
-                    string liveId = this.liveIdTable.GetLiveId(channel);
+                    string liveId = liveIdTable.GetLiveId(channel);
                     if (liveId != "")
                         return liveId;
                 }
@@ -39,10 +37,10 @@ namespace TVTComment.Model.NiconicoUtils
             }
             else
             {
-                ChannelEntry channel = this.channelDatabase.GetByNetworkIdAndServiceId(networkId, serviceId);
+                ChannelEntry channel = channelDatabase.GetByNetworkIdAndServiceId(networkId, serviceId);
                 if (channel == null)
                     return "";
-                return this.liveIdTable.GetLiveId(channel);
+                return liveIdTable.GetLiveId(channel);
             }
         }
 

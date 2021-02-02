@@ -23,12 +23,12 @@ namespace Nichan
 
         public DatFormatDatThreadLoaderException(string datString)
         {
-            this.DatString = datString;
+            DatString = datString;
         }
 
         public DatFormatDatThreadLoaderException(string datString, System.Exception inner) : base(null, inner)
         {
-            this.DatString = datString;
+            DatString = datString;
         }
     }
 
@@ -59,8 +59,8 @@ namespace Nichan
 
         public DatThreadLoader(string serverName, string boardName, string threadId)
         {
-            (this.ServerName, this.BoardName, this.ThreadId) = (serverName, boardName, threadId);
-            this.Thread.Name = threadId;
+            (ServerName, BoardName, ThreadId) = (serverName, boardName, threadId);
+            Thread.Name = threadId;
         }
 
         /// <summary>
@@ -69,31 +69,31 @@ namespace Nichan
         /// </summary>
         public async Task Update(ApiClient apiClient)
         {
-            this.LastUpdated = this.LastAllUpdated = false;
+            LastUpdated = LastAllUpdated = false;
 
             var headers = new List<(string, string)>();
-            if(this.loadedNumBytes > 0)
+            if (loadedNumBytes > 0)
             {
-                headers.Add(("Range", $"bytes={this.loadedNumBytes - 1}-"));
+                headers.Add(("Range", $"bytes={loadedNumBytes - 1}-"));
             }
-            if(this.lastModified != "")
+            if (lastModified != "")
             {
-                headers.Add(("If-Modified-Since", this.lastModified));
+                headers.Add(("If-Modified-Since", lastModified));
             }
 
             HttpResponseMessage response = await apiClient.GetDatResponse(
-                this.ServerName, this.BoardName, this.ThreadId, headers
+                ServerName, BoardName, ThreadId, headers
             );
 
-            if(response.StatusCode == HttpStatusCode.NotModified)
+            if (response.StatusCode == HttpStatusCode.NotModified)
             {
                 // 変更なし
                 return;
             }
 
-            if(response.Content.Headers.TryGetValues("Last-Modified", out var values))
+            if (response.Content.Headers.TryGetValues("Last-Modified", out var values))
             {
-                this.lastModified = values.First();
+                lastModified = values.First();
             }
 
             byte[] responseBodyBytes = await response.Content.ReadAsByteArrayAsync();
@@ -102,19 +102,19 @@ namespace Nichan
             if (response.StatusCode == HttpStatusCode.OK)
             {
                 // 全体更新
-                this.loadedNumBytes = responseBodyBytes.Length;
-                this.datParser.Reset();
+                loadedNumBytes = responseBodyBytes.Length;
+                datParser.Reset();
                 try
                 {
-                    this.datParser.Feed(responseBody);
+                    datParser.Feed(responseBody);
                 }
                 catch (DatParserException e)
                 {
                     throw new DatFormatDatThreadLoaderException(responseBody, e);
                 }
-                this.Thread.Title = this.datParser.ThreadTitle;
-                this.Thread.Res.Clear();
-                this.LastUpdated = this.LastAllUpdated = true;
+                Thread.Title = datParser.ThreadTitle;
+                Thread.Res.Clear();
+                LastUpdated = LastAllUpdated = true;
             }
             else if (response.StatusCode == HttpStatusCode.PartialContent)
             {
@@ -123,12 +123,12 @@ namespace Nichan
                 {
                     // 差分更新
                     (int startIdx, int endIdx) = (contentRange.IndexOf('-'), contentRange.IndexOf('/'));
-                    this.loadedNumBytes = int.Parse(contentRange[(startIdx + 1)..endIdx]) + 1;
+                    loadedNumBytes = int.Parse(contentRange[(startIdx + 1)..endIdx]) + 1;
                     try
                     {
-                        this.datParser.Feed(responseBody[1..]);
+                        datParser.Feed(responseBody[1..]);
                     }
-                    catch(DatParserException e)
+                    catch (DatParserException e)
                     {
                         throw new DatFormatDatThreadLoaderException(responseBody[1..], e);
                     }
@@ -136,27 +136,27 @@ namespace Nichan
                 else
                 {
                     // 過去のレスが削除などで変更されてる→全体再取得
-                    (this.loadedNumBytes, this.lastModified) = (0, "");
-                    await this.Update(apiClient);
+                    (loadedNumBytes, lastModified) = (0, "");
+                    await Update(apiClient);
                     return;
                 }
             }
             else if (response.StatusCode == HttpStatusCode.RequestedRangeNotSatisfiable)
             {
                 // 過去のレスが削除などで変更されてる→全体再取得
-                (this.loadedNumBytes, this.lastModified) = (0, "");
-                await this.Update(apiClient);
+                (loadedNumBytes, lastModified) = (0, "");
+                await Update(apiClient);
                 return;
             }
-            else if(
-                response.StatusCode == HttpStatusCode.NotImplemented && 
+            else if (
+                response.StatusCode == HttpStatusCode.NotImplemented &&
                 headers.Any(x => x.Item1 == "Range") &&
                 !response.Headers.Contains("Accept-Ranges")
             )
             {
                 // スレが落ちしてるときにRange要求するとここに来る→全体再取得
-                (this.loadedNumBytes, this.lastModified) = (0, "");
-                await this.Update(apiClient);
+                (loadedNumBytes, lastModified) = (0, "");
+                await Update(apiClient);
                 return;
             }
             else
@@ -166,12 +166,12 @@ namespace Nichan
 
             while (true)
             {
-                Res res = this.datParser.PopRes();
+                Res res = datParser.PopRes();
                 if (res == null) break;
-                this.Thread.Res.Add(res);
-                this.LastUpdated = true;
+                Thread.Res.Add(res);
+                LastUpdated = true;
             }
-            this.Thread.ResCount = this.Thread.Res.Count;
+            Thread.ResCount = Thread.Res.Count;
         }
 
         private string lastModified = "";

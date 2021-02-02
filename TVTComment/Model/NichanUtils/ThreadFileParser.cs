@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.IO;
 
 namespace TVTComment.Model.NichanUtils
@@ -34,9 +31,9 @@ namespace TVTComment.Model.NichanUtils
                  {
                      if (section == "boards")
                      {
-                         if (cols.Length != 4 && cols.Length!=3) return true;
+                         if (cols.Length != 4 && cols.Length != 3) return true;
 
-                         boards.Add(new BoardEntry(cols[0],cols[1], new Uri(cols[2]), cols.Length==4 && !string.IsNullOrWhiteSpace(cols[3]) ? cols[3].Split(' '):null));
+                         boards.Add(new BoardEntry(cols[0], cols[1], new Uri(cols[2]), cols.Length == 4 && !string.IsNullOrWhiteSpace(cols[3]) ? cols[3].Split(' ') : null));
                      }
                      else if (section == "threadmapping")
                      {
@@ -50,7 +47,7 @@ namespace TVTComment.Model.NichanUtils
                              case "nid": target = ThreadMappingRuleTarget.NId; break;
                              default: return true;
                          }
-                         threadMapping.Add(new ThreadMappingRuleEntry(target, Utils.PrefixedIntegerParser.ParseToUInt32(cols[1]), cols[2], 
+                         threadMapping.Add(new ThreadMappingRuleEntry(target, Utils.PrefixedIntegerParser.ParseToUInt32(cols[1]), cols[2],
                              cols.Length == 4 && !string.IsNullOrWhiteSpace(cols[3]) ? cols[3].Split(' ') : null));
                      }
                      return true;

@@ -26,7 +26,7 @@ namespace TVTComment.Model.NichanUtils
         {
             MatchingThread matchingThread = threadResolver.Resolve(channel, false);
             if (matchingThread == null)
-                return new string[0];
+                return Array.Empty<string>();
 
             IEnumerable<string> keywords = matchingThread.ThreadTitleKeywords.Select(
                 x => x.ToLower().Normalize(NormalizationForm.FormKD)
@@ -50,7 +50,7 @@ namespace TVTComment.Model.NichanUtils
             return threadsInBoard.Select(
                 x => { x.Title = x.Title.ToLower().Normalize(NormalizationForm.FormKD); return x; }
             ).Where(
-                x =>x.ResCount<=1000 && keywords.All(keyword => x.Title.Contains(keyword))
+                x => x.ResCount <= 1000 && keywords.All(keyword => x.Title.Contains(keyword))
             ).OrderByDescending(x => x.ResCount).Take(3).Select(
                 x => $"{boardHost}/test/read.cgi/{boardName}/{x.Name}/l50"
             );

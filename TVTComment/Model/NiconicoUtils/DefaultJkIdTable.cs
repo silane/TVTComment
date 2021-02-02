@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace TVTComment.Model.NiconicoUtils
 {
@@ -10,7 +6,7 @@ namespace TVTComment.Model.NiconicoUtils
     {
         //キーはnid | (sid << 16)ただし地上波はnid=0x000f
         public static Dictionary<uint, int> Value
-        { 
+        {
             get
             {
                 return new Dictionary<uint, int> {

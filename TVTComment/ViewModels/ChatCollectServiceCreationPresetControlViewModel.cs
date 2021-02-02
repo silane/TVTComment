@@ -10,10 +10,9 @@ using TVTComment.ViewModels.Contents;
 
 namespace TVTComment.ViewModels
 {
-    class ChatCollectServiceCreationPresetControlViewModel:IInteractionRequestAware
+    class ChatCollectServiceCreationPresetControlViewModel : IInteractionRequestAware
     {
-        private IRegionManager regionManager;
-        private Model.TVTComment model;
+        private readonly IRegionManager regionManager;
         private SettingsWindowContents.ChatCollectServiceCreationPresetConfirmation confirmation;
 
         public IReadOnlyList<SelectableViewModel<Model.ChatCollectServiceEntry.IChatCollectServiceEntry>> ChatCollectServiceEntries { get; }
@@ -26,25 +25,24 @@ namespace TVTComment.ViewModels
         public INotification Notification
         {
             get { return confirmation; }
-            set { confirmation = (SettingsWindowContents.ChatCollectServiceCreationPresetConfirmation)value; initialize(); }
+            set { confirmation = (SettingsWindowContents.ChatCollectServiceCreationPresetConfirmation)value; Initialize(); }
         }
 
         public Action FinishInteraction { get; set; }
-        
-        public ChatCollectServiceCreationPresetControlViewModel(IRegionManager regionManager,Model.TVTComment model)
+
+        public ChatCollectServiceCreationPresetControlViewModel(IRegionManager regionManager, Model.TVTComment model)
         {
             this.regionManager = regionManager;
-            this.model = model;
-            ChatCollectServiceEntries = model.ChatServices.SelectMany(x => x.ChatCollectServiceEntries).Select(x=>new SelectableViewModel<Model.ChatCollectServiceEntry.IChatCollectServiceEntry>(x)).ToList();
+            ChatCollectServiceEntries = model.ChatServices.SelectMany(x => x.ChatCollectServiceEntries).Select(x => new SelectableViewModel<Model.ChatCollectServiceEntry.IChatCollectServiceEntry>(x)).ToList();
             foreach (var entry in ChatCollectServiceEntries)
                 entry.PropertyChanged += ChatCollectServiceEntryListItemChanged;
-            ChatCollectServiceEntries.First().IsSelected = true;
-            
+            ChatCollectServiceEntries[0].IsSelected = true;
+
             OkCommand = new DelegateCommand(() =>
               {
                   var entry = ChatCollectServiceEntries.FirstOrDefault(x => x.IsSelected)?.Value;
                   var option = OptionRegionViewModel?.GetChatCollectServiceCreationOption();
-                  if (string.IsNullOrWhiteSpace(PresetName.Value) || entry == null || option==null) return;
+                  if (string.IsNullOrWhiteSpace(PresetName.Value) || entry == null || option == null) return;
                   confirmation.ChatCollectServiceCreationPreset = new Model.ChatCollectServiceCreationPreset(PresetName.Value, entry, option);
                   confirmation.Confirmed = true;
                   FinishInteraction();
@@ -52,7 +50,7 @@ namespace TVTComment.ViewModels
             CancelCommand = new DelegateCommand(() => { confirmation.Confirmed = false; FinishInteraction(); });
         }
 
-        private void initialize()
+        private void Initialize()
         {
             confirmation.Confirmed = false;
             confirmation.ChatCollectServiceCreationPreset = null;
@@ -61,10 +59,10 @@ namespace TVTComment.ViewModels
         private void ChatCollectServiceEntryListItemChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(SelectableViewModel<Model.ChatCollectServiceEntry.IChatCollectServiceEntry>.IsSelected))
-                serviceEntryChanged();
+                ServiceEntryChanged();
         }
 
-        private void serviceEntryChanged()
+        private void ServiceEntryChanged()
         {
             var entry = ChatCollectServiceEntries.FirstOrDefault(x => x.IsSelected)?.Value;
             string creationOptionControl = entry switch

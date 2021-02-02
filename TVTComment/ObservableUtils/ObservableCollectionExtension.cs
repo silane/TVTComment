@@ -3,35 +3,33 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ObservableUtils
 {
     static class ObservableCollectionExtension
     {
-        public static DisposableReadOnlyObservableCollection<TResult> MakeOneWayLinkedCollection<TSource,TCollection,TResult>(this TCollection source,Func<TSource,TResult> selector)
-            where TCollection :INotifyCollectionChanged,IEnumerable<TSource>
+        public static DisposableReadOnlyObservableCollection<TResult> MakeOneWayLinkedCollection<TSource, TCollection, TResult>(this TCollection source, Func<TSource, TResult> selector)
+            where TCollection : INotifyCollectionChanged, IEnumerable<TSource>
         {
             var ret = new DisposableObservableCollection<TResult>(source.Select(selector));
-            ret.AddDisposable(source.ObserveCollectionChanged<TCollection,TSource>((item, index) =>
-            {
-                ret.Insert(index, selector(item));
-            }, (item, index) =>
+            ret.AddDisposable(source.ObserveCollectionChanged<TCollection, TSource>((item, index) =>
              {
-                 ret.RemoveAt(index);
-             }, () =>
-             {
-                 ret.Clear();
-                 ret.AddRange(source.Select(selector));
-             }));
+                 ret.Insert(index, selector(item));
+             }, (item, index) =>
+              {
+                  ret.RemoveAt(index);
+              }, () =>
+              {
+                  ret.Clear();
+                  ret.AddRange(source.Select(selector));
+              }));
 
             return new DisposableReadOnlyObservableCollection<TResult>(ret);
         }
 
-        public static DisposableReadOnlyObservableCollection<TResult> MakeOneWayLinkedCollection<TSource,TResult>(this ObservableCollection<TSource> source, Func<TSource, TResult> selector)
+        public static DisposableReadOnlyObservableCollection<TResult> MakeOneWayLinkedCollection<TSource, TResult>(this ObservableCollection<TSource> source, Func<TSource, TResult> selector)
         {
-            return MakeOneWayLinkedCollection<TSource, ObservableCollection<TSource>, TResult>(source,selector);
+            return MakeOneWayLinkedCollection<TSource, ObservableCollection<TSource>, TResult>(source, selector);
         }
         public static DisposableReadOnlyObservableCollection<TResult> MakeOneWayLinkedCollection<TSource, TResult>(this ReadOnlyObservableCollection<TSource> source, Func<TSource, TResult> selector)
         {
@@ -42,26 +40,26 @@ namespace ObservableUtils
             where TCollection : INotifyCollectionChanged, IEnumerable<TSource>
         {
             List<int> counts = new List<int>();
-            var ret = new DisposableObservableCollection<TResult>(source.Select(selector).SelectMany(x => { counts.Add(x?.Count() ?? 0); return x ?? new TResult[0]; }));
+            var ret = new DisposableObservableCollection<TResult>(source.Select(selector).SelectMany(x => { counts.Add(x?.Count() ?? 0); return x ?? Array.Empty<TResult>(); }));
             ret.AddDisposable(source.ObserveCollectionChanged<TCollection, TSource>((item, index) =>
             {
-                int idx=counts.Take(index).Sum();
+                int idx = counts.Take(index).Sum();
                 int lastIdx = idx;
-                foreach (var newItem in selector(item) ?? new TResult[0])
+                foreach (var newItem in selector(item) ?? Array.Empty<TResult>())
                     ret.Insert(lastIdx++, newItem);
                 counts.Insert(index, lastIdx - idx);
             }, (item, index) =>
             {
-                int idx=counts.Take(index).Sum();
+                int idx = counts.Take(index).Sum();
                 int lastIdx = idx + counts[index];
-                for(;idx<lastIdx;idx++)
+                for (; idx < lastIdx; idx++)
                     ret.RemoveAt(idx);
                 counts.RemoveAt(index);
             }, () =>
             {
                 counts.Clear();
                 ret.Clear();
-                ret.AddRange(source.Select(selector).SelectMany(x => { counts.Add(x?.Count() ?? 0); return x ?? new TResult[0]; }));
+                ret.AddRange(source.Select(selector).SelectMany(x => { counts.Add(x?.Count() ?? 0); return x ?? Array.Empty<TResult>(); }));
             }));
 
             return new DisposableReadOnlyObservableCollection<TResult>(ret);

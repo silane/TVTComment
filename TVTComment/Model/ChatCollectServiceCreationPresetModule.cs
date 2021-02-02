@@ -12,27 +12,22 @@ namespace TVTComment.Model
 
         public ChatCollectServiceCreationPreset(string name, ChatCollectServiceEntry.IChatCollectServiceEntry serviceEntry, ChatCollectServiceEntry.IChatCollectServiceCreationOption creationOption)
         {
-            this.Name = name;
-            this.ServiceEntry = serviceEntry;
-            this.CreationOption = creationOption;
+            Name = name;
+            ServiceEntry = serviceEntry;
+            CreationOption = creationOption;
         }
     }
 
     class ChatCollectServiceCreationPresetModule : IDisposable
     {
-        private TVTCommentSettings settings;
-        private IEnumerable<ChatCollectServiceEntry.IChatCollectServiceEntry> collectServiceEntries;
 
-        private ObservableCollection<ChatCollectServiceCreationPreset> creationPresets = new ObservableCollection<ChatCollectServiceCreationPreset>();
+        private readonly ObservableCollection<ChatCollectServiceCreationPreset> creationPresets = new ObservableCollection<ChatCollectServiceCreationPreset>();
         public ReadOnlyObservableCollection<ChatCollectServiceCreationPreset> CreationPresets { get; }
 
         public ChatCollectServiceCreationPresetModule(
             TVTCommentSettings settings, IEnumerable<ChatCollectServiceEntry.IChatCollectServiceEntry> collectServiceEntries
         )
         {
-            this.settings = settings;
-            this.collectServiceEntries = collectServiceEntries;
-
             CreationPresets = new ReadOnlyObservableCollection<ChatCollectServiceCreationPreset>(creationPresets);
         }
 
@@ -46,17 +41,13 @@ namespace TVTComment.Model
             return creationPresets.Remove(item);
         }
 
-        private void loadSettings()
-        {
-        }
-
-        private void saveSettings()
+        private void SaveSettings()
         {
         }
 
         public void Dispose()
         {
-            saveSettings();
+            SaveSettings();
         }
     }
 }

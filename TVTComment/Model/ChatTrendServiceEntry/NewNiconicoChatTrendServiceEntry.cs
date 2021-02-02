@@ -3,12 +3,12 @@ using TVTComment.Model.ChatTrendService;
 
 namespace TVTComment.Model
 {
-    class NewNiconicoChatTrendServiceEntry:IChatTrendServiceEntry
+    class NewNiconicoChatTrendServiceEntry : IChatTrendServiceEntry
     {
         public string Name => "新ニコニコ実況";
         public string Description => "ニコニコ実況の勢いを表示します";
 
-        private NiconicoUtils.LiveIdResolver liveIdResolver;
+        private readonly NiconicoUtils.LiveIdResolver liveIdResolver;
 
         public NewNiconicoChatTrendServiceEntry(NiconicoUtils.LiveIdResolver liveIdResolver)
         {

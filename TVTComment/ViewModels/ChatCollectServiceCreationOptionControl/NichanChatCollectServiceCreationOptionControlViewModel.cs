@@ -50,7 +50,7 @@ namespace TVTComment.ViewModels.ChatCollectServiceCreationOptionControl
             var nichan = model.ChatServices.OfType<Model.ChatService.NichanChatService>().Single();
             Boards = nichan.BoardList;
             Method = Model.ChatCollectServiceEntry.NichanChatCollectServiceEntry.ChatCollectServiceCreationOption.ThreadSelectMethod.Auto;
-            OkCommand = new DelegateCommand(() => Finished?.Invoke(this,new EventArgs()));
+            OkCommand = new DelegateCommand(() => Finished?.Invoke(this, new EventArgs()));
             RefreshThreadsCommand = new DelegateCommand(RefreshThreads);
         }
 
@@ -76,8 +76,8 @@ namespace TVTComment.ViewModels.ChatCollectServiceCreationOptionControl
 
         private async void RefreshThreads()
         {
-            if (this.SelectedBoard == null) return;
-            string boardUri = this.SelectedBoard.Uri.ToString();
+            if (SelectedBoard == null) return;
+            string boardUri = SelectedBoard.Uri.ToString();
             var uri = new Uri(boardUri);
             string boardHost = $"{uri.Scheme}://{uri.Host}";
             string boardName = uri.Segments[1];
@@ -93,7 +93,7 @@ namespace TVTComment.ViewModels.ChatCollectServiceCreationOptionControl
             foreach (var thread in threadsInBoard)
                 thread.Uri = new Uri($"{boardHost}/test/read.cgi/{boardName}/{thread.Name}/l50");
 
-            this.Threads = threadsInBoard;
+            Threads = threadsInBoard;
         }
     }
 }

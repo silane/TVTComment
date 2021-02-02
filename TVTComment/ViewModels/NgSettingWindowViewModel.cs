@@ -16,7 +16,7 @@ namespace TVTComment.ViewModels
     class NgSettingWindowViewModel : BindableBase, IDisposable
     {
         private readonly Model.TVTComment model;
-        private readonly CompositeDisposable disposables=new CompositeDisposable();
+        private readonly CompositeDisposable disposables = new CompositeDisposable();
 
         private double windowTop = double.NaN;
         private double windowLeft = double.NaN;
@@ -102,16 +102,16 @@ namespace TVTComment.ViewModels
             WindowWidth = rect.Width;
             WindowHeight = rect.Height;
 
-            TargetChatCollectServiceEntries=new List<Contents.SelectableViewModel<Model.ChatCollectServiceEntry.IChatCollectServiceEntry>>(
+            TargetChatCollectServiceEntries = new List<Contents.SelectableViewModel<Model.ChatCollectServiceEntry.IChatCollectServiceEntry>>(
                 model.ChatServices.SelectMany(service => service.ChatCollectServiceEntries)
-                .Select(x=>new Contents.SelectableViewModel<Model.ChatCollectServiceEntry.IChatCollectServiceEntry>(x,true)));
+                .Select(x => new Contents.SelectableViewModel<Model.ChatCollectServiceEntry.IChatCollectServiceEntry>(x, true)));
             var updateTimer = Observable.Interval(TimeSpan.FromSeconds(3));
-            disposables.Add((IDisposable)(Rules = model.ChatModule.ChatModRules.MakeOneWayLinkedCollection(x=>new Contents.ChatModRuleListItemViewModel(x,updateTimer.Select(_=>new Unit())))));
+            disposables.Add((IDisposable)(Rules = model.ChatModule.ChatModRules.MakeOneWayLinkedCollection(x => new Contents.ChatModRuleListItemViewModel(x, updateTimer.Select(_ => new Unit())))));
 
             AddWordNgCommand = new DelegateCommand(() =>
               {
                   if (string.IsNullOrWhiteSpace(NgText)) return;
-                  model.ChatModule.AddChatModRule(new Model.ChatModRules.WordNgChatModRule(TargetChatCollectServiceEntries.Where(x=>x.IsSelected).Select(x=>x.Value),NgText));
+                  model.ChatModule.AddChatModRule(new Model.ChatModRules.WordNgChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value), NgText));
               });
 
             AddUserNgCommand = new DelegateCommand(() =>
@@ -137,7 +137,7 @@ namespace TVTComment.ViewModels
 
             AddTextLengthNgCommand = new DelegateCommand(() =>
             {
-                model.ChatModule.AddChatModRule(new Model.ChatModRules.TextLengthNg(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value),TextLengthCount.Value));
+                model.ChatModule.AddChatModRule(new Model.ChatModRules.TextLengthNg(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value), TextLengthCount.Value));
             });
 
             AddRandomizeColorRuleCommand = new DelegateCommand(() =>
@@ -147,7 +147,7 @@ namespace TVTComment.ViewModels
 
             AddSmallOnMultiLineRuleCommand = new DelegateCommand(() =>
               {
-                  model.ChatModule.AddChatModRule(new Model.ChatModRules.SmallOnMultiLineChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value),SmallOnMultiLineRuleLineCount.Value));
+                  model.ChatModule.AddChatModRule(new Model.ChatModRules.SmallOnMultiLineChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value), SmallOnMultiLineRuleLineCount.Value));
               });
 
             AddRemoveAnchorCommand = new DelegateCommand(() =>
@@ -199,7 +199,10 @@ namespace TVTComment.ViewModels
         {
             model.Settings.View.NgSettingWindowPosition = new Model.Serialization.WindowPositionEntity()
             {
-                X = WindowLeft, Y = WindowTop, Width = WindowWidth, Height = WindowHeight,
+                X = WindowLeft,
+                Y = WindowTop,
+                Width = WindowWidth,
+                Height = WindowHeight,
             };
 
             disposables.Dispose();

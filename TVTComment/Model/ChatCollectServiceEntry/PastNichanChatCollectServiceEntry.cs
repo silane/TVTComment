@@ -19,14 +19,14 @@ namespace TVTComment.Model.ChatCollectServiceEntry
             ObservableValue<TimeSpan> backTime
         )
         {
-            this.Owner = chatService;
+            Owner = chatService;
             this.threadResolver = threadResolver;
             this.backTime = backTime;
         }
 
         public ChatCollectService.IChatCollectService GetNewService(IChatCollectServiceCreationOption creationOption)
         {
-            var threadSelector = new NichanUtils.AutoPastNichanThreadSelector(this.threadResolver, TimeSpan.FromSeconds(15), this.backTime.Value);
+            var threadSelector = new NichanUtils.AutoPastNichanThreadSelector(threadResolver, TimeSpan.FromSeconds(15), backTime.Value);
             return new ChatCollectService.PastNichanChatCollectService(
                 this, threadSelector, TimeSpan.FromSeconds(15)
             );

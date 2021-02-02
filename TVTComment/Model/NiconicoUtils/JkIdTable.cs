@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.IO;
 
 namespace TVTComment.Model.NiconicoUtils
@@ -12,30 +9,28 @@ namespace TVTComment.Model.NiconicoUtils
     /// </summary>
     class JkIdTable
     {
-        private enum RuleTarget { Flags,NSId,NId}
+        private enum RuleTarget { Flags, NSId, NId }
 
-        private List<Tuple<RuleTarget,uint,int>> rules=new List<Tuple<RuleTarget, uint, int>>();
-        private Dictionary<ChannelEntry, int> tableCache = new Dictionary<ChannelEntry, int>();
+        private readonly List<Tuple<RuleTarget, uint, int>> rules = new List<Tuple<RuleTarget, uint, int>>();
+        private readonly Dictionary<ChannelEntry, int> tableCache = new Dictionary<ChannelEntry, int>();
 
         public JkIdTable(string filePath)
         {
-            using (var reader = new StreamReader(filePath))
-            {
-                Utils.SimpleCsvReader.ReadByLine(reader, cols =>
+            using var reader = new StreamReader(filePath);
+            Utils.SimpleCsvReader.ReadByLine(reader, cols =>
+             {
+                 if (cols.Length != 3) return true;
+                 RuleTarget target;
+                 switch (cols[0])
                  {
-                     if (cols.Length != 3) return true;
-                     RuleTarget target;
-                     switch(cols[0])
-                     {
-                         case "flags":target = RuleTarget.Flags;break;
-                         case "nsid":target = RuleTarget.NSId;break;
-                         case "nid":target = RuleTarget.NId;break;
-                         default:return true;
-                     }
-                     rules.Add(new Tuple<RuleTarget, uint, int>(target,Utils.PrefixedIntegerParser.ParseToUInt32(cols[1]),int.Parse(cols[2])));
-                     return true;
-                 }, new char[] { '\t' });
-            }
+                     case "flags": target = RuleTarget.Flags; break;
+                     case "nsid": target = RuleTarget.NSId; break;
+                     case "nid": target = RuleTarget.NId; break;
+                     default: return true;
+                 }
+                 rules.Add(new Tuple<RuleTarget, uint, int>(target, Utils.PrefixedIntegerParser.ParseToUInt32(cols[1]), int.Parse(cols[2])));
+                 return true;
+             }, new char[] { '\t' });
         }
 
         /// <summary>
@@ -43,8 +38,7 @@ namespace TVTComment.Model.NiconicoUtils
         /// </summary>
         public int GetJkId(ChannelEntry channel)
         {
-            int ret;
-            if (tableCache.TryGetValue(channel, out ret))
+            if (tableCache.TryGetValue(channel, out int ret))
                 return ret;
 
             ret = 0;
@@ -59,7 +53,7 @@ namespace TVTComment.Model.NiconicoUtils
                         }
                         break;
                     case RuleTarget.NSId:
-                        if (channel.NetworkId == (rule.Item2>>16) && channel.ServiceId == (rule.Item2 & 0xFFFF))
+                        if (channel.NetworkId == (rule.Item2 >> 16) && channel.ServiceId == (rule.Item2 & 0xFFFF))
                         {
                             ret = rule.Item3;
                         }

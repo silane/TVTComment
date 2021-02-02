@@ -13,7 +13,7 @@ namespace TVTComment.Views.Converters
             {
                 return Enum.GetName(value.GetType(), value) ?? "";
             }
-            catch(ArgumentException)
+            catch (ArgumentException)
             {
                 return "";
             }
@@ -21,15 +21,14 @@ namespace TVTComment.Views.Converters
 
         public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
-            string valueString = value as string;
-            if (valueString == null)
+            if (value is not string valueString)
                 return Binding.DoNothing;
 
             try
             {
                 return Enum.Parse(targetType, valueString);
             }
-            catch(ArgumentException)
+            catch (ArgumentException)
             {
                 return Binding.DoNothing;
             }

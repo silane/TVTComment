@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Interactivity;
+﻿using System.Windows;
 using System.Windows.Input;
+using System.Windows.Interactivity;
 
 namespace TVTComment.Views.Behaviors
 {
-    class SetKeyboardFocusedElementAction:TriggerAction<DependencyObject>
+    class SetKeyboardFocusedElementAction : TriggerAction<DependencyObject>
     {
         public IInputElement Element
         {

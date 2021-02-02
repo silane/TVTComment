@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace TVTComment.Model.ChatModRules
 {
-    class JyougeKomeNgChatModRule:IChatModRule
+    class JyougeKomeNgChatModRule : IChatModRule
     {
         public string Description => "上下コメNG";
         public IEnumerable<ChatCollectServiceEntry.IChatCollectServiceEntry> TargetChatCollectServiceEntries { get; }

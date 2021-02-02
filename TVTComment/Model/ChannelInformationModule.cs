@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using ObservableUtils;
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using ObservableUtils;
 
 namespace TVTComment.Model
 {
@@ -13,12 +11,12 @@ namespace TVTComment.Model
     /// </summary>
     class ChannelInformationModule
     {
-        private IPCModule ipc;
+        private readonly IPCModule ipc;
 
-        private ObservableValue<DateTime?> currentTime = new ObservableValue<DateTime?>();
-        private ObservableCollection<ChannelInfo> channelList=new ObservableCollection<ChannelInfo>();
-        private ObservableValue<ChannelInfo> currentChannel = new ObservableValue<ChannelInfo>();
-        private ObservableValue<EventInfo> currentEvent = new ObservableValue<EventInfo>();
+        private readonly ObservableValue<DateTime?> currentTime = new ObservableValue<DateTime?>();
+        private readonly ObservableCollection<ChannelInfo> channelList = new ObservableCollection<ChannelInfo>();
+        private readonly ObservableValue<ChannelInfo> currentChannel = new ObservableValue<ChannelInfo>();
+        private readonly ObservableValue<EventInfo> currentEvent = new ObservableValue<EventInfo>();
 
         /// <summary>
         /// 現在再生中の番組の時刻
@@ -45,16 +43,16 @@ namespace TVTComment.Model
         /// コンストラクタの引数で指定した<seealso cref="IPCModule"/>の<seealso cref="IPCModule.MessageReceivedSynchronizationContext"/>と同じ
         /// </summary>
         public SynchronizationContext SynchronizationContext => ipc.MessageReceivedSynchronizationContext;
-        
+
         public ChannelInformationModule(IPCModule ipc)
         {
             CurrentTime = new ReadOnlyObservableValue<DateTime?>(currentTime);
-            ChannelList　= new ReadOnlyObservableCollection<ChannelInfo>(channelList);
+            ChannelList = new ReadOnlyObservableCollection<ChannelInfo>(channelList);
             CurrentChannel = new ReadOnlyObservableValue<ChannelInfo>(currentChannel);
             CurrentEvent = new ReadOnlyObservableValue<EventInfo>(currentEvent);
 
             this.ipc = ipc;
-            ipc.MessageReceived += ipc_MessageReceived;
+            ipc.MessageReceived += Ipc_MessageReceived;
         }
 
         public async void SetCurrentChannel(ChannelInfo channel)
@@ -63,19 +61,15 @@ namespace TVTComment.Model
             await ipc.Send(msg);
         }
 
-        private void ipc_MessageReceived(IPC.IPCMessage.IIPCMessage message)
+        private void Ipc_MessageReceived(IPC.IPCMessage.IIPCMessage message)
         {
-            IPC.IPCMessage.ChannelListIPCMessage chlistmsg = message as IPC.IPCMessage.ChannelListIPCMessage;
-            IPC.IPCMessage.CurrentChannelIPCMessage curchmsg = message as IPC.IPCMessage.CurrentChannelIPCMessage;
-            IPC.IPCMessage.TimeIPCMessage timemsg = message as IPC.IPCMessage.TimeIPCMessage;
-            
-            if (chlistmsg != null)
+            if (message is IPC.IPCMessage.ChannelListIPCMessage chlistmsg)
             {
                 //選択できるチャンネルリストを伝えるメッセージ
                 channelList.Clear();
                 channelList.AddRange(chlistmsg.ChannelList);
             }
-            else if (curchmsg != null)
+            else if (message is IPC.IPCMessage.CurrentChannelIPCMessage curchmsg)
             {
                 //現在のチャンネル・番組情報を伝えるメッセージ
                 //NID,TSID,SIDがすべて同じならチャンネルは同じで変わってないと判定する
@@ -85,17 +79,17 @@ namespace TVTComment.Model
                     this.currentChannel.Value = curchmsg.Channel;
                 }
 
-                    var currentChannel = ChannelList.Select((ch, idx) => new { Channel = ch, Index = idx }).FirstOrDefault((x) =>
-                         curchmsg.Channel.NetworkId == x.Channel.NetworkId && curchmsg.Channel.TransportStreamId == x.Channel.TransportStreamId &&
-                         curchmsg.Channel.ServiceId == x.Channel.ServiceId);
+                var currentChannel = ChannelList.Select((ch, idx) => new { Channel = ch, Index = idx }).FirstOrDefault((x) =>
+                     curchmsg.Channel.NetworkId == x.Channel.NetworkId && curchmsg.Channel.TransportStreamId == x.Channel.TransportStreamId &&
+                     curchmsg.Channel.ServiceId == x.Channel.ServiceId);
 
-                    //チャンネルリスト内に同じチャンネルがあればそれを今回のメッセージで得たインスタンスに置き換える
-                    if (currentChannel != null)
-                        this.channelList[currentChannel.Index] = this.currentChannel.Value;
+                //チャンネルリスト内に同じチャンネルがあればそれを今回のメッセージで得たインスタンスに置き換える
+                if (currentChannel != null)
+                    channelList[currentChannel.Index] = this.currentChannel.Value;
 
-                    this.currentEvent.Value = curchmsg.Event;
+                currentEvent.Value = curchmsg.Event;
             }
-            else if(timemsg!=null)
+            else if (message is IPC.IPCMessage.TimeIPCMessage timemsg)
             {
                 //TOTを伝えるメッセージ
                 //精度は1秒単位で値が変わるごとに来る

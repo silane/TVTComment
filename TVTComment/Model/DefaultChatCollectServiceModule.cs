@@ -2,10 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Reactive.Disposables;
 using System.Threading;
-using System.Linq;
-using System.Collections.Specialized;
 
 namespace TVTComment.Model
 {
@@ -14,11 +13,11 @@ namespace TVTComment.Model
     /// </summary>
     class DefaultChatCollectServiceModule
     {
-        private TVTCommentSettings settings;
-        private ChannelInformationModule channelInformationModule;
-        private ChatCollectServiceModule collectServiceModule;
-        private IEnumerable<ChatCollectServiceEntry.IChatCollectServiceEntry> serviceEntryList;
-        private CompositeDisposable disposables = new CompositeDisposable();
+        private readonly TVTCommentSettings settings;
+        private readonly ChannelInformationModule channelInformationModule;
+        private readonly ChatCollectServiceModule collectServiceModule;
+        private readonly IEnumerable<ChatCollectServiceEntry.IChatCollectServiceEntry> serviceEntryList;
+        private readonly CompositeDisposable disposables = new CompositeDisposable();
         private bool? lastIsRecord = null;
         private bool lastIsEnabled = false;
 
@@ -50,12 +49,12 @@ namespace TVTComment.Model
             this.collectServiceModule = collectServiceModule;
             this.serviceEntryList = serviceEntryList;
 
-            loadSettings();
-            disposables.Add(channelInformationModule.CurrentTime.Subscribe(timeChanged));
+            LoadSettings();
+            disposables.Add(channelInformationModule.CurrentTime.Subscribe(TimeChanged));
             disposables.Add(LiveChatCollectService.ObserveCollectionChanged(newServiceEntry =>
             {
                 if (IsEnabled.Value && !lastIsRecord.GetValueOrDefault(true))
-                    if(collectServiceModule.RegisteredServices.All(x => x.ServiceEntry != newServiceEntry))
+                    if (collectServiceModule.RegisteredServices.All(x => x.ServiceEntry != newServiceEntry))
                         collectServiceModule.AddService(newServiceEntry, null);
             }, oldServiceEntry =>
             {
@@ -83,26 +82,26 @@ namespace TVTComment.Model
                     collectServiceModule.ClearServices();
             }));
 
-            disposables.Add(channelInformationModule.CurrentTime.Subscribe(timeChanged));
+            disposables.Add(channelInformationModule.CurrentTime.Subscribe(TimeChanged));
         }
 
-        private void timeChanged(DateTime? time)
+        private void TimeChanged(DateTime? time)
         {
             if (!time.HasValue)
                 return;
 
-            bool isEnabled = this.IsEnabled.Value;
-            bool isRecord = (getDateTimeJstNow() - time.Value).TotalMinutes > 3;
-            if (this.lastIsEnabled == isEnabled && isRecord == this.lastIsRecord)
+            bool isEnabled = IsEnabled.Value;
+            bool isRecord = (GetDateTimeJstNow() - time.Value).TotalMinutes > 3;
+            if (lastIsEnabled == isEnabled && isRecord == lastIsRecord)
                 return; // 有効・無効、リアルタイム・録画、いずれも変化がなければ何もしない
 
-            this.lastIsEnabled = isEnabled;
-            this.lastIsRecord = isRecord;
+            lastIsEnabled = isEnabled;
+            lastIsRecord = isRecord;
 
             if (!isEnabled)
                 return; // 無効の場合は何もしない
 
-            if(isRecord)
+            if (isRecord)
             {
                 //録画
                 collectServiceModule.ClearServices();
@@ -114,43 +113,43 @@ namespace TVTComment.Model
                 //リアルタイム
                 collectServiceModule.ClearServices();
                 foreach (var serviceEntry in LiveChatCollectService)
-                    collectServiceModule.AddService(serviceEntry,null);
+                    collectServiceModule.AddService(serviceEntry, null);
             }
         }
 
         public void Dispose()
         {
-            saveSettings();
+            SaveSettings();
             disposables.Dispose();
         }
 
-        private void saveSettings()
+        private void SaveSettings()
         {
-            this.settings.UseDefaultChatCollectService = this.IsEnabled.Value;
+            settings.UseDefaultChatCollectService = IsEnabled.Value;
 
-            this.settings.LiveDefaultChatCollectServices = this.LiveChatCollectService.Select(x => x.Id).ToArray();
-            this.settings.RecordDefaultChatCollectServices = this.RecordChatCollectService.Select(x => x.Id).ToArray();
+            settings.LiveDefaultChatCollectServices = LiveChatCollectService.Select(x => x.Id).ToArray();
+            settings.RecordDefaultChatCollectServices = RecordChatCollectService.Select(x => x.Id).ToArray();
         }
 
-        private void loadSettings()
+        private void LoadSettings()
         {
-            this.IsEnabled.Value = this.settings.UseDefaultChatCollectService;
+            IsEnabled.Value = settings.UseDefaultChatCollectService;
 
-            foreach (string id in this.settings.LiveDefaultChatCollectServices)
-            {
-                var serviceEntry = serviceEntryList.SingleOrDefault(x => x.Id == id);
-                if(serviceEntry != null)
-                    this.LiveChatCollectService.Add(serviceEntry);
-            }
-            foreach (string id in this.settings.RecordDefaultChatCollectServices)
+            foreach (string id in settings.LiveDefaultChatCollectServices)
             {
                 var serviceEntry = serviceEntryList.SingleOrDefault(x => x.Id == id);
                 if (serviceEntry != null)
-                    this.RecordChatCollectService.Add(serviceEntry);
+                    LiveChatCollectService.Add(serviceEntry);
+            }
+            foreach (string id in settings.RecordDefaultChatCollectServices)
+            {
+                var serviceEntry = serviceEntryList.SingleOrDefault(x => x.Id == id);
+                if (serviceEntry != null)
+                    RecordChatCollectService.Add(serviceEntry);
             }
         }
 
-        private static DateTime getDateTimeJstNow()
+        private static DateTime GetDateTimeJstNow()
         {
             return DateTime.SpecifyKind(DateTime.UtcNow.AddHours(9), DateTimeKind.Unspecified);
         }

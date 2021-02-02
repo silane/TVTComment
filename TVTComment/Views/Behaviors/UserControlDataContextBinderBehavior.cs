@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interactivity;
 
@@ -12,11 +7,11 @@ namespace TVTComment.Views.Behaviors
     /// <summary>
     /// PrismのAutoWireViewModelがセットされたUserControlのDataContextに、UserControlが配置されたWindow側からアクセスするために使う
     /// </summary>
-    class UserControlDataContextBinderBehavior:Behavior<FrameworkElement>
+    class UserControlDataContextBinderBehavior : Behavior<FrameworkElement>
     {
         public object Binding
         {
-            get { return (object)GetValue(BindingProperty); }
+            get { return GetValue(BindingProperty); }
             set { SetValue(BindingProperty, value); }
         }
 
@@ -28,7 +23,7 @@ namespace TVTComment.Views.Behaviors
 
         protected override void OnAttached()
         {
-            target = getDescendantOrSelfUserControl(AssociatedObject);
+            target = GetDescendantOrSelfUserControl(AssociatedObject);
             if (target == null) return;
 
             OnDataContextChanged(target.DataContext);
@@ -41,17 +36,15 @@ namespace TVTComment.Views.Behaviors
             target.DataContextChanged -= AssociatedObject_DataContextChanged;
         }
 
-        private UserControl getDescendantOrSelfUserControl(FrameworkElement frameworkElement)
+        private UserControl GetDescendantOrSelfUserControl(FrameworkElement frameworkElement)
         {
-            var userControl = frameworkElement as UserControl;
-            if (userControl != null) return userControl;
+            if (frameworkElement as UserControl != null) return frameworkElement as UserControl;
 
-            foreach(var child in LogicalTreeHelper.GetChildren(frameworkElement))
+            foreach (var child in LogicalTreeHelper.GetChildren(frameworkElement))
             {
-                var elem=child as FrameworkElement;
-                if (elem != null)
+                if (child is FrameworkElement elem)
                 {
-                    var descendant = getDescendantOrSelfUserControl(elem);
+                    var descendant = GetDescendantOrSelfUserControl(elem);
                     if (descendant != null) return descendant;
                 }
             }

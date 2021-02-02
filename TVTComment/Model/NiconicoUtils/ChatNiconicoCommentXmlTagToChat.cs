@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace TVTComment.Model.NiconicoUtils
@@ -68,7 +67,7 @@ namespace TVTComment.Model.NiconicoUtils
             }
             else
             {
-                var namedColor = colorNameMapping.Where(kv => mail.Contains(kv.Key)).Select(kv => (KeyValuePair<string,Color>?)kv).FirstOrDefault();
+                var namedColor = colorNameMapping.Where(kv => mail.Contains(kv.Key)).Select(kv => (KeyValuePair<string, Color>?)kv).FirstOrDefault();
                 if (namedColor != null)
                     color = namedColor.Value.Value;
             }

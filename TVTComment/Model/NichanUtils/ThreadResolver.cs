@@ -7,7 +7,7 @@
     {
         private readonly ChannelDatabase channelDatabase;
         private readonly BoardDatabase boardDatabase;
-        
+
         public ThreadResolver(ChannelDatabase channelDatabase, BoardDatabase boardDatabase)
         {
             this.channelDatabase = channelDatabase;
@@ -18,13 +18,13 @@
         {
             MatchingThread getMatchingThread(ChannelEntry channel)
             {
-                if(!ignoreMainThreadTitleKeywords)
-                    return this.boardDatabase.GetMatchingThread(channel);
+                if (!ignoreMainThreadTitleKeywords)
+                    return boardDatabase.GetMatchingThread(channel);
                 else
                 {
-                    ThreadMappingRuleEntry ruleEntry = this.boardDatabase.GetMatchingThreadMappingRuleEntry(channel);
+                    ThreadMappingRuleEntry ruleEntry = boardDatabase.GetMatchingThreadMappingRuleEntry(channel);
                     if (ruleEntry == null) return null;
-                    BoardEntry boardEntry = this.boardDatabase.GetBoardEntryById(ruleEntry.BoardId);
+                    BoardEntry boardEntry = boardDatabase.GetBoardEntryById(ruleEntry.BoardId);
                     if (boardEntry == null) return null;
                     return new MatchingThread(boardEntry.Title, boardEntry.Uri, ruleEntry.ThreadTitleKeywords);
                 }

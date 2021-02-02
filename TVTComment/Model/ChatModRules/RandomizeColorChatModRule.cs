@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TVTComment.Model.ChatModRules
 {
     class RandomizeColorChatModRule : IChatModRule
     {
-        private Random random = new Random();
+        private readonly Random random = new Random();
 
         public string Description => "色をランダムに変更";
         public IEnumerable<ChatCollectServiceEntry.IChatCollectServiceEntry> TargetChatCollectServiceEntries { get; }
@@ -27,7 +24,7 @@ namespace TVTComment.Model.ChatModRules
 
         private static Color ColorFromHls(float hue, float lightness, float saturation)
         {
-            hue = hue % 360;
+            hue %= 360;
             if (lightness < 0 || 1 < lightness)
             {
                 throw new ArgumentOutOfRangeException(nameof(lightness), $"{nameof(lightness)} must be from 0.0 to 1.0");

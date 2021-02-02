@@ -71,7 +71,7 @@ namespace TVTComment.ViewModels
                   try
                   {
                       await niconico.SetUser(NiconicoUserId.Value, NiconicoPassword.Value);
-                      syncNiconicoUserStatus();
+                      SyncNiconicoUserStatus();
                   }
                   catch (Model.NiconicoUtils.NiconicoLoginSessionException)
                   {
@@ -88,7 +88,7 @@ namespace TVTComment.ViewModels
                       nichan.SetIntervalValues(
                           TimeSpan.FromSeconds(uint.Parse(NichanResCollectInterval.Value)),
                           TimeSpan.FromSeconds(uint.Parse(NichanThreadSearchInterval.Value)));
-                      
+
                       nichan.SetApiParams(
                           NichanApiHmKey.Value, NichanApiAppKey.Value, nichan.GochanApiUserId, nichan.GochanApiPassword,
                           NichanApiAuthUserAgent.Value, NichanApiAuthX2chUA.Value, NichanApiUserAgent.Value
@@ -96,7 +96,7 @@ namespace TVTComment.ViewModels
 
                       nichan.SetPastCollectServiceBackTime(TimeSpan.FromMinutes(double.Parse(NichanPastCollectServiceBackTime.Value)));
 
-                      syncNichanSettings();
+                      SyncNichanSettings();
                   }
                   catch (Exception e) when (e is FormatException || e is OverflowException)
                   {
@@ -104,17 +104,19 @@ namespace TVTComment.ViewModels
                   }
               });
 
-            ApplyTwitterApisCommand = new DelegateCommand(() => {
+            ApplyTwitterApisCommand = new DelegateCommand(() =>
+            {
                 twitter.ApiKey = TwitterApiKey.Value;
                 twitter.ApiSecret = TwitterApiSecret.Value;
                 AlertRequest.Raise(new Notification { Title = "TVTCommentメッセージ", Content = "適用しました" });
             });
 
-            LoginTokensTwitterCommand = new DelegateCommand(async () => {
+            LoginTokensTwitterCommand = new DelegateCommand(async () =>
+            {
                 try
                 {
                     await twitter.LoginAccessTokens(TwitterApiKey.Value, TwitterApiSecret.Value, TwitterApiAccessKey.Value, TwitterApiAccessSecret.Value);
-                    syncTwitterStatus();
+                    SyncTwitterStatus();
                 }
                 catch (Exception e)
                 {
@@ -123,7 +125,8 @@ namespace TVTComment.ViewModels
             });
 
 
-            OpenTwitter = new DelegateCommand(() => {
+            OpenTwitter = new DelegateCommand(() =>
+            {
                 try
                 {
                     twitterAuthentication = twitter.InitOAuthPin(twitter.ApiKey, twitter.ApiSecret);
@@ -136,11 +139,12 @@ namespace TVTComment.ViewModels
                 }
             });
 
-            EnterTwitter = new DelegateCommand(async () => {
+            EnterTwitter = new DelegateCommand(async () =>
+            {
                 try
                 {
                     await twitter.LoginOAuthPin(twitterAuthentication, TwitterPinCode.Value);
-                    syncTwitterStatus();
+                    SyncTwitterStatus();
                 }
                 catch (Exception e)
                 {
@@ -159,24 +163,24 @@ namespace TVTComment.ViewModels
                 {
                     AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = e.Message });
                 }
-                syncTwitterStatus();
+                SyncTwitterStatus();
             });
 
             ChatPreserveCount = model.ChatModule.ChatPreserveCount;
 
-            syncNiconicoUserStatus();
-            syncNichanSettings();
-            syncTwitterStatus();
+            SyncNiconicoUserStatus();
+            SyncNichanSettings();
+            SyncTwitterStatus();
         }
 
-        private void syncNiconicoUserStatus()
+        private void SyncNiconicoUserStatus()
         {
             NiconicoLoginStatus.Value = niconico.IsLoggedin ? "ログイン済" : "未ログイン";
             NiconicoUserId.Value = niconico.UserId;
             NiconicoPassword.Value = niconico.UserPassword;
         }
 
-        private void syncNichanSettings()
+        private void SyncNichanSettings()
         {
             NichanResCollectInterval.Value = nichan.ResCollectInterval.TotalSeconds.ToString();
             NichanThreadSearchInterval.Value = nichan.ThreadSearchInterval.TotalSeconds.ToString();
@@ -188,7 +192,7 @@ namespace TVTComment.ViewModels
             NichanPastCollectServiceBackTime.Value = nichan.PastCollectServiceBackTime.TotalMinutes.ToString();
         }
 
-        private void syncTwitterStatus()
+        private void SyncTwitterStatus()
         {
             TwitterApiKey.Value = twitter.ApiKey;
             TwitterApiSecret.Value = twitter.ApiSecret;

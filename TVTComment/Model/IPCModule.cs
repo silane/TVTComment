@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Linq;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Diagnostics;
-using System.IO;
 
 namespace TVTComment.Model
 {
@@ -25,7 +23,7 @@ namespace TVTComment.Model
         UnexpectedError,
     }
 
-    class IPCModule:IDisposable
+    class IPCModule : IDisposable
     {
         public class ConnectException : Exception
         {
@@ -39,13 +37,13 @@ namespace TVTComment.Model
 
         private IPC.IPCTunnel tunnel;
 
-        private SemaphoreSlim disposeLock = new SemaphoreSlim(1,1);
-        private SemaphoreSlim sendLock = new SemaphoreSlim(1, 1);
+        private readonly SemaphoreSlim disposeLock = new SemaphoreSlim(1, 1);
+        private readonly SemaphoreSlim sendLock = new SemaphoreSlim(1, 1);
         private Task receiveTask;
         private CancellationTokenSource cancel;
 
         private volatile IPCModuleState _state;
-        public IPCModuleState State { get { return _state; }private set { _state = value; } }
+        public IPCModuleState State { get { return _state; } private set { _state = value; } }
         public IPCModuleDisposeReason? DisposeReason { get; private set; } = null;
 
         public IPC.IPCTunnel Tunnel { get { return tunnel; } }
@@ -69,11 +67,11 @@ namespace TVTComment.Model
         /// </summary>
         /// <param name="messageReceivedSynchronizationContext"><see cref="MessageReceived"/>を呼び出す同期コンテキスト
         /// <para><seealso cref="SynchronizationContext.Send"/>や<seealso cref="SynchronizationContext.Post"/>された処理を排他的に実行するものである必要がある</para></param>
-        public IPCModule(string sendPipeName,string receivePipeName,SynchronizationContext messageReceivedSynchronizationContext)
+        public IPCModule(string sendPipeName, string receivePipeName, SynchronizationContext messageReceivedSynchronizationContext)
         {
-            this.State = IPCModuleState.BeforeConnect;
-            this.tunnel = new IPC.IPCTunnel(sendPipeName,receivePipeName);
-            this.MessageReceivedSynchronizationContext = messageReceivedSynchronizationContext;
+            State = IPCModuleState.BeforeConnect;
+            tunnel = new IPC.IPCTunnel(sendPipeName, receivePipeName);
+            MessageReceivedSynchronizationContext = messageReceivedSynchronizationContext;
         }
 
         /// <summary>
@@ -92,18 +90,18 @@ namespace TVTComment.Model
                 await tunnel.Connect(new CancellationTokenSource(5000).Token).ConfigureAwait(false);
                 State = IPCModuleState.Connected;
             }
-            catch(IOException e)
+            catch (IOException e)
             {
-                throw new ConnectException("Failed to connect by IOError",e);
+                throw new ConnectException("Failed to connect by IOError", e);
             }
-            catch(OperationCanceledException e)
+            catch (OperationCanceledException e)
             {
                 throw new ConnectException("Failed to connect by timeout", e);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 //不明な例外が投げられた時は以降操作できない
-                await dispose(IPCModuleDisposeReason.UnexpectedError,e);
+                await Dispose(IPCModuleDisposeReason.UnexpectedError, e);
                 throw;
             }
         }
@@ -118,7 +116,7 @@ namespace TVTComment.Model
                 throw new InvalidOperationException($"Cannot call this method on current state. Current state is '{state}'");
 
             cancel = new CancellationTokenSource();
-            receiveTask =  receiveLoop();
+            receiveTask = ReceiveLoop();
         }
 
         /// <summary>
@@ -129,25 +127,25 @@ namespace TVTComment.Model
         public async Task Send(IPC.IPCMessage.IIPCMessage message)
         {
             var state = State;
-            if (state!=IPCModuleState.Connected && state != IPCModuleState.Receiving)
+            if (state != IPCModuleState.Connected && state != IPCModuleState.Receiving)
                 throw new InvalidOperationException($"Cannot call this method on current state. Current state is '{state}'");
 
             await sendLock.WaitAsync();
             try
             {
-                await tunnel.Send(message,new CancellationTokenSource(1000).Token).ConfigureAwait(false);
+                await tunnel.Send(message, new CancellationTokenSource(1000).Token).ConfigureAwait(false);
             }
-            catch(IOException e)
+            catch (IOException e)
             {
-                await dispose(IPCModuleDisposeReason.SendFailure,e).ConfigureAwait(false);
+                await Dispose(IPCModuleDisposeReason.SendFailure, e).ConfigureAwait(false);
             }
-            catch(OperationCanceledException)
+            catch (OperationCanceledException)
             {
-                await dispose(IPCModuleDisposeReason.SendFailure).ConfigureAwait(false);
+                await Dispose(IPCModuleDisposeReason.SendFailure).ConfigureAwait(false);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
-                await dispose(IPCModuleDisposeReason.UnexpectedError, e).ConfigureAwait(false);
+                await Dispose(IPCModuleDisposeReason.UnexpectedError, e).ConfigureAwait(false);
                 throw;
             }
             finally
@@ -157,7 +155,7 @@ namespace TVTComment.Model
             //Debug.WriteLine("Sent: "+message);
         }
 
-        private async Task receiveLoop()
+        private async Task ReceiveLoop()
         {
             State = IPCModuleState.Receiving;
             try
@@ -176,27 +174,27 @@ namespace TVTComment.Model
                     //Debug.WriteLine("Received: " + msg);
                     MessageReceivedSynchronizationContext.Post((state) =>
                     {
-                        if (cancel!=null && !cancel.IsCancellationRequested)
+                        if (cancel != null && !cancel.IsCancellationRequested)
                             MessageReceived?.Invoke(msg);
                     }, null);
                 }
                 cancel = null;
             }
-            catch(EndOfStreamException)
+            catch (EndOfStreamException)
             {
-                await dispose(IPCModuleDisposeReason.ConnectionTerminated).ConfigureAwait(false);
+                await Dispose(IPCModuleDisposeReason.ConnectionTerminated).ConfigureAwait(false);
             }
             catch (IOException e)
             {
-                await dispose(IPCModuleDisposeReason.ReceiveFailure,e).ConfigureAwait(false);
+                await Dispose(IPCModuleDisposeReason.ReceiveFailure, e).ConfigureAwait(false);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
-                await dispose(IPCModuleDisposeReason.UnexpectedError,e).ConfigureAwait(false);
+                await Dispose(IPCModuleDisposeReason.UnexpectedError, e).ConfigureAwait(false);
             }
         }
 
-        private async Task dispose(IPCModuleDisposeReason reason, Exception e = null)
+        private async Task Dispose(IPCModuleDisposeReason reason, Exception e = null)
         {
             await disposeLock.WaitAsync().ConfigureAwait(false);
             try
@@ -244,7 +242,7 @@ namespace TVTComment.Model
 
         public void Dispose()
         {
-            dispose(IPCModuleDisposeReason.DisposeCalled).Wait();
+            Dispose(IPCModuleDisposeReason.DisposeCalled).Wait();
         }
     }
 }

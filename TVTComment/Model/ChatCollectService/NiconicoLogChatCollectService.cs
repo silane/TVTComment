@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Net;
 using System.Net.Http;
+using System.Threading.Tasks;
 using System.Web;
 
 namespace TVTComment.Model.ChatCollectService
 {
-    class NiconicoLogChatCollectService:OnceASecondChatCollectService
+    class NiconicoLogChatCollectService : OnceASecondChatCollectService
     {
         [Serializable]
         private class ServerErrorException : Exception
@@ -22,32 +20,29 @@ namespace TVTComment.Model.ChatCollectService
               System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
         }
 
-        private NiconicoUtils.JkIdResolver jkIdResolver;
+        private readonly NiconicoUtils.JkIdResolver jkIdResolver;
         private int lastJkId = 0;
         private DateTime lastGetTime;
         private long baseTime;
-        private List<NiconicoUtils.ChatAndVpos> chats = new List<NiconicoUtils.ChatAndVpos>();
-        private NiconicoUtils.NiconicoLoginSession session;
+        private readonly List<NiconicoUtils.ChatAndVpos> chats = new List<NiconicoUtils.ChatAndVpos>();
         private Task chatCollectTask;
-        private HttpClient client;
-        
+        private readonly HttpClient client;
+
         public override string Name => "ニコニコ実況過去ログ";
         public override ChatCollectServiceEntry.IChatCollectServiceEntry ServiceEntry { get; }
 
         public override string GetInformationText()
         {
             if (lastJkId != 0)
-                return $"現在の実況ID: {lastJkId.ToString()}, 前回の取得時刻: {lastGetTime.ToString("HH:mm:ss")}";
+                return $"現在の実況ID: {lastJkId}, 前回の取得時刻: {lastGetTime:HH:mm:ss}";
             else
                 return $"現在の実況ID: [対応なし]";
         }
 
-        public NiconicoLogChatCollectService(ChatCollectServiceEntry.IChatCollectServiceEntry serviceEntry,NiconicoUtils.JkIdResolver jkIdResolver,NiconicoUtils.NiconicoLoginSession session):base(new TimeSpan(0,0,10))
+        public NiconicoLogChatCollectService(ChatCollectServiceEntry.IChatCollectServiceEntry serviceEntry, NiconicoUtils.JkIdResolver jkIdResolver, NiconicoUtils.NiconicoLoginSession session) : base(new TimeSpan(0, 0, 10))
         {
-            this.ServiceEntry = serviceEntry;
+            ServiceEntry = serviceEntry;
             this.jkIdResolver = jkIdResolver;
-            this.session = session;
-
             var handler = new HttpClientHandler();
             client = new HttpClient(handler);
             handler.CookieContainer.Add(session.Cookie);
@@ -59,20 +54,20 @@ namespace TVTComment.Model.ChatCollectService
 
             int jkId = jkIdResolver.Resolve(channel.NetworkId, channel.ServiceId);
 
-            if(jkId==0)
+            if (jkId == 0)
             {
                 //対応するjkidがなかった
                 lastJkId = 0;
                 return ret;
             }
 
-            if(lastJkId==jkId && baseTime!=0)
+            if (lastJkId == jkId && baseTime != 0)
             {
                 lock (chats)
                 {
                     //再生時刻のchatをretに入れる
-                    int vpos=(int)(new DateTimeOffset(time).ToUnixTimeSeconds()- baseTime) * 100;//time.KindはLocalじゃないとダメよ
-                    
+                    int vpos = (int)(new DateTimeOffset(time).ToUnixTimeSeconds() - baseTime) * 100;//time.KindはLocalじゃないとダメよ
+
                     foreach (var chat in chats.Where(chat => vpos <= chat.Vpos && chat.Vpos < vpos + 100).Select(chat => chat.Chat))
                         ret.Add(chat);
                     chats.RemoveAll(chat => chat.Vpos < vpos + 100);
@@ -84,18 +79,18 @@ namespace TVTComment.Model.ChatCollectService
                 return ret;//取得しないなら帰る
 
             //取得処理
-            if (chatCollectTask!=null && !chatCollectTask.IsCompleted)
+            if (chatCollectTask != null && !chatCollectTask.IsCompleted)
                 return ret;//まだ前回の取得が終わってないなら帰る(普通は終わってるはず)
 
             try
             {
                 chatCollectTask?.Wait();
             }
-            catch(AggregateException e)when(e.InnerException is ServerErrorException)
+            catch (AggregateException e) when (e.InnerException is ServerErrorException)
             {
-                throw new ChatCollectException("コメントサーバーからエラーが返されました。",e);
+                throw new ChatCollectException("コメントサーバーからエラーが返されました。", e);
             }
-            catch(AggregateException e)when(e.InnerException is HttpRequestException)
+            catch (AggregateException e) when (e.InnerException is HttpRequestException)
             {
                 throw new ChatCollectException("コメントサーバーとの通信でエラーが発生しました。このエラーはサーバー混雑時にも起こり得ます。", e);
             }
@@ -104,9 +99,9 @@ namespace TVTComment.Model.ChatCollectService
             int resFrom;
             lock (chats)
             {
-                if (chats.Count>0 && (time - lastGetTime).Duration().TotalSeconds < 15 && lastJkId == jkId)
+                if (chats.Count > 0 && (time - lastGetTime).Duration().TotalSeconds < 15 && lastJkId == jkId)
                 {
-                    resFrom = chats[chats.Count - 1].Chat.Number + 1;
+                    resFrom = chats[^1].Chat.Number + 1;
                 }
                 else
                 {
@@ -115,7 +110,7 @@ namespace TVTComment.Model.ChatCollectService
                 }
             }
 
-            chatCollectTask = collectChat(jkId, time.AddSeconds(1), time.AddSeconds(15), resFrom);
+            chatCollectTask = CollectChat(jkId, time.AddSeconds(1), time.AddSeconds(15), resFrom);
 
             lastJkId = jkId;
             lastGetTime = time;
@@ -123,13 +118,13 @@ namespace TVTComment.Model.ChatCollectService
             return ret;
         }
 
-        private async Task collectChat(int jkId,DateTime startTime,DateTime endTime,int resFrom)
+        private async Task CollectChat(int jkId, DateTime startTime, DateTime endTime, int resFrom)
         {
             string startTimeStr = new DateTimeOffset(startTime).ToUnixTimeSeconds().ToString();
             string endTimeStr = new DateTimeOffset(endTime).ToUnixTimeSeconds().ToString();
-            
-            string queryStr=await client.GetStringAsync($"http://jk.nicovideo.jp/api/getflv?v=jk{jkId}&start_time={startTimeStr}&end_time={endTimeStr}").ConfigureAwait(false);
-            var query=HttpUtility.ParseQueryString(queryStr);
+
+            string queryStr = await client.GetStringAsync($"http://jk.nicovideo.jp/api/getflv?v=jk{jkId}&start_time={startTimeStr}&end_time={endTimeStr}").ConfigureAwait(false);
+            var query = HttpUtility.ParseQueryString(queryStr);
             if (query.AllKeys.Contains("error"))
                 throw new ServerErrorException();
 
@@ -140,7 +135,7 @@ namespace TVTComment.Model.ChatCollectService
             baseTime = long.Parse(query["base_time"]);
 
             string waybackkey = await client.GetStringAsync($"http://jk.nicovideo.jp/api/v2/getwaybackkey?thread={thread_id}").ConfigureAwait(false);
-            waybackkey = waybackkey.Substring(waybackkey.IndexOf('=') + 1);
+            waybackkey = waybackkey[(waybackkey.IndexOf('=') + 1)..];
 
             string data = await client.GetStringAsync($"http://{ms}:{http_port}/api/thread?thread={thread_id}&res_from={resFrom}&version=20061206&when={endTimeStr}&user_id={user_id}&waybackkey={waybackkey}&scores=1").ConfigureAwait(false);
 
@@ -151,10 +146,9 @@ namespace TVTComment.Model.ChatCollectService
                 while (parser.DataAvailable())
                 {
                     var tag = parser.Pop();
-                    var chatTag = tag as NiconicoUtils.ChatNiconicoCommentXmlTag;
-                    if (chatTag != null)
+                    if (tag as NiconicoUtils.ChatNiconicoCommentXmlTag != null)
                         chats.Add(new NiconicoUtils.ChatAndVpos(
-                            NiconicoUtils.ChatNiconicoCommentXmlTagToChat.Convert(chatTag), chatTag.Vpos
+                            NiconicoUtils.ChatNiconicoCommentXmlTagToChat.Convert(tag as NiconicoUtils.ChatNiconicoCommentXmlTag), (tag as NiconicoUtils.ChatNiconicoCommentXmlTag).Vpos
                         ));
                 }
             }
@@ -162,7 +156,7 @@ namespace TVTComment.Model.ChatCollectService
 
         public override void Dispose()
         {
-            using(this.client)
+            using (client)
             {
                 client.CancelPendingRequests();
                 try

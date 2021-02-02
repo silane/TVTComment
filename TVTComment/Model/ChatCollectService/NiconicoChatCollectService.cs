@@ -1,15 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Net.Sockets;
-using System.Net;
-using System.Net.Http;
 using System.Web;
 using System.Xml.Linq;
-using System.IO;
 
 namespace TVTComment.Model.ChatCollectService
 {
@@ -40,9 +39,9 @@ namespace TVTComment.Model.ChatCollectService
               System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
         }
 
-        private NiconicoUtils.JkIdResolver jkIdResolver;
+        private readonly NiconicoUtils.JkIdResolver jkIdResolver;
         private int lastJkId = 0;
-        private NiconicoUtils.NiconicoCommentXmlParser parser = new NiconicoUtils.NiconicoCommentXmlParser(true);
+        private readonly NiconicoUtils.NiconicoCommentXmlParser parser = new NiconicoUtils.NiconicoCommentXmlParser(true);
         private NetworkStream socketStream;
         private NiconicoUtils.ThreadNiconicoCommentXmlTag lastThreadTag;
         private int lastResNum = -1;
@@ -52,7 +51,7 @@ namespace TVTComment.Model.ChatCollectService
         /// サーバーからのコメント投稿の結果をセットする
         /// </summary>
         private TaskCompletionSource<int> postingResult;
-        private HttpClient httpClient;
+        private readonly HttpClient httpClient;
         private CancellationTokenSource cancel;
         private Task chatCollectTask;
         private static readonly Encoding utf8Encoding = new UTF8Encoding(false);
@@ -81,11 +80,11 @@ namespace TVTComment.Model.ChatCollectService
         {
             if (lastJkId == 0)
                 return "対応する実況IDがありません";
-            string ret=$"実況ID: {lastJkId} - ";
+            string ret = $"実況ID: {lastJkId} - ";
             if (socketStream == null)
-                return ret+"サーバーに未接続";
+                return ret + "サーバーに未接続";
             else
-                return ret+"サーバーに接続中";
+                return ret + "サーバーに接続中";
         }
 
         public IEnumerable<Chat> GetChats(ChannelInfo channel, DateTime time)
@@ -93,14 +92,14 @@ namespace TVTComment.Model.ChatCollectService
             if (chatCollectTask != null && chatCollectTask.IsFaulted)
             {
                 //非同期部分で例外発生
-                throw new ChatCollectException($"ニコニコ実況でエラーが発生しました: {chatCollectTask.Exception.ToString()}", chatCollectTask.Exception);
+                throw new ChatCollectException($"ニコニコ実況でエラーが発生しました: {chatCollectTask.Exception}", chatCollectTask.Exception);
             }
 
-            int jkId=jkIdResolver.Resolve(channel.NetworkId,channel.ServiceId);
+            int jkId = jkIdResolver.Resolve(channel.NetworkId, channel.ServiceId);
             if (jkId == 0)
             {
                 lastJkId = 0;
-                return new Chat[0];
+                return Array.Empty<Chat>();
             }
 
             //非同期部分で集めたデータからチャットを生成
@@ -110,20 +109,17 @@ namespace TVTComment.Model.ChatCollectService
                 while (parser.DataAvailable())
                 {
                     var tag = parser.Pop();
-                    var chatTag = tag as NiconicoUtils.ChatNiconicoCommentXmlTag;
-                    var threadTag = tag as NiconicoUtils.ThreadNiconicoCommentXmlTag;
-                    var chatResultTag = tag as NiconicoUtils.ChatResultNiconicoCommentXmlTag;
-                    if (chatTag != null)
+                    if (tag is NiconicoUtils.ChatNiconicoCommentXmlTag chatTag)
                     {
                         var chat = NiconicoUtils.ChatNiconicoCommentXmlTagToChat.Convert(chatTag);
                         ret.Add(chat);
                         lastResNum = chat.Number;
                     }
-                    else if (threadTag != null)
-                        lastThreadTag = threadTag;
-                    else if (chatResultTag != null)
+                    else if (tag as NiconicoUtils.ThreadNiconicoCommentXmlTag != null)
+                        lastThreadTag = tag as NiconicoUtils.ThreadNiconicoCommentXmlTag;
+                    else if (tag is NiconicoUtils.ChatResultNiconicoCommentXmlTag chatResultTag)
                         postingResult?.TrySetResult(chatResultTag.Status);
-                    
+
                 }
             }
 
@@ -146,16 +142,16 @@ namespace TVTComment.Model.ChatCollectService
                 {
                 }
                 cancel = new CancellationTokenSource();
-                chatCollectTask = collectChat(jkId, cancel.Token);
+                chatCollectTask = CollectChat(jkId, cancel.Token);
             }
             catch (ChatReceivingException e)
             {
-                throw new ChatCollectException($"ニコニコ実況でエラーが発生しました: {e.ToString()}", e);
+                throw new ChatCollectException($"ニコニコ実況でエラーが発生しました: {e}", e);
             }
             return ret;
         }
 
-        private async Task collectChat(int jkId, CancellationToken cancel)
+        private async Task CollectChat(int jkId, CancellationToken cancel)
         {
             try
             {
@@ -168,7 +164,7 @@ namespace TVTComment.Model.ChatCollectService
 
                 for (int disconnectedCount = 0; ; disconnectedCount++)
                 {
-                    string str = await httpClient.GetStringAsync($"http://jk.nicovideo.jp/api/getflv?v=jk{jkId}").ConfigureAwait(false);
+                    string str = await httpClient.GetStringAsync($"http://jk.nicovideo.jp/api/getflv?v=jk{jkId}", cancel).ConfigureAwait(false);
                     var query = HttpUtility.ParseQueryString(str);
 
                     if (query["error"] != null)
@@ -181,46 +177,44 @@ namespace TVTComment.Model.ChatCollectService
                     isPremium = int.Parse(query["is_premium"] ?? "0") != 0;
 
                     string body = $"<thread res_from=\"-10\" version=\"20061206\" thread=\"{thread_id}\" />\0";
-                    using (TcpClient tcpClinet = new TcpClient(ms, int.Parse(ms_port)))
+                    using TcpClient tcpClinet = new TcpClient(ms, int.Parse(ms_port));
+                    try
                     {
-                        try
-                        {
-                            socketStream = tcpClinet.GetStream();
+                        socketStream = tcpClinet.GetStream();
 
-                            byte[] body_encoded = utf8Encoding.GetBytes(body);
-                            await socketStream.WriteAsync(body_encoded, 0, body_encoded.Length, cancel).ConfigureAwait(false);
+                        byte[] body_encoded = utf8Encoding.GetBytes(body);
+                        await socketStream.WriteAsync(body_encoded.AsMemory(0, body_encoded.Length), cancel).ConfigureAwait(false);
 
-                            //コメント受信ループ
-                            while (true)
-                            {
-                                byte[] buf = new byte[2048];
-                                int receivedByte = await socketStream.ReadAsync(buf, 0, buf.Length, cancel).ConfigureAwait(false);
-                                if (receivedByte == 0)
-                                        throw new ChatReceivingException("コメントサーバーとの通信が切断されました");
+                        //コメント受信ループ
+                        while (true)
+                        {
+                            byte[] buf = new byte[2048];
+                            int receivedByte = await socketStream.ReadAsync(buf.AsMemory(0, buf.Length), cancel).ConfigureAwait(false);
+                            if (receivedByte == 0)
+                                throw new ChatReceivingException("コメントサーバーとの通信が切断されました");
 
-                                //TODO: データが文字境界以外で切れることを想定してない
-                                lock (parser)
-                                    parser.Push(utf8Encoding.GetString(buf, 0, receivedByte));
-                            }
+                            //TODO: データが文字境界以外で切れることを想定してない
+                            lock (parser)
+                                parser.Push(utf8Encoding.GetString(buf, 0, receivedByte));
                         }
-                        catch(ChatReceivingException)
-                        {
-                            if (disconnectedCount >= 3)
-                                throw;
-                            else
-                                continue;
-                        }
-                        finally
-                        {
-                            socketStream?.Dispose();
-                            socketStream = null;
-                        }
+                    }
+                    catch (ChatReceivingException)
+                    {
+                        if (disconnectedCount >= 3)
+                            throw;
+                        else
+                            continue;
+                    }
+                    finally
+                    {
+                        socketStream?.Dispose();
+                        socketStream = null;
                     }
                 }
             }
-            catch(ObjectDisposedException e)
+            catch (ObjectDisposedException e)
             {
-                if(cancel.IsCancellationRequested)
+                if (cancel.IsCancellationRequested)
                     throw new OperationCanceledException("Receive loop was canceled", e, cancel);
                 throw;
             }
@@ -242,10 +236,10 @@ namespace TVTComment.Model.ChatCollectService
 
             //postkey取得
             string postKey = await httpClient.GetStringAsync($"/api/v2/getpostkey?thread={lastThreadTag.Thread}&block_no={(lastResNum + 1) / 100}");
-            postKey = postKey.Substring(postKey.IndexOf('=') + 1);
+            postKey = postKey[(postKey.IndexOf('=') + 1)..];
 
             // vposは10msec単位 サーバ時刻を基準に計算
-            int vpos = (int)(lastThreadTag.ServerTime - lastThreadTag.Thread) * 100 + (int)((getDateTimeJstNow() - lastThreadTag.ReceivedTime).Value.TotalMilliseconds) / 10;
+            int vpos = (int)(lastThreadTag.ServerTime - lastThreadTag.Thread) * 100 + (int)((GetDateTimeJstNow() - lastThreadTag.ReceivedTime).Value.TotalMilliseconds) / 10;
 
             string mail = (chatPostObject as ChatPostObject)?.Mail ?? "";
 
@@ -262,7 +256,7 @@ namespace TVTComment.Model.ChatCollectService
             byte[] postData = utf8Encoding.GetBytes(postXml.ToString(SaveOptions.DisableFormatting) + "\0");//最後にnull文字が必要
 
             postingResult = new TaskCompletionSource<int>();//コメント受信側で投稿の結果応答を入れてもらう
-            await socketStream.WriteAsync(postData, 0, postData.Length);
+            await socketStream.WriteAsync(postData.AsMemory(0, postData.Length));
 
             int result;
             using (new Timer((_) => postingResult?.TrySetCanceled(), null, 5000, Timeout.Infinite))//結果応答を5秒以内に受信できなければタイムアウト
@@ -289,7 +283,7 @@ namespace TVTComment.Model.ChatCollectService
 
         public void Dispose()
         {
-            using(this.httpClient)
+            using (httpClient)
             {
                 cancel?.Cancel();
                 cancel = null;
@@ -308,7 +302,7 @@ namespace TVTComment.Model.ChatCollectService
         /// <summary>
         /// (マシンのカルチャ設定に関係なく)今の日本標準時を返す
         /// </summary>
-        private static DateTime getDateTimeJstNow()
+        private static DateTime GetDateTimeJstNow()
         {
             return DateTime.SpecifyKind(DateTime.UtcNow.AddHours(9), DateTimeKind.Unspecified);
         }

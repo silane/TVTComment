@@ -38,8 +38,8 @@ namespace Nichan
         /// </param>
         public DatParser(bool fromTheMiddle)
         {
-            this.FromTheMiddle = fromTheMiddle;
-            this.Reset();
+            FromTheMiddle = fromTheMiddle;
+            Reset();
         }
 
         /// <summary>
@@ -48,20 +48,20 @@ namespace Nichan
         /// <exception cref="DatParserException"></exception>
         public void Feed(string datString)
         {
-            this.buffer += datString;
-            if (this.buffer == "")
+            buffer += datString;
+            if (buffer == "")
                 return;
-            var rows = this.buffer.Split('\n');
+            var rows = buffer.Split('\n');
             var reses = rows[..^1].Select(x => x.Split("<>")).ToArray();
-            this.buffer = rows[^1];
+            buffer = rows[^1];
 
-            bool isFirstLine = this.isBeforeFirstLine && reses.Length > 0; // 真ならreses[0]は最初の行
-            if(isFirstLine)
+            bool isFirstLine = isBeforeFirstLine && reses.Length > 0; // 真ならreses[0]は最初の行
+            if (isFirstLine)
             {
-                this.isBeforeFirstLine = false;
+                isBeforeFirstLine = false;
             }
 
-            if (isFirstLine && this.FromTheMiddle)
+            if (isFirstLine && FromTheMiddle)
             {
                 // 中途半端な位置から始まるデータの場合、最初の行は省く
                 reses = reses[1..];
@@ -73,10 +73,10 @@ namespace Nichan
                 throw new DatParserException();
             }
 
-            if (isFirstLine && !this.FromTheMiddle)
+            if (isFirstLine && !FromTheMiddle)
             {
                 // 最初の行からスレタイを取得
-                this.ThreadTitle = reses[0][4];
+                ThreadTitle = reses[0][4];
             }
 
             using var sgmlReader = new SgmlReader() { DocType = "HTML", IgnoreDtd = false };
@@ -94,11 +94,11 @@ namespace Nichan
 
                 this.reses.Enqueue(new Res
                 {
-                    Number = ++this.resNum,
+                    Number = ++resNum,
                     Name = HttpUtility.HtmlDecode(row[0]),
                     Mail = HttpUtility.HtmlDecode(row[1]),
                     UserId = userId,
-                    Date = getDate(row[2]),
+                    Date = GetDate(row[2]),
                     Text = text,
                 });
             }
@@ -109,7 +109,7 @@ namespace Nichan
         /// </summary>
         public Res PopRes()
         {
-            return this.reses.TryDequeue(out Res res) ? res : null;
+            return reses.TryDequeue(out Res res) ? res : null;
         }
 
         /// <summary>
@@ -117,20 +117,20 @@ namespace Nichan
         /// </summary>
         public void Reset()
         {
-            this.ThreadTitle = null;
-            this.buffer = "";
-            this.reses.Clear();
-            this.resNum = 0;
-            this.isBeforeFirstLine = true;
+            ThreadTitle = null;
+            buffer = "";
+            reses.Clear();
+            resNum = 0;
+            isBeforeFirstLine = true;
         }
 
         private string buffer;
-        private Queue<Res> reses = new Queue<Res>();
+        private readonly Queue<Res> reses = new Queue<Res>();
         private int resNum;
         private bool isBeforeFirstLine;
 
         private static readonly Regex reDate = new Regex(@"(\d+)/(\d+)/(\d+)[^ ]* (\d+):(\d+):(\d+)\.(\d+)");
-        private static DateTime? getDate(string str)
+        private static DateTime? GetDate(string str)
         {
             Match m = reDate.Match(str);
             if (m.Success)

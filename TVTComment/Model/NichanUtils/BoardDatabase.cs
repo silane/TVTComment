@@ -13,8 +13,8 @@ namespace TVTComment.Model.NichanUtils
 
         public BoardDatabase(IEnumerable<BoardEntry> boardList, IEnumerable<ThreadMappingRuleEntry> threadMappingRuleEntries)
         {
-            this.BoardList = boardList;
-            this.ThreadMappingRuleEntries = threadMappingRuleEntries;
+            BoardList = boardList;
+            ThreadMappingRuleEntries = threadMappingRuleEntries;
         }
 
         /// <summary>
@@ -24,7 +24,7 @@ namespace TVTComment.Model.NichanUtils
         public ThreadMappingRuleEntry GetMatchingThreadMappingRuleEntry(ChannelEntry channel)
         {
             ThreadMappingRuleEntry ret = null;
-            foreach (ThreadMappingRuleEntry entry in this.ThreadMappingRuleEntries)
+            foreach (ThreadMappingRuleEntry entry in ThreadMappingRuleEntries)
             {
                 switch (entry.Target)
                 {
@@ -56,7 +56,7 @@ namespace TVTComment.Model.NichanUtils
         /// </summary>
         public BoardEntry GetBoardEntryById(string id)
         {
-            return this.BoardList.FirstOrDefault(x => x.Id == id);
+            return BoardList.FirstOrDefault(x => x.Id == id);
         }
 
         /// <summary>
@@ -67,10 +67,10 @@ namespace TVTComment.Model.NichanUtils
         {
             string[] threadTitleKeywords;
 
-            var boardAndThread = this.GetMatchingThreadMappingRuleEntry(channel);//板名とスレッドタイトルを得る
+            var boardAndThread = GetMatchingThreadMappingRuleEntry(channel);//板名とスレッドタイトルを得る
             if (boardAndThread == null)
                 return null;
-            BoardEntry board = this.GetBoardEntryById(boardAndThread.BoardId);//板名から板URLと主要スレッド名を得る
+            BoardEntry board = GetBoardEntryById(boardAndThread.BoardId);//板名から板URLと主要スレッド名を得る
             if (board == null)
                 return null;
             threadTitleKeywords = boardAndThread.ThreadTitleKeywords ?? board.MainThreadTitleKeywords;

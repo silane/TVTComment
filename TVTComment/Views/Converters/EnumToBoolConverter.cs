@@ -9,8 +9,7 @@ namespace TVTComment.Views.Converters
         #region IValueConverter Members
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
-            string parameterString = parameter as string;
-            if (parameterString == null)
+            if (parameter is not string parameterString)
                 return DependencyProperty.UnsetValue;
 
             if (Enum.IsDefined(value.GetType(), value) == false)
@@ -23,8 +22,7 @@ namespace TVTComment.Views.Converters
 
         public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
-            string parameterString = parameter as string;
-            if (parameterString == null || value.Equals(false))
+            if (parameter is not string parameterString || value.Equals(false))
                 return Binding.DoNothing;
 
             return Enum.Parse(targetType, parameterString);

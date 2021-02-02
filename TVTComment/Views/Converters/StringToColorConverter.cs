@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Data;
 
 namespace TVTComment.Views.Converters
@@ -12,7 +8,7 @@ namespace TVTComment.Views.Converters
     {
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if(!(value is string))
+            if (!(value is string))
                 throw new ArgumentException($"{nameof(value)} must be string type", nameof(value));
 
             try
@@ -25,16 +21,16 @@ namespace TVTComment.Views.Converters
                 else
                 {
                     var ret = System.Drawing.Color.FromName((string)value);
-                    if (ret.A==0 && ret.R==0 && ret.G==0 && ret.B==0)
+                    if (ret.A == 0 && ret.R == 0 && ret.G == 0 && ret.B == 0)
                         return System.Drawing.Color.Empty;
                     return ret;
                 }
             }
-            catch(FormatException)
+            catch (FormatException)
             {
                 return System.Drawing.Color.Empty;
             }
-            catch(OverflowException)
+            catch (OverflowException)
             {
                 return System.Drawing.Color.Empty;
             }
@@ -42,10 +38,10 @@ namespace TVTComment.Views.Converters
 
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if(!(value is System.Drawing.Color))
+            if (!(value is System.Drawing.Color))
                 throw new ArgumentException($"{nameof(value)} must be {nameof(System.Drawing.Color)} type", nameof(value));
 
-            var val=(System.Drawing.Color)value;
+            var val = (System.Drawing.Color)value;
             return val.IsEmpty ? "" : val.IsNamedColor ? val.Name : $"{val.R},{val.G},{val.B}";
         }
     }

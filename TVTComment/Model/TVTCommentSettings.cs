@@ -5,14 +5,14 @@
         public ChatService.NiconicoChatServiceSettings Niconico { get; set; } = new ChatService.NiconicoChatServiceSettings();
         public ChatService.NichanChatServiceSettings Nichan { get; set; } = new ChatService.NichanChatServiceSettings();
         public ChatService.TwitterChatServiceSettings Twitter { get; set; } = new ChatService.TwitterChatServiceSettings();
-        public string[] ChatPostMailTextExamples { get; set; } = new string[0];
+        public string[] ChatPostMailTextExamples { get; set; } = System.Array.Empty<string>();
         public byte ChatOpacity { get; set; } = 255;
         public int ChatPreserveCount { get; set; } = 10000;
         public bool ClearChatsOnChannelChange { get; set; } = false;
-        public Serialization.ChatModRuleEntity[] ChatModRules { get; set; } = new Serialization.ChatModRuleEntity[0];
+        public Serialization.ChatModRuleEntity[] ChatModRules { get; set; } = System.Array.Empty<Serialization.ChatModRuleEntity>();
         public bool UseDefaultChatCollectService { get; set; } = false;
-        public string[] LiveDefaultChatCollectServices { get; set; } = new string[0];
-        public string[] RecordDefaultChatCollectServices { get; set; } = new string[0];
+        public string[] LiveDefaultChatCollectServices { get; set; } = System.Array.Empty<string>();
+        public string[] RecordDefaultChatCollectServices { get; set; } = System.Array.Empty<string>();
         public ViewModels.ViewSettings View { get; set; } = new ViewModels.ViewSettings();
     }
 

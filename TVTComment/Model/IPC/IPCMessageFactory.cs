@@ -1,45 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TVTComment.Model.IPC
+﻿namespace TVTComment.Model.IPC
 {
     static class IPCMessageFactory
     {
         public static IPCMessage.IIPCMessage FromRawIPCMessage(RawIPCMessage rawmsg)
         {
-            IPCMessage.IIPCMessage ret;
-            switch(rawmsg.MessageName)
+            IPCMessage.IIPCMessage ret = rawmsg.MessageName switch
             {
-                case "Chat":
-                    ret = new IPCMessage.ChatIPCMessage();
-                    break;
-                case "ChannelList":
-                    ret = new IPCMessage.ChannelListIPCMessage();
-                    break;
-                case "ChannelSelect":
-                    ret = new IPCMessage.ChannelSelectIPCMessage();
-                    break;
-                case "CurrentChannel":
-                    ret = new IPCMessage.CurrentChannelIPCMessage();
-                    break;
-                case "Time":
-                    ret = new IPCMessage.TimeIPCMessage();
-                    break;
-                case "Close":
-                    ret = new IPCMessage.CloseIPCMessage();
-                    break;
-                case "SetChatOpacity":
-                    ret = new IPCMessage.SetChatOpacityIPCMessage();
-                    break;
-                case "Command":
-                    ret = new IPCMessage.CommandIPCMessage();
-                    break;
-                default:
-                    throw new IPCMessage.IPCMessageDecodeException("不明なMessageNameです: "+rawmsg.ToString());
-            }
+                "Chat" => new IPCMessage.ChatIPCMessage(),
+                "ChannelList" => new IPCMessage.ChannelListIPCMessage(),
+                "ChannelSelect" => new IPCMessage.ChannelSelectIPCMessage(),
+                "CurrentChannel" => new IPCMessage.CurrentChannelIPCMessage(),
+                "Time" => new IPCMessage.TimeIPCMessage(),
+                "Close" => new IPCMessage.CloseIPCMessage(),
+                "SetChatOpacity" => new IPCMessage.SetChatOpacityIPCMessage(),
+                "Command" => new IPCMessage.CommandIPCMessage(),
+                _ => throw new IPCMessage.IPCMessageDecodeException("不明なMessageNameです: " + rawmsg.ToString()),
+            };
             ret.Decode(rawmsg.Contents);
             return ret;
         }

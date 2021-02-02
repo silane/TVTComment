@@ -24,27 +24,27 @@ namespace TVTComment.ViewModels
 
             public double X
             {
-                get { return this.x; }
-                set { SetProperty(ref this.x, value); }
+                get { return x; }
+                set { SetProperty(ref x, value); }
             }
             public double Y
             {
-                get { return this.y; }
-                set { SetProperty(ref this.y, value); }
+                get { return y; }
+                set { SetProperty(ref y, value); }
             }
             public double Width
             {
-                get { return this.width; }
-                set { SetProperty(ref this.width, value); }
+                get { return width; }
+                set { SetProperty(ref width, value); }
             }
             public double Height
             {
-                get { return this.height; }
-                set { SetProperty(ref this.height, value); }
+                get { return height; }
+                set { SetProperty(ref height, value); }
             }
         }
         private readonly Rect windowPosition = new Rect();
-        public Rect WindowPosition => this.windowPosition;
+        public Rect WindowPosition => windowPosition;
 
         private Model.ChannelInfo selectedChannel;
         public Model.ChannelInfo SelectedChannel
@@ -75,14 +75,14 @@ namespace TVTComment.ViewModels
         public ReadOnlyObservableValue<Model.ChannelInfo> CurrentChannel { get; private set; }
         public ReadOnlyObservableValue<Model.EventInfo> CurrentEvent { get; private set; }
         public ObservableValue<bool> UseDefaultChatCollectService { get; private set; }
-        
+
         public ObservableValue<string> WindowTitle { get; } = new ObservableValue<string>("TVTComment");
         public ObservableValue<double> WindowOpacity => BasicSettingControlViewModel?.WindowOpacity;
         public ObservableValue<bool> WindowTopmost => BasicSettingControlViewModel?.WindowTopmost;
         public ObservableValue<double> WindowFontSize => BasicSettingControlViewModel?.WindowFontSize;
         public ObservableValue<MainWindowTab> SelectedTab { get; } = new ObservableValue<MainWindowTab>();
 
-        public Views.AttachedProperties.GridViewColumnSettingsBinder.ColumnInfo[] ChatListColumnInfos { set; get; } = new Views.AttachedProperties.GridViewColumnSettingsBinder.ColumnInfo[0];
+        public Views.AttachedProperties.GridViewColumnSettingsBinder.ColumnInfo[] ChatListColumnInfos { set; get; } = Array.Empty<Views.AttachedProperties.GridViewColumnSettingsBinder.ColumnInfo>();
 
         public ICommand CloseApplicationCommand { get; private set; }
         public ICommand MinimizeWindowCommand { get; private set; }
@@ -102,7 +102,9 @@ namespace TVTComment.ViewModels
         public ShellContents.BasicSettingControlViewModel BasicSettingControlViewModel
         {
             get { return basicSettingControlViewModel; }
-            set { basicSettingControlViewModel = value; initializeInternal(); }
+#pragma warning disable CS4014 // この呼び出しを待たないため、現在のメソッドの実行は、呼び出しが完了するまで続行します。呼び出しの結果に 'await' 演算子を適用することを検討してください。
+            set { basicSettingControlViewModel = value; InitializeInternal(); }
+#pragma warning restore CS4014 // この呼び出しを待たないため、現在のメソッドの実行は、呼び出しが完了するまで続行します。呼び出しの結果に 'await' 演算子を適用することを検討してください。
         }
 
         private bool initialized = false;
@@ -118,11 +120,11 @@ namespace TVTComment.ViewModels
             mainWindow.MouseLeftButtonDown += (_, __) => { mainWindow.DragMove(); };
             // 初期化が終わるまで最小化しておく
             mainWindow.WindowState = WindowState.Minimized;
-            
+
             model.ApplicationClose += CloseApplication;
         }
 
-        private async Task initializeInternal()
+        private async Task InitializeInternal()
         {
             if (initialized) return;
             initialized = true;
@@ -149,34 +151,34 @@ namespace TVTComment.ViewModels
 
             // 表示関係の設定復元
             Model.Serialization.WindowPositionEntity rect = model.Settings.View.MainWindowPosition;
-            this.WindowPosition.X = rect.X;
-            this.WindowPosition.Y = rect.Y;
-            this.WindowPosition.Width = rect.Width;
-            this.WindowPosition.Height = rect.Height;
+            WindowPosition.X = rect.X;
+            WindowPosition.Y = rect.Y;
+            WindowPosition.Width = rect.Width;
+            WindowPosition.Height = rect.Height;
 
             ChatListColumnInfos = model.Settings.View.ChatListViewColumns?.Select(
                 x => new Views.AttachedProperties.GridViewColumnSettingsBinder.ColumnInfo(x.Id, x.Width)
             ).ToArray();
 
-            this.SelectedTab.Value = model.Settings.View.MainWindowTab;
+            SelectedTab.Value = model.Settings.View.MainWindowTab;
 
             // ウィンドウの位置を復元したら最小化を解除
             Window window = Application.Current.MainWindow;
             window.WindowState = WindowState.Normal;
 
             // モデルのイベントハンドラを登録
-            model.ChatCollectServiceModule.ErrorOccurredInChatCollecting += model_ErrorOccurredInChatCollecting;
-            model.ChatCollectServiceModule.ErrorOccurredInChatPosting += model_ErrorOccurredInChatPosting;
-            model.ChatCollectServiceModule.ErrorOccurredInServiceCreation += model_ErrorOccurredAtChatCollectServiceCreation;
+            model.ChatCollectServiceModule.ErrorOccurredInChatCollecting += Model_ErrorOccurredInChatCollecting;
+            model.ChatCollectServiceModule.ErrorOccurredInChatPosting += Model_ErrorOccurredInChatPosting;
+            model.ChatCollectServiceModule.ErrorOccurredInServiceCreation += Model_ErrorOccurredAtChatCollectServiceCreation;
 
             // モデルのプロパティを結びつける
             CurrentPlayTime = model.ChannelInformationModule.CurrentTime;
             CurrentChannel = model.ChannelInformationModule.CurrentChannel;
             CurrentEvent = model.ChannelInformationModule.CurrentEvent;
 
-            disposables.Add(CurrentPlayTime.Subscribe(_ => updateWindowTitle()));
-            disposables.Add(CurrentChannel.Subscribe(_ => updateWindowTitle()));
-            disposables.Add(CurrentEvent.Subscribe(_ => updateWindowTitle()));
+            disposables.Add(CurrentPlayTime.Subscribe(_ => UpdateWindowTitle()));
+            disposables.Add(CurrentChannel.Subscribe(_ => UpdateWindowTitle()));
+            disposables.Add(CurrentEvent.Subscribe(_ => UpdateWindowTitle()));
 
             //da
             model.ChatTrendServiceModule.AddService(model.ChatServices.OfType<Model.ChatService.NiconicoChatService>().Single().ChatTrendServiceEntries[0]);
@@ -185,15 +187,15 @@ namespace TVTComment.ViewModels
 
             UseDefaultChatCollectService = model.DefaultChatCollectServiceModule.IsEnabled;
 
-            model.CommandModule.ShowWindowCommandInvoked += commandModule_ShowWindowCommandInvoked;
+            model.CommandModule.ShowWindowCommandInvoked += CommandModule_ShowWindowCommandInvoked;
 
             // コマンド生成
-            this.CloseApplicationCommand = new DelegateCommand(() =>
+            CloseApplicationCommand = new DelegateCommand(() =>
             {
-                this.CloseApplication();
+                CloseApplication();
             });
 
-            this.MinimizeWindowCommand = new DelegateCommand(() =>
+            MinimizeWindowCommand = new DelegateCommand(() =>
             {
                 window.WindowState = WindowState.Minimized;
             });
@@ -201,14 +203,15 @@ namespace TVTComment.ViewModels
             ChangeChannelCommand = new DelegateCommand<Model.ChannelInfo>(channel => { if (channel != null) model.ChannelInformationModule.SetCurrentChannel(channel); });
 
             AddChatCollectServiceCommand = new DelegateCommand<ShellContents.ChatCollectServiceAddListItemViewModel>(
-                async x => { if (x != null) await addChatCollectService(x); },
+                async x => { if (x != null) await AddChatCollectService(x); },
                 _ => !UseDefaultChatCollectService.Value
             );
             RemoveChatCollectServiceCommand = new DelegateCommand<Model.ChatCollectService.IChatCollectService>(
                 service => { if (service != null) model.ChatCollectServiceModule.RemoveService(service); },
                 _ => !UseDefaultChatCollectService.Value
             );
-            UseDefaultChatCollectService.Subscribe(x => {
+            UseDefaultChatCollectService.Subscribe(x =>
+            {
                 AddChatCollectServiceCommand.RaiseCanExecuteChanged();
                 RemoveChatCollectServiceCommand.RaiseCanExecuteChanged();
             });
@@ -244,12 +247,12 @@ namespace TVTComment.ViewModels
             window.Close();
         }
 
-        private void updateWindowTitle()
+        private void UpdateWindowTitle()
         {
             WindowTitle.Value = $"{CurrentChannel.Value?.ServiceName} {CurrentPlayTime.Value?.ToString("yy/M/d(ddd) HH:mm:ss")} - TVTComment";
         }
 
-        private async Task addChatCollectService(ShellContents.ChatCollectServiceAddListItemViewModel item)
+        private async Task AddChatCollectService(ShellContents.ChatCollectServiceAddListItemViewModel item)
         {
             if (item.IsPreset)
             {
@@ -257,7 +260,7 @@ namespace TVTComment.ViewModels
             }
             else
             {
-                switch(item.ServiceEntry)
+                switch (item.ServiceEntry)
                 {
                     case Model.ChatCollectServiceEntry.NiconicoChatCollectServiceEntry _:
                     case Model.ChatCollectServiceEntry.NiconicoLogChatCollectServiceEntry _:
@@ -282,24 +285,24 @@ namespace TVTComment.ViewModels
             }
         }
 
-        private void model_ErrorOccurredInChatCollecting(Model.ChatCollectService.IChatCollectService service, string errorText)
+        private void Model_ErrorOccurredInChatCollecting(Model.ChatCollectService.IChatCollectService service, string errorText)
         {
             AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = $"\"{service.Name}\"で以下のエラーが発生しました。このコメント元を無効化します。\n\n{errorText}" });
         }
 
-        private void model_ErrorOccurredInChatPosting(Model.ChatCollectService.IChatCollectService service, Model.ChatCollectService.BasicChatPostObject postObject, string errorText)
+        private void Model_ErrorOccurredInChatPosting(Model.ChatCollectService.IChatCollectService service, Model.ChatCollectService.BasicChatPostObject postObject, string errorText)
         {
             AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = $"\"{service.Name}\"にコメントを投稿するとき以下のエラーが発生しました。\n\n{errorText}" });
         }
 
-        private void model_ErrorOccurredAtChatCollectServiceCreation(Model.ChatCollectServiceEntry.IChatCollectServiceEntry serviceEntry, string errorText)
+        private void Model_ErrorOccurredAtChatCollectServiceCreation(Model.ChatCollectServiceEntry.IChatCollectServiceEntry serviceEntry, string errorText)
         {
             AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = $"コメント元、\"{serviceEntry.Name}\"を有効にしようとしたとき以下のエラーが発生し、有効化できませんでした。\n\n{errorText}" });
         }
 
-        private void commandModule_ShowWindowCommandInvoked()
+        private void CommandModule_ShowWindowCommandInvoked()
         {
-            Window window=Application.Current.MainWindow;
+            Window window = Application.Current.MainWindow;
             //windowをアクティブにする。window.Activate()は不確実。実験した中ではこれが一番確実だった
             window.WindowState = WindowState.Minimized;
             window.WindowState = WindowState.Normal;
@@ -311,15 +314,15 @@ namespace TVTComment.ViewModels
                 return;
 
             if (model.CommandModule != null)
-                model.CommandModule.ShowWindowCommandInvoked -= commandModule_ShowWindowCommandInvoked;
+                model.CommandModule.ShowWindowCommandInvoked -= CommandModule_ShowWindowCommandInvoked;
             if (model.ChatCollectServiceModule != null)
             {
-                model.ChatCollectServiceModule.ErrorOccurredInServiceCreation -= model_ErrorOccurredAtChatCollectServiceCreation;
-                model.ChatCollectServiceModule.ErrorOccurredInChatPosting -= model_ErrorOccurredInChatPosting;
-                model.ChatCollectServiceModule.ErrorOccurredInChatCollecting -= model_ErrorOccurredInChatCollecting;
+                model.ChatCollectServiceModule.ErrorOccurredInServiceCreation -= Model_ErrorOccurredAtChatCollectServiceCreation;
+                model.ChatCollectServiceModule.ErrorOccurredInChatPosting -= Model_ErrorOccurredInChatPosting;
+                model.ChatCollectServiceModule.ErrorOccurredInChatCollecting -= Model_ErrorOccurredInChatCollecting;
             }
 
-            if(model.Settings != null)
+            if (model.Settings != null)
             {
                 model.Settings.View.MainWindowPosition = new Model.Serialization.WindowPositionEntity()
                 {
@@ -333,7 +336,7 @@ namespace TVTComment.ViewModels
                     x => new ListViewColumnViewModel { Id = x.Id, Width = x.Width }
                 ).ToArray();
 
-                model.Settings.View.MainWindowTab = this.SelectedTab.Value;
+                model.Settings.View.MainWindowTab = SelectedTab.Value;
             }
 
             model.Dispose();

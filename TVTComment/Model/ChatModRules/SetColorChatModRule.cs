@@ -6,7 +6,7 @@ namespace TVTComment.Model.ChatModRules
     class SetColorChatModRule : IChatModRule
     {
 
-        public string Description => $"色を{this.Color.Name}に変更";
+        public string Description => $"色を{Color.Name}に変更";
         public IEnumerable<ChatCollectServiceEntry.IChatCollectServiceEntry> TargetChatCollectServiceEntries { get; }
         public Color Color { get; }
 
@@ -15,13 +15,13 @@ namespace TVTComment.Model.ChatModRules
             Color color
         )
         {
-            this.TargetChatCollectServiceEntries = targetServiceEntries;
-            this.Color = color;
+            TargetChatCollectServiceEntries = targetServiceEntries;
+            Color = color;
         }
 
         public bool Modify(Chat chat)
         {
-            chat.SetColor(this.Color);
+            chat.SetColor(Color);
             return true;
         }
     }

@@ -1,21 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace TVTComment.Model.ChatModRules
 {
-    class UserNgChatModRule:IChatModRule
+    class UserNgChatModRule : IChatModRule
     {
         public string Description => $"NGUser: {UserId}";
         public IEnumerable<ChatCollectServiceEntry.IChatCollectServiceEntry> TargetChatCollectServiceEntries { get; }
         public string UserId { get; }
 
-        public UserNgChatModRule(IEnumerable<ChatCollectServiceEntry.IChatCollectServiceEntry> targetServiceEntry,string userId)
+        public UserNgChatModRule(IEnumerable<ChatCollectServiceEntry.IChatCollectServiceEntry> targetServiceEntry, string userId)
         {
-            this.TargetChatCollectServiceEntries = targetServiceEntry;
-            this.UserId = userId;
+            TargetChatCollectServiceEntries = targetServiceEntry;
+            UserId = userId;
         }
 
         public bool Modify(Chat chat)

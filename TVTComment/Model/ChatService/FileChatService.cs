@@ -7,7 +7,7 @@ namespace TVTComment.Model.ChatService
         public string Name => "ファイル";
 
         public IReadOnlyList<ChatCollectServiceEntry.IChatCollectServiceEntry> ChatCollectServiceEntries { get; }
-        public IReadOnlyList<IChatTrendServiceEntry> ChatTrendServiceEntries { get; } = new IChatTrendServiceEntry[0];
+        public IReadOnlyList<IChatTrendServiceEntry> ChatTrendServiceEntries { get; } = System.Array.Empty<IChatTrendServiceEntry>();
 
         public FileChatService()
         {

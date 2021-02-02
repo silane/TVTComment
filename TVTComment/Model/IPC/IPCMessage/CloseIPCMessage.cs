@@ -1,17 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace TVTComment.Model.IPC.IPCMessage
 {
-    class CloseIPCMessage:IIPCMessage
+    class CloseIPCMessage : IIPCMessage
     {
         public string MessageName => "Close";
         public IEnumerable<string> Encode()
         {
-            return new string[0];
+            return System.Array.Empty<string>();
         }
         public void Decode(IEnumerable<string> content)
         {

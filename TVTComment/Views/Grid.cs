@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using System.Windows;
 
 namespace TVTComment.Views
@@ -22,9 +17,9 @@ namespace TVTComment.Views
 
         // Using a DependencyProperty as the backing store for Shape.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty ShapeProperty =
-            DependencyProperty.RegisterAttached("Shape", typeof(string), typeof(Grid), new PropertyMetadata(shapeChanged),validateShape);
+            DependencyProperty.RegisterAttached("Shape", typeof(string), typeof(Grid), new PropertyMetadata(ShapeChanged), ValidateShape);
 
-        private static void shapeChanged(DependencyObject sender,DependencyPropertyChangedEventArgs e)
+        private static void ShapeChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e)
         {
             var shape = (string)e.NewValue;
             var grid = (System.Windows.Controls.Grid)sender;
@@ -34,16 +29,16 @@ namespace TVTComment.Views
 
             int idx = shape.IndexOf(':');
 
-            foreach(string s in shape.Substring(0,idx).Split(','))
+            foreach (string s in shape.Substring(0, idx).Split(','))
             {
                 var column = new System.Windows.Controls.ColumnDefinition();
                 string str = s.Trim();
 
                 //SharedSizeGroup
                 int idx2 = str.IndexOf('#');
-                if(idx2!=-1)
+                if (idx2 != -1)
                 {
-                    column.SharedSizeGroup = str.Substring(idx2 + 1);
+                    column.SharedSizeGroup = str[(idx2 + 1)..];
                     str = str.Substring(0, idx2).TrimEnd();
                 }
 
@@ -53,7 +48,7 @@ namespace TVTComment.Views
                 else
                 {
                     if (str.EndsWith("*"))
-                        column.Width = new GridLength(str.Length==1 ? 1 :  double.Parse(str.Substring(0, str.Length - 1)), GridUnitType.Star);
+                        column.Width = new GridLength(str.Length == 1 ? 1 : double.Parse(str[0..^1]), GridUnitType.Star);
                     else
                         column.Width = new GridLength(double.Parse(str));
                 }
@@ -61,7 +56,7 @@ namespace TVTComment.Views
                 grid.ColumnDefinitions.Add(column);
             }
 
-            foreach (string s in shape.Substring(idx+1).Split(','))
+            foreach (string s in shape[(idx + 1)..].Split(','))
             {
                 var row = new System.Windows.Controls.RowDefinition();
                 string str = s.Trim();
@@ -70,7 +65,7 @@ namespace TVTComment.Views
                 int idx2 = str.IndexOf('#');
                 if (idx2 != -1)
                 {
-                    row.SharedSizeGroup = str.Substring(idx2 + 1);
+                    row.SharedSizeGroup = str[(idx2 + 1)..];
                     str = str.Substring(0, idx2).TrimEnd();
                 }
 
@@ -80,7 +75,7 @@ namespace TVTComment.Views
                 else
                 {
                     if (str.EndsWith("*"))
-                        row.Height = new GridLength(str.Length==1 ? 1 : double.Parse(str.Substring(0, str.Length - 1)), GridUnitType.Star);
+                        row.Height = new GridLength(str.Length == 1 ? 1 : double.Parse(str[0..^1]), GridUnitType.Star);
                     else
                         row.Height = new GridLength(double.Parse(str));
                 }
@@ -90,10 +85,9 @@ namespace TVTComment.Views
         }
 
         private static readonly Regex reShape = new Regex(@"^((\d+|\d*\*|auto),)*(\d+|\d*\*|auto):((\d+|\d*\*|auto),)*(\d+|\d*\*|auto)$");
-        private static bool validateShape(object value)
+        private static bool ValidateShape(object value)
         {
-            string str=value as string;
-            if (str == null) return true;
+            if (value is not string str) return true;
             return reShape.Match(str).Success;
         }
     }

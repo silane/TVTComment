@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using TVTComment.Model.ChatCollectServiceEntry;
 
 namespace TVTComment.Model.ChatModRules
@@ -14,7 +10,7 @@ namespace TVTComment.Model.ChatModRules
 
         public IEnumerable<IChatCollectServiceEntry> TargetChatCollectServiceEntries { get; }
 
-        public TextLengthNg(IEnumerable<IChatCollectServiceEntry> entries,int maxLength)
+        public TextLengthNg(IEnumerable<IChatCollectServiceEntry> entries, int maxLength)
         {
             TargetChatCollectServiceEntries = entries;
             MaxLength = maxLength;

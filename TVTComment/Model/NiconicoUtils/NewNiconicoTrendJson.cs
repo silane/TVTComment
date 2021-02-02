@@ -6,7 +6,7 @@ namespace TVTComment.Model.NiconicoUtils
     public class NewNiconicoTrendJson
     {
         [DataMember]
-        public Datum[] data { get; set; }
+        public Datum[] Data { get; set; }
     }
 
 
@@ -14,9 +14,9 @@ namespace TVTComment.Model.NiconicoUtils
     public class Datum
     {
         [DataMember]
-        public string socialGroupId { get; set; }
+        public string SocialGroupId { get; set; }
         [DataMember]
-        public int commentCount { get; set; }
+        public int CommentCount { get; set; }
     }
 
 }

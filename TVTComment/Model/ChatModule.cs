@@ -47,16 +47,16 @@ namespace TVTComment.Model
             this.chatServices = chatServices;
             this.ipc = ipc;
             this.collectServiceModule = collectServiceModule;
-            disposables.Add(ChatPreserveCount.Subscribe(x => onChatPreserveCountChanged()));
+            disposables.Add(ChatPreserveCount.Subscribe(x => OnChatPreserveCountChanged()));
             disposables.Add(channelInformationModule.CurrentChannel.Subscribe(x =>
             {
                 if (ClearChatsOnChannelChange.Value)
                     ClearChats();
             }));
 
-            collectServiceModule.NewChatProduced += collectServiceModule_NewChatProduced;
+            collectServiceModule.NewChatProduced += CollectServiceModule_NewChatProduced;
 
-            loadSettings();
+            LoadSettings();
         }
 
         public void AddChatModRule(ChatModRules.IChatModRule modRule)
@@ -74,15 +74,15 @@ namespace TVTComment.Model
             chats.Clear();
         }
 
-        private async void collectServiceModule_NewChatProduced(IEnumerable<Chat> newChats)
+        private async void CollectServiceModule_NewChatProduced(IEnumerable<Chat> newChats)
         {
             foreach (Chat chat in newChats)
             {
-                applyChatModRule(chat);
+                ApplyChatModRule(chat);
 
                 if (ChatPreserveCount.Value > 0)
                 {
-                    while(chats.Count >= ChatPreserveCount.Value)
+                    while (chats.Count >= ChatPreserveCount.Value)
                         chats.RemoveAt(0);
                 }
                 chats.Add(chat);
@@ -90,19 +90,19 @@ namespace TVTComment.Model
                 if (!chat.Ng)
                 {
                     IPC.IPCMessage.ChatIPCMessage msg = new IPC.IPCMessage.ChatIPCMessage { Chat = chat };
-                    await ipc.Send(msg);
+                    await ipc.Send(msg);//スローされる可能性
                 }
             }
         }
 
         public void Dispose()
         {
-            collectServiceModule.NewChatProduced -= collectServiceModule_NewChatProduced;
-            saveSettings();
+            collectServiceModule.NewChatProduced -= CollectServiceModule_NewChatProduced;
+            SaveSettings();
             disposables.Dispose();
         }
 
-        private void applyChatModRule(Chat chat)
+        private void ApplyChatModRule(Chat chat)
         {
             foreach (ChatModRuleEntry modRule in ChatModRules)
             {
@@ -115,22 +115,22 @@ namespace TVTComment.Model
             }
         }
 
-        private void onChatPreserveCountChanged()
+        private void OnChatPreserveCountChanged()
         {
-            if(chats.Count>ChatPreserveCount.Value)
+            if (chats.Count > ChatPreserveCount.Value)
             {
                 for (int i = 0; i < chats.Count - ChatPreserveCount.Value; i++)
                     chats.RemoveAt(0);
             }
         }
 
-        private void loadSettings()
+        private void LoadSettings()
         {
-            ChatPreserveCount.Value = this.settings.ChatPreserveCount;
-            ClearChatsOnChannelChange.Value = this.settings.ClearChatsOnChannelChange;
+            ChatPreserveCount.Value = settings.ChatPreserveCount;
+            ClearChatsOnChannelChange.Value = settings.ClearChatsOnChannelChange;
             var chatCollectServiceEntries = chatServices.SelectMany(x => x.ChatCollectServiceEntries).ToArray();
-            var entities = this.settings.ChatModRules;
-            foreach(var entity in entities)
+            var entities = settings.ChatModRules;
+            foreach (var entity in entities)
             {
                 var entry = new ChatModRuleEntry { AppliedCount = entity.AppliedCount, LastAppliedTime = entity.LastAppliedTime };
                 var targetServices = entity.TargetChatCollectServiceEntries.Select(
@@ -163,9 +163,9 @@ namespace TVTComment.Model
                         break;
                     case "SmallOnMultiLine":
                         int lineCount;
-                        if(!int.TryParse(entity.Expression, out lineCount))
-                            lineCount=2;
-                        entry.ChatModRule = new ChatModRules.SmallOnMultiLineChatModRule(targetServices,lineCount);
+                        if (!int.TryParse(entity.Expression, out lineCount))
+                            lineCount = 2;
+                        entry.ChatModRule = new ChatModRules.SmallOnMultiLineChatModRule(targetServices, lineCount);
                         break;
                     case "RemoveAnchor":
                         entry.ChatModRule = new ChatModRules.RemoveAnchorChatModRule(targetServices);
@@ -201,19 +201,20 @@ namespace TVTComment.Model
             }
         }
 
-        private void saveSettings()
+        private void SaveSettings()
         {
-            this.settings.ChatPreserveCount = ChatPreserveCount.Value;
-            this.settings.ClearChatsOnChannelChange = ClearChatsOnChannelChange.Value;
-            this.settings.ChatModRules = chatModRules.Select(x =>
+            settings.ChatPreserveCount = ChatPreserveCount.Value;
+            settings.ClearChatsOnChannelChange = ClearChatsOnChannelChange.Value;
+            settings.ChatModRules = chatModRules.Select(x =>
             {
-                var entity = new Serialization.ChatModRuleEntity {
-                    TargetChatCollectServiceEntries = x.ChatModRule.TargetChatCollectServiceEntries.Select(entry=>entry.Id).ToArray(),
+                var entity = new Serialization.ChatModRuleEntity
+                {
+                    TargetChatCollectServiceEntries = x.ChatModRule.TargetChatCollectServiceEntries.Select(entry => entry.Id).ToArray(),
                     AppliedCount = x.AppliedCount,
                     LastAppliedTime = x.LastAppliedTime
                 };
 
-                switch(x.ChatModRule)
+                switch (x.ChatModRule)
                 {
                     case ChatModRules.WordNgChatModRule wordNg:
                         entity.Type = "WordNg";

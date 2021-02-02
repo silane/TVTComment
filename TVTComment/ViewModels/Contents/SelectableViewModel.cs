@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel;
 
 namespace TVTComment.ViewModels.Contents
 {
-    class SelectableViewModel<T>:INotifyPropertyChanged
+    class SelectableViewModel<T> : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -16,7 +11,7 @@ namespace TVTComment.ViewModels.Contents
         public T Value
         {
             get { return value; }
-            set { this.value = value;PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Value))); }
+            set { this.value = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Value))); }
         }
         public bool IsSelected
         {
@@ -29,7 +24,7 @@ namespace TVTComment.ViewModels.Contents
             Value = value;
         }
 
-        public SelectableViewModel(T value,bool isSelected)
+        public SelectableViewModel(T value, bool isSelected)
         {
             Value = value;
             IsSelected = isSelected;

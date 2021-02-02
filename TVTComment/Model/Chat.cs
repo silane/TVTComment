@@ -5,8 +5,8 @@ namespace TVTComment.Model
 {
     public class Chat
     {
-        public enum PositionType{ Normal,Top,Bottom}
-        public enum SizeType { Normal,Small,Large}
+        public enum PositionType { Normal, Top, Bottom }
+        public enum SizeType { Normal, Small, Large }
 
         /// <summary>
         /// 投稿された日付時刻(JST)
@@ -23,45 +23,45 @@ namespace TVTComment.Model
 
         public ChatCollectServiceEntry.IChatCollectServiceEntry SourceService { get; private set; }
 
-        public Chat(DateTime time,string text,PositionType position,SizeType size,Color color,string userId,int number)
+        public Chat(DateTime time, string text, PositionType position, SizeType size, Color color, string userId, int number)
         {
-            this.Time = time;
-            this.Text = text;
-            this.Position = position;
-            this.Size = size;
-            this.Color = color;
-            this.UserId = userId;
-            this.Number = number;
+            Time = time;
+            Text = text;
+            Position = position;
+            Size = size;
+            Color = color;
+            UserId = userId;
+            Number = number;
         }
 
         public void SetText(string text)
         {
-            this.Text = text;
+            Text = text;
         }
 
         public void SetPosition(PositionType position)
         {
-            this.Position = position;
+            Position = position;
         }
 
         public void SetSize(SizeType size)
         {
-            this.Size = size;
+            Size = size;
         }
 
         public void SetColor(Color color)
         {
-            this.Color = color;
+            Color = color;
         }
 
         public void SetNg(bool ng)
         {
-            this.Ng = ng;
+            Ng = ng;
         }
 
         public void SetSourceService(ChatCollectServiceEntry.IChatCollectServiceEntry sourceService)
         {
-            this.SourceService = sourceService;
+            SourceService = sourceService;
         }
     }
 }

@@ -10,7 +10,7 @@ namespace TVTComment.Model.ChatCollectServiceEntry
             public string LiveId { get; }
             public ChatCollectServiceCreationOption(string liveId)
             {
-                this.LiveId = liveId;
+                LiveId = liveId;
             }
         }
 
@@ -20,17 +20,17 @@ namespace TVTComment.Model.ChatCollectServiceEntry
         public string Description => "指定したニコニコ生放送を表示";
         public bool CanUseDefaultCreationOption => false;
 
-        private ObservableValue<NiconicoUtils.NiconicoLoginSession> session;
+        private readonly ObservableValue<NiconicoUtils.NiconicoLoginSession> session;
 
         public NiconicoLiveChatCollectServiceEntry(ChatService.NiconicoChatService owner, ObservableValue<NiconicoUtils.NiconicoLoginSession> session)
         {
-            this.Owner = owner;
+            Owner = owner;
             this.session = session;
         }
 
         public ChatCollectService.IChatCollectService GetNewService(IChatCollectServiceCreationOption creationOption)
         {
-            if (creationOption == null || !(creationOption is ChatCollectServiceCreationOption co))
+            if (creationOption == null || creationOption is not ChatCollectServiceCreationOption co)
                 throw new ArgumentException($"Type of {nameof(creationOption)} must be {nameof(NiconicoLiveChatCollectServiceEntry)}.{nameof(ChatCollectServiceCreationOption)}", nameof(creationOption));
             var session = this.session.Value;
             if (session == null)
