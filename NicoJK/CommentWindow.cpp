@@ -821,7 +821,7 @@ void CCommentWindow::DrawChat(Gdiplus::Graphics &g, int width, int height, RECT 
 			}
 			// ウィンドウ下にはみ出すコメントは表示ライン行間に移す
 			// それでもはみ出すコメントは無視
-			double actLine = it->line >= actLineCount ? (it->line - actLineCount) + 0.5 : it->line;
+			double actLine = it->line >= actLineCount ? ((double)it->line - actLineCount) + 0.5 : it->line;
 			if (actLine < 0 || actLineCount <= actLine || lineDrawCount_ <= actLine) {
 				continue;
 			}

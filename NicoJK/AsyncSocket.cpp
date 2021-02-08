@@ -40,7 +40,7 @@ bool CAsyncSocket::Send(HWND hwnd, UINT msg, const char *name, unsigned short po
 			hwnd_ = hwnd;
 			msg_ = msg;
 			delete [] name_;
-			name_ = new char[lstrlenA(name) + 1];
+			name_ = new char[lstrlenA(name) + 1LL];
 			lstrcpyA(name_, name);
 			port_ = port;
 			bKeepSession_ = bKeepSession;
