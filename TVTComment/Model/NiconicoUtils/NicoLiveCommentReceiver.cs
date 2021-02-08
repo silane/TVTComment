@@ -97,7 +97,6 @@ namespace TVTComment.Model.NiconicoUtils
                 var playerStatusRoot = playerStatus.RootElement;
                 var msUriStr = playerStatusRoot.GetProperty("data").GetProperty("rooms")[0].GetProperty("webSocketUri").GetString();
                 var threadId = playerStatusRoot.GetProperty("data").GetProperty("rooms")[0].GetProperty("threadId").GetString();
-                Debug.WriteLine(msUriStr);
                 if (threadId == null || msUriStr == null)
                 {
                     throw new InvalidPlayerStatusNicoLiveCommentReceiverException(str.ToString());
@@ -112,10 +111,10 @@ namespace TVTComment.Model.NiconicoUtils
                 await ws.ConnectAsync(msUri, cancellationToken);
 
                 var sendThread = "[{\"ping\":{\"content\":\"rs:0\"}},{\"ping\":{\"content\":\"ps:0\"}},{\"thread\":{\"thread\":\""+ threadId + "\",\"version\":\"20061206\",\"fork\":0,\"user_id\":\"guest\",\"res_from\":-150,\"with_global\":1,\"scores\":1,\"nicoru\":0}},{\"ping\":{\"content\":\"pf:0\"}},{\"ping\":{\"content\":\"rf:0\"}}]";
-                Debug.WriteLine(sendThread);
+                
                 try
                 {
-                    byte[] bodyEncoded = Encoding.UTF8.GetBytes(sendThread);
+                    var bodyEncoded = Encoding.UTF8.GetBytes(sendThread);
                     var segment = new ArraySegment<byte>(bodyEncoded);
                     await ws.SendAsync(segment, WebSocketMessageType.Text, true, cancellationToken);
                 }
@@ -139,7 +138,6 @@ namespace TVTComment.Model.NiconicoUtils
                     var segment = new ArraySegment<byte>(buffer);
                     var result = await ws.ReceiveAsync(segment, cancellationToken);
                     var message = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                    Debug.WriteLine(message);
                     parser.Push(message);
                     while(parser.DataAvailable())
                         yield return parser.Pop();
