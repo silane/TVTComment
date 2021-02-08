@@ -258,10 +258,11 @@ namespace TVTComment.Model.ChatCollectService
             using (commentSender)
             using (httpClient)
             {
-                cancellationTokenSource.Cancel();
+                if (cancellationTokenSource != null) cancellationTokenSource.Cancel();
                 try
                 {
-                    chatCollectTask.Wait();
+                    if (chatCollectTask != null) chatCollectTask.Wait();
+
                 }
                 //Waitからの例外がタスクがキャンセルされたことによるものか、通信エラー等なら無視
                 catch (AggregateException e) when (e.InnerExceptions.All(
