@@ -107,7 +107,23 @@ namespace TVTComment.Model.NiconicoUtils
                 ws.Options.SetRequestHeader("User-Agent", ua);
                 ws.Options.AddSubProtocol("msg.nicovideo.jp#json");
 
-                await ws.ConnectAsync(msUri, cancellationToken);
+                try
+                {
+                    await ws.ConnectAsync(msUri, cancellationToken);
+                }
+                catch (Exception e) when (e is ObjectDisposedException || e is WebSocketException || e is IOException)
+                {
+                    if (cancellationToken.IsCancellationRequested)
+                        throw new OperationCanceledException(null, e, cancellationToken);
+                    if (e is ObjectDisposedException)
+                        throw;
+                    else
+                        throw new NetworkNicoLiveCommentReceiverException(e);
+                }
+
+                using var __ = cancellationToken.Register(() => {
+                    ws.Dispose();
+                });
 
                 var sendThread = "[{\"ping\":{\"content\":\"rs:0\"}},{\"ping\":{\"content\":\"ps:0\"}},{\"thread\":{\"thread\":\""+ threadId + "\",\"version\":\"20061206\",\"fork\":0,\"user_id\":\""+ NiconicoLoginSession.UserId + "\",\"res_from\":-150,\"with_global\":1,\"scores\":1,\"nicoru\":0}},{\"ping\":{\"content\":\"pf:0\"}},{\"ping\":{\"content\":\"rf:0\"}}]";
                 
@@ -135,12 +151,25 @@ namespace TVTComment.Model.NiconicoUtils
                     if (ws.State != WebSocketState.Open)
                         break;
                     var segment = new ArraySegment<byte>(buffer);
-                    var result = await ws.ReceiveAsync(segment, cancellationToken);
+                    WebSocketReceiveResult result;
+                    try
+                    {
+                        result = await ws.ReceiveAsync(segment, cancellationToken);
+                    }
+                    catch (Exception e) when (e is ObjectDisposedException || e is WebSocketException || e is IOException)
+                    {
+                        if (cancellationToken.IsCancellationRequested)
+                            throw new OperationCanceledException(null, e, cancellationToken);
+                        if (e is ObjectDisposedException)
+                            throw;
+                        else
+                            throw new NetworkNicoLiveCommentReceiverException(e);
+                    }
                     var message = Encoding.UTF8.GetString(buffer, 0, result.Count);
                     parser.Push(message);
-                    while(parser.DataAvailable())
+                    while (parser.DataAvailable())
                         yield return parser.Pop();
-                }
+                    }
             }
             throw new ConnectionClosedNicoLiveCommentReceiverException();
         }
