@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Net.WebSockets;
@@ -110,7 +109,7 @@ namespace TVTComment.Model.NiconicoUtils
 
                 await ws.ConnectAsync(msUri, cancellationToken);
 
-                var sendThread = "[{\"ping\":{\"content\":\"rs:0\"}},{\"ping\":{\"content\":\"ps:0\"}},{\"thread\":{\"thread\":\""+ threadId + "\",\"version\":\"20061206\",\"fork\":0,\"user_id\":\"guest\",\"res_from\":-150,\"with_global\":1,\"scores\":1,\"nicoru\":0}},{\"ping\":{\"content\":\"pf:0\"}},{\"ping\":{\"content\":\"rf:0\"}}]";
+                var sendThread = "[{\"ping\":{\"content\":\"rs:0\"}},{\"ping\":{\"content\":\"ps:0\"}},{\"thread\":{\"thread\":\""+ threadId + "\",\"version\":\"20061206\",\"fork\":0,\"user_id\":\""+ NiconicoLoginSession.UserId + "\",\"res_from\":-150,\"with_global\":1,\"scores\":1,\"nicoru\":0}},{\"ping\":{\"content\":\"pf:0\"}},{\"ping\":{\"content\":\"rf:0\"}}]";
                 
                 try
                 {

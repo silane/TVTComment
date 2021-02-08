@@ -41,6 +41,7 @@ namespace TVTComment.Model.NiconicoUtils
         private readonly string mail;
         private readonly string password;
         private CookieCollection cookie = null;
+        private string userid = null;
 
         public bool IsLoggedin => cookie != null;
         /// <summary>
@@ -55,6 +56,17 @@ namespace TVTComment.Model.NiconicoUtils
                     return cookie;
                 else
                     throw new InvalidOperationException("ログインしていません");
+            }
+        }
+
+        public string UserId
+        {
+            get
+            {
+                if (userid != null)
+                    return userid;
+                else
+                    throw new InvalidOperationException("UserIDが取得できてません");
             }
         }
 
@@ -89,13 +101,14 @@ namespace TVTComment.Model.NiconicoUtils
 
             try
             {
-                await client.PostAsync(loginUrl, content).ConfigureAwait(false);
+                var res = await client.PostAsync(loginUrl, content).ConfigureAwait(false);
+                userid = res.Headers.GetValues("x-niconico-id").FirstOrDefault();
             }
             catch (HttpRequestException e)
             {
                 throw new NetworkNiconicoLoginSessionException(e);
             }
-
+            
             CookieCollection cookieCollection = handler.CookieContainer.GetCookies(new Uri(loginUrl));
             if (cookieCollection.All(x => x.Name != "user_session"))
                 throw new LoginFailureNiconicoLoginSessionException();
