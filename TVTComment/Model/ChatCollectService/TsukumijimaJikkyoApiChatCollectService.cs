@@ -188,7 +188,7 @@ namespace TVTComment.Model.ChatCollectService
                     string content = chatObj.GetProperty("content").GetString();
 
                     var chatTag = new NiconicoUtils.ChatNiconicoCommentXmlTag(
-                        content, 0, no, vpos, date, dateUsec, mail, userId, premium, anonymity, abone
+                        content, thread, no, vpos, date, dateUsec, mail, userId, premium, anonymity, abone
                     );
 
                     lock (chats)

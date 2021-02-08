@@ -16,7 +16,7 @@ namespace TVTComment.Model.NiconicoUtils
     class ChatNiconicoCommentXmlTag : NiconicoCommentXmlTag
     {
         public string Text { get; }
-        public long Thread { get; }
+        public string Thread { get; }
         public int No { get; }
         public int Vpos { get; }
         public long Date { get; }
@@ -28,7 +28,7 @@ namespace TVTComment.Model.NiconicoUtils
         public int Abone { get; }
 
         public ChatNiconicoCommentXmlTag(
-            string text, long thread, int no, int vpos, long date, int dateUsec,
+            string text, string thread, int no, int vpos, long date, int dateUsec,
             string mail, string userId, int premium, int anonymity, int abone
         )
         {

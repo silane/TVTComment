@@ -139,10 +139,13 @@ namespace TVTComment.Model.NiconicoUtils
         private static ChatNiconicoCommentXmlTag GetChatXmlTag(string str)
         {
             string text = HttpUtility.HtmlDecode(reChat.Match(str).Groups[2].Value);
-            _ = long.TryParse(reThread.Match(str).Groups[1].Value, out long thread);
+
+            Match match = reThread.Match(str);
+            string thread = match.Success ? HttpUtility.HtmlDecode(match.Groups[1].Value) : "";
+
             long date = long.Parse(reDate.Match(str).Groups[1].Value);
 
-            Match match = reDateUsec.Match(str);
+            match = reDateUsec.Match(str);
             int dateUsec = match.Success ? int.Parse(match.Groups[1].Value) : 0;
 
             match = reMail.Match(str);
