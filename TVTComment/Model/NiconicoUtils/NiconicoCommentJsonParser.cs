@@ -31,7 +31,7 @@ namespace TVTComment.Model.NiconicoUtils
             string text = chat.GetProperty("content").ToString();
             string thread = chat.GetProperty("thread").ToString();
             int no = chat.GetProperty("no").GetInt32();
-            int vpos = chat.GetProperty("vpos").GetInt32();
+            int vpos = chat.TryGetProperty("vpos", out var pos) ? pos.GetInt32() : 0;
             long date = chat.GetProperty("date").GetInt64();
             int dateUsec = chat.GetProperty("date_usec").GetInt32();
             string mail = chat.TryGetProperty("mail", out var str) ? str.GetString() : "";
