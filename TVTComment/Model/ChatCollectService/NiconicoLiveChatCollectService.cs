@@ -129,25 +129,22 @@ namespace TVTComment.Model.ChatCollectService
             }
             catch (HttpRequestException e)
             {
+                if (e.StatusCode == System.Net.HttpStatusCode.NotFound)
+                    throw new ChatReceivingException("番組が見つかりません\n権限がないか削除された可能性があります");
+                if (e.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable)
+                    throw new ChatReceivingException("ニコニコのサーバーがメンテナンス中の可能性があります");
+                if (e.StatusCode == System.Net.HttpStatusCode.InternalServerError)
+                    throw new ChatReceivingException("ニコニコのサーバーで内部エラーが発生しました");
+
                 throw new ChatReceivingException("サーバーとの通信でエラーが発生しました", e);
             }
+
             var playerStatus = await JsonDocument.ParseAsync(playerStatusStr, cancellationToken: cancel).ConfigureAwait(false);
             var playerStatusRoot = playerStatus.RootElement;
 
-            if (!playerStatusRoot.GetProperty("meta").GetProperty("errorCode").GetString().Equals("OK"))
-            {
-                if (playerStatusRoot.GetProperty("meta").GetProperty("errorCode").GetString().Equals("SERVER_ERROR"))
-                    throw new ChatReceivingException("ニコニコのサーバーがメンテナンス中の可能性があります");
-                if (playerStatusRoot.GetProperty("meta").GetProperty("errorCode").GetString().Equals("INTERNAL_SERVER_ERROR"))
-                    throw new ChatReceivingException("ニコニコのサーバーで内部エラーが発生しました");
-                if (playerStatusRoot.GetProperty("meta").GetProperty("errorCode").GetString().Equals("NOT_FOUND"))
-                    throw new ChatReceivingException("放送が見つかりませんでした");
-                throw new ChatReceivingException("コメントサーバーから予期しないPlayerStatusが返されました:\n" + playerStatusStr);
-            }
-
             if (playerStatusRoot.GetProperty("data").GetProperty("rooms").GetArrayLength() <= 0)
-                throw new ChatReceivingException("現在放送されていないか、コミュニティ限定配信のためコメント取得できませんでした");
-
+                throw new ChatReceivingException("コメント取得できませんでした以下の原因が考えられます\n\n・放送されていない\n・視聴権がない\n・コミュニティフォロワー限定番組");
+            
             liveId = playerStatusRoot.GetProperty("data").GetProperty("socialGroup").GetProperty("id").GetString();
 
             try
@@ -173,14 +170,6 @@ namespace TVTComment.Model.ChatCollectService
 
         private async void Heartbeat(CancellationToken cancel)
         {
-            if (liveId == "")
-                return;
-            // async void なのでこの関数内の例外は無視される
-            await httpClient.PostAsync(
-                "http://ow.live.nicovideo.jp/api/heartbeat",
-                new FormUrlEncodedContent(new Dictionary<string, string> { { "v", liveId } }),
-                cancel
-            );
         }
 
         public async Task PostChat(BasicChatPostObject chatPostObject)

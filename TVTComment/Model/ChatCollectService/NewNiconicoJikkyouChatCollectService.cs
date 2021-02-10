@@ -169,21 +169,18 @@ namespace TVTComment.Model.ChatCollectService
             }
             catch (HttpRequestException e)
             {
+                if (e.StatusCode == System.Net.HttpStatusCode.NotFound)
+                    throw new LiveNotFoundChatReceivingException();
+                if (e.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable)
+                    throw new ChatReceivingException("ニコニコのサーバーがメンテナンス中の可能性があります");
+                if (e.StatusCode == System.Net.HttpStatusCode.InternalServerError)
+                    throw new ChatReceivingException("ニコニコのサーバーで内部エラーが発生しました");
+
                 throw new ChatReceivingException("サーバーとの通信でエラーが発生しました", e);
             }
+
             var playerStatus = await JsonDocument.ParseAsync(playerStatusStr, cancellationToken: cancellationToken).ConfigureAwait(false);
             var playerStatusRoot = playerStatus.RootElement;
-
-            if (!playerStatusRoot.GetProperty("meta").GetProperty("errorCode").GetString().Equals("OK"))
-            {
-                if (playerStatusRoot.GetProperty("meta").GetProperty("errorCode").GetString().Equals("SERVER_ERROR"))
-                    throw new ChatReceivingException("ニコニコのサーバーがメンテナンス中の可能性があります");
-                if (playerStatusRoot.GetProperty("meta").GetProperty("errorCode").GetString().Equals("INTERNAL_SERVER_ERROR"))
-                    throw new ChatReceivingException("ニコニコのサーバーで内部エラーが発生しました");
-                if (playerStatusRoot.GetProperty("meta").GetProperty("errorCode").GetString().Equals("NOT_FOUND"))
-                    throw new LiveNotFoundChatReceivingException(); // 呼び出し側で特別な処理をするので別の例外を投げて区別する
-                throw new ChatReceivingException("コメントサーバーから予期しないPlayerStatusが返されました:\n" + playerStatusStr);
-            }
 
             if (playerStatusRoot.GetProperty("data").GetProperty("rooms").GetArrayLength() <= 0)
                 throw new LiveNotFoundChatReceivingException();
