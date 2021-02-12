@@ -92,13 +92,6 @@ namespace TVTComment.Model.ChatCollectService
                 );
             }
 
-            // Heartbeat送信
-            if (DateTime.Now >= lastHeartbeatTime.AddSeconds(60))
-            {
-                lastHeartbeatTime = DateTime.Now;
-                Heartbeat(cancel.Token);
-            }
-
             //非同期部分で集めたデータからチャットを生成
             var ret = new List<Chat>();
             while (commentTagQueue.TryDequeue(out var tag))
@@ -166,10 +159,10 @@ namespace TVTComment.Model.ChatCollectService
             {
                 throw new ChatReceivingException("サーバーとの通信が切断されました", e);
             }
-        }
-
-        private async void Heartbeat(CancellationToken cancel)
-        {
+            catch (NiconicoUtils.ConnectionDisconnectNicoLiveCommentReceiverException)
+            {
+                throw new ChatReceivingException("放送が終了しました");
+            }
         }
 
         public async Task PostChat(BasicChatPostObject chatPostObject)

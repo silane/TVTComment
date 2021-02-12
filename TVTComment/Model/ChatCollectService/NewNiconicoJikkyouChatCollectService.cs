@@ -61,7 +61,6 @@ namespace TVTComment.Model.ChatCollectService
         private bool notOnAir = false;
         private Task chatCollectTask = null;
         private CancellationTokenSource cancellationTokenSource = null;
-        private DateTime lastHeartbeatTime = DateTime.MinValue;
 
         public NewNiconicoJikkyouChatCollectService(
             ChatCollectServiceEntry.IChatCollectServiceEntry serviceEntry,
@@ -129,13 +128,6 @@ namespace TVTComment.Model.ChatCollectService
             if (this.originalLiveId == "")
             {
                 return Array.Empty<Chat>();
-            }
-
-            // Heartbeat送信
-            if (DateTime.Now >= lastHeartbeatTime.AddSeconds(60))
-            {
-                lastHeartbeatTime = DateTime.Now;
-                Heartbeat(cancellationTokenSource.Token);
             }
 
             var ret = new List<Chat>();
@@ -206,19 +198,10 @@ namespace TVTComment.Model.ChatCollectService
             {
                 throw new ChatReceivingException("サーバーとの通信が切断されました", e);
             }
-        }
-
-        private async void Heartbeat(CancellationToken cancel)//キャンセルトークンの例外スローされる可能性
-        {
-            string liveId = this.liveId;
-            if (liveId == "")
-                return;
-            // async void なのでこの関数内の例外は無視される
-            await httpClient.PostAsync(
-                "http://ow.live.nicovideo.jp/api/heartbeat",
-                new FormUrlEncodedContent(new Dictionary<string, string> { { "v", liveId } }),
-                cancel
-            );
+            catch (NiconicoUtils.ConnectionDisconnectNicoLiveCommentReceiverException)
+            {
+                throw new LiveClosedChatReceivingException();
+            }
         }
 
         public async Task PostChat(BasicChatPostObject chatPostObject)
