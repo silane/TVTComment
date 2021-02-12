@@ -40,6 +40,12 @@ namespace TVTComment.Model.NiconicoUtils
         {
         }
     }
+    class ConnectionDisconnectNicoLiveCommentReceiverException : NicoLiveCommentReceiverException
+    {
+        public ConnectionDisconnectNicoLiveCommentReceiverException()
+        {
+        }
+    }
 
     class NicoLiveCommentReceiver : IDisposable
     {
@@ -69,16 +75,25 @@ namespace TVTComment.Model.NiconicoUtils
         /// <exception cref="ConnectionClosedNicoLiveCommentReceiverException"></exception>
         public async IAsyncEnumerable<NiconicoCommentXmlTag> Receive(string liveId, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
+            using var timer = new System.Timers.Timer(60000);
             using var _ = cancellationToken.Register(() =>
            {
                httpClient.CancelPendingRequests();
+               timer.Dispose();
            });
+            var comId = "";
 
             for (int disconnectedCount = 0; disconnectedCount < 5; ++disconnectedCount)
             {
                 Stream str;
                 try
                 {
+                    if (comId != "") { //コミュIDが取得済みであればlvを再取得　24時間放送のコミュニティ・チャンネル用
+                        var getLiveId = await httpClient.GetStreamAsync($"https://live2.nicovideo.jp/unama/tool/v1/broadcasters/social_group/{comId}/program", cancellationToken).ConfigureAwait(false);
+                        var liveIdJson = await JsonDocument.ParseAsync(getLiveId, cancellationToken: cancellationToken).ConfigureAwait(false);
+                        if (!liveIdJson.RootElement.GetProperty("meta").GetProperty("errorCode").GetString().Equals("OK")) throw new InvalidPlayerStatusNicoLiveCommentReceiverException("コミュニティ・チャンネルが見つかりませんでした");
+                        liveId = liveIdJson.RootElement.GetProperty("data").GetProperty("nicoliveProgramId").GetString();
+                    }
                     str = await httpClient.GetStreamAsync($"https://live2.nicovideo.jp/unama/watch/{liveId}/programinfo", cancellationToken).ConfigureAwait(false);
                 }
                 // httpClient.CancelPendingRequestsが呼ばれた、もしくはタイムアウト
@@ -94,6 +109,9 @@ namespace TVTComment.Model.NiconicoUtils
                 }
                 var playerStatus = await JsonDocument.ParseAsync(str, cancellationToken: cancellationToken).ConfigureAwait(false);
                 var playerStatusRoot = playerStatus.RootElement;
+                comId = playerStatusRoot.GetProperty("data").GetProperty("socialGroup").GetProperty("id").GetString(); //コメント受信ループ内でbreakされたあとにコミュからlvを取得するためにコミュを取得しておく
+                if (playerStatusRoot.GetProperty("data").GetProperty("rooms").GetArrayLength() <= 0) //roomsが無かったら放送終了扱い
+                    throw new ConnectionDisconnectNicoLiveCommentReceiverException();
                 var msUriStr = playerStatusRoot.GetProperty("data").GetProperty("rooms")[0].GetProperty("webSocketUri").GetString();
                 var threadId = playerStatusRoot.GetProperty("data").GetProperty("rooms")[0].GetProperty("threadId").GetString();
                 if (threadId == null || msUriStr == null)
@@ -125,7 +143,7 @@ namespace TVTComment.Model.NiconicoUtils
                     ws.Dispose();
                 });
 
-                var sendThread = "[{\"ping\":{\"content\":\"rs:0\"}},{\"ping\":{\"content\":\"ps:0\"}},{\"thread\":{\"thread\":\""+ threadId + "\",\"version\":\"20061206\",\"fork\":0,\"user_id\":\""+ NiconicoLoginSession.UserId + "\",\"res_from\":-150,\"with_global\":1,\"scores\":1,\"nicoru\":0}},{\"ping\":{\"content\":\"pf:0\"}},{\"ping\":{\"content\":\"rf:0\"}}]";
+                var sendThread = "[{\"ping\":{\"content\":\"rs:0\"}},{\"ping\":{\"content\":\"ps:0\"}},{\"thread\":{\"thread\":\""+ threadId + "\",\"version\":\"20061206\",\"user_id\":\""+ NiconicoLoginSession.UserId + "\",\"res_from\":-150,\"with_global\":1,\"scores\":1,\"nicoru\":0}},{\"ping\":{\"content\":\"pf:0\"}},{\"ping\":{\"content\":\"rf:0\"}}]";
                 
                 try
                 {
@@ -143,7 +161,14 @@ namespace TVTComment.Model.NiconicoUtils
                         throw new NetworkNicoLiveCommentReceiverException(e);
                 }
 
-                
+                timer.Elapsed += async (sender, e) => //60秒ごと定期的に空リクエスト送信　コメント無いときの切断防止
+                {
+                    if (ws.State != WebSocketState.Open)
+                        timer.Stop();
+                    await ws.SendAsync(new ArraySegment<byte>(Array.Empty<byte>()), WebSocketMessageType.Text, true, cancellationToken);
+                };
+
+                timer.Start();
                 var buffer = new byte[2048];
                 //コメント受信ループ
                 while (true)
@@ -165,11 +190,23 @@ namespace TVTComment.Model.NiconicoUtils
                         else
                             throw new NetworkNicoLiveCommentReceiverException(e);
                     }
+                    if (result.MessageType == WebSocketMessageType.Close) //切断要求だったらException
+                        throw new ConnectionClosedNicoLiveCommentReceiverException();
                     var message = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                    parser.Push(message);
+                    try { 
+                        parser.Push(message);
+                    }
+                    catch (ConnectionDisconnectNicoLiveCommentReceiverException) { //Disconnectメッセージだったら
+                        await Task.Delay(5000); //再接続試行時にすぐだとlvが更新されてない事があるので5秒待機
+                        break;
+                    }
+                    catch (Exception) {
+                        throw;
+                    }
                     while (parser.DataAvailable())
                         yield return parser.Pop();
-                    }
+                }
+                timer.Close();
             }
             throw new ConnectionClosedNicoLiveCommentReceiverException();
         }
