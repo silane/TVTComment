@@ -177,7 +177,7 @@ namespace TVTComment.Model.ChatCollectService
                     if (threadNoList.Contains((thread, no))) // 同じスレッドの同じコメ番があればスキップ
                         continue;
 
-                    if (chatObj.TryGetProperty("deleted", out elem)) //削除済みの場合スキップ
+                    if (chatObj.TryGetProperty("deleted", out _)) //削除済みの場合スキップ
                         continue;
 
                     int vpos = int.Parse(chatObj.GetProperty("vpos").GetString());
