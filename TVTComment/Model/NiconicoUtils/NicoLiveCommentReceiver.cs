@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Net.WebSockets;
@@ -9,6 +10,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 
 namespace TVTComment.Model.NiconicoUtils
 {
@@ -85,6 +87,7 @@ namespace TVTComment.Model.NiconicoUtils
 
             for (int disconnectedCount = 0; disconnectedCount < 5; ++disconnectedCount)
             {
+                await Task.Delay(disconnectedCount * 5000); //再試行時に立て続けのリクエストにならないようにする
                 Stream str;
                 try
                 {
@@ -161,20 +164,30 @@ namespace TVTComment.Model.NiconicoUtils
                         throw new NetworkNicoLiveCommentReceiverException(e);
                 }
 
-                timer.Elapsed += async (sender, e) => //60秒ごと定期的に空リクエスト送信　コメント無いときの切断防止
+                ElapsedEventHandler handler = null;
+                handler = async (sender, e) => //60秒ごと定期的に空リクエスト送信　コメント無いときの切断防止
                 {
                     if (ws.State != WebSocketState.Open)
-                        timer.Stop();
+                    {
+                        timer.Elapsed -= handler;
+                        timer.Close();
+                        return;
+                    }
                     await ws.SendAsync(new ArraySegment<byte>(Array.Empty<byte>()), WebSocketMessageType.Text, true, cancellationToken);
                 };
+                timer.Elapsed += handler;
 
                 timer.Start();
-                var buffer = new byte[2048];
+                var buffer = new byte[4096];
                 //コメント受信ループ
                 while (true)
                 {
-                    if (ws.State != WebSocketState.Open)
+                    if (ws.State != WebSocketState.Open) {
+                        timer.Elapsed -= handler;
+                        timer.Close();
                         break;
+                    }
+
                     var segment = new ArraySegment<byte>(buffer);
                     WebSocketReceiveResult result;
                     try
@@ -197,7 +210,8 @@ namespace TVTComment.Model.NiconicoUtils
                         parser.Push(message);
                     }
                     catch (ConnectionDisconnectNicoLiveCommentReceiverException) { //Disconnectメッセージだったら
-                        await Task.Delay(5000); //再接続試行時にすぐだとlvが更新されてない事があるので5秒待機
+                        timer.Elapsed -= handler;
+                        timer.Close();
                         break;
                     }
                     catch (Exception) {
@@ -206,6 +220,7 @@ namespace TVTComment.Model.NiconicoUtils
                     while (parser.DataAvailable())
                         yield return parser.Pop();
                 }
+                timer.Elapsed -= handler;
                 timer.Close();
             }
             throw new ConnectionClosedNicoLiveCommentReceiverException();
