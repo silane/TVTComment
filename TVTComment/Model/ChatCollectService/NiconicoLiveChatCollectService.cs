@@ -48,6 +48,7 @@ namespace TVTComment.Model.ChatCollectService
         private readonly NiconicoUtils.NicoLiveCommentSender commentSender;
         private DateTime lastHeartbeatTime = DateTime.MinValue;
         private readonly CancellationTokenSource cancel = new CancellationTokenSource();
+        private NiconicoUtils.NiconicoLoginSession session;
 
         public NiconicoLiveChatCollectService(
             ChatCollectServiceEntry.IChatCollectServiceEntry serviceEntry, string liveId,
@@ -56,6 +57,7 @@ namespace TVTComment.Model.ChatCollectService
         {
             this.ServiceEntry = serviceEntry;
             this.originalLiveId = liveId;
+            this.session = session;
 
             var assembly = Assembly.GetExecutingAssembly().GetName();
             var ua = assembly.Name + "/" + assembly.Version.ToString(3);
@@ -131,6 +133,8 @@ namespace TVTComment.Model.ChatCollectService
             }
             catch (HttpRequestException e)
             {
+                if (e.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                    this.session.BadSession = true;
                 throw new ChatReceivingException("サーバーとの通信でエラーが発生しました", e);
             }
             var playerStatus = await JsonDocument.ParseAsync(playerStatusStr, cancellationToken: cancel).ConfigureAwait(false);

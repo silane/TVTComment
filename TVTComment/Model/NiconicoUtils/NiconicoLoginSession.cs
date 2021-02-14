@@ -42,8 +42,12 @@ namespace TVTComment.Model.NiconicoUtils
     {
         private string mail;
         private string password;
+        public string nicosid { get; private set; }
+        public string session { get; private set; }
+        public string secure { get; private set; }
         private CookieCollection cookie = null;
 
+        public bool BadSession = false;
         public bool IsLoggedin => cookie != null;
         /// <summary>
         /// 送信するべき認証情報を含んだクッキー
@@ -60,10 +64,13 @@ namespace TVTComment.Model.NiconicoUtils
             }
         }
 
-        public NiconicoLoginSession(string mail, string password)
+        public NiconicoLoginSession(string mail, string password, string nicosid, string session, string secure)
         {
             this.mail = mail;
             this.password = password;
+            this.nicosid = nicosid;
+            this.session = session;
+            this.secure = secure;
         }
 
         /// <summary>
@@ -74,8 +81,19 @@ namespace TVTComment.Model.NiconicoUtils
         /// <exception cref="NetworkNiconicoLoginSessionException"></exception>
         public async Task Login()
         {
-            if (this.IsLoggedin)
+            if (!this.BadSession && this.IsLoggedin)
                 throw new InvalidOperationException("すでにログインしています");
+
+            if (!this.BadSession && nicosid != null && nicosid.Length > 0 && session != null && session.Length > 0 && secure != null && secure.Length > 0)
+            {
+                this.cookie = new CookieCollection();
+
+                this.cookie.Add(new Cookie("nicosid", nicosid, "/", "nicovideo.jp"));
+                this.cookie.Add(new Cookie("user_session", session, "/", "nicovideo.jp"));
+                this.cookie.Add(new Cookie("user_session_secure", secure, "/", "nicovideo.jp"));
+
+                return;
+            }
 
             const string loginUrl = "https://secure.nicovideo.jp/secure/login?site=niconico";
 
@@ -101,6 +119,16 @@ namespace TVTComment.Model.NiconicoUtils
             CookieCollection cookieCollection = handler.CookieContainer.GetCookies(new Uri(loginUrl));
             if (cookieCollection.All(x => x.Name != "user_session"))
                 throw new LoginFailureNiconicoLoginSessionException();
+
+            Cookie cookieNicosid = cookieCollection.Where(x => x.Name == "nicosid").Single();
+            Cookie cookieSession = cookieCollection.Where(x => x.Name == "user_session").Single();
+            Cookie cookieSecure = cookieCollection.Where(x => x.Name == "user_session_secure").Single();
+
+            this.nicosid = cookieNicosid.Value;
+            this.session = cookieSession.Value;
+            this.secure = cookieSecure.Value;
+
+            this.BadSession = false;
 
             this.cookie = cookieCollection;
         }
@@ -128,6 +156,9 @@ namespace TVTComment.Model.NiconicoUtils
                 throw new NetworkNiconicoLoginSessionException(e);
             }
             this.cookie = null;
+            this.nicosid = null;
+            this.session = null;
+            this.secure = null;
         }
     }
 }
