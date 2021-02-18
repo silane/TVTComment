@@ -35,4 +35,19 @@ namespace TVTComment.Model.TwitterUtils.AnnictUtils
         {
         }
     }
+
+    class AnnictNotFoundResponseException : AnnictException
+    {
+        public AnnictNotFoundResponseException()
+        {
+        }
+
+        public AnnictNotFoundResponseException(string message) : base(message)
+        {
+        }
+
+        public AnnictNotFoundResponseException(string message, Exception innerException) : base(message, innerException)
+        {
+        }
+    }
 }
