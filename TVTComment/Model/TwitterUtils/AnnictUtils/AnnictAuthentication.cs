@@ -5,6 +5,7 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace TVTComment.Model.TwitterUtils.AnnictUtils
 {
@@ -30,7 +31,7 @@ namespace TVTComment.Model.TwitterUtils.AnnictUtils
             return new(@$"{HOST}{endpoint}?client_id={ClientId}&response_type={ResponseType}&redirect_uri={RedirectUri}&scope={Scope}");
         }
 
-        public string GetToken(string token)
+        public async Task<string> GetTokenAsync(string token)
         {
             const string endpoint = "oauth/token";
             using var web = new WebClient();
@@ -42,7 +43,7 @@ namespace TVTComment.Model.TwitterUtils.AnnictUtils
             postBodyParameters.Add("code", token);
             try
             {
-                var vs = web.UploadValues(@$"{HOST}{endpoint}", postBodyParameters);
+                var vs = await web.UploadValuesTaskAsync(@$"{HOST}{endpoint}", postBodyParameters);
                 var json = JsonDocument.Parse(Encoding.UTF8.GetString(vs)).RootElement;
                 return json.GetProperty("access_token").GetString();
             }
