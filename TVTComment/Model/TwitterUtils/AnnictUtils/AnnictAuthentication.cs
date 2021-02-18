@@ -60,7 +60,7 @@ namespace TVTComment.Model.TwitterUtils.AnnictUtils
             }
             catch  (Exception e) when (e is KeyNotFoundException || e is JsonException)
             {
-                throw new AnnictResponseException("Annict APIからのレスポンスを正しく処理できませんでした");
+                throw new AnnictResponseException("Annict APIからのレスポンスを正しく処理できませんでした",e);
             }
         }
     }
