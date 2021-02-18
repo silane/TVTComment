@@ -14,6 +14,7 @@ namespace TVTComment.Model.ChatService
         public string ApiSecret { get; set; } = "";
         public string ApiAccessToken { get; set; } = "";
         public string ApiAccessSecret { get; set; } = "";
+        public string AnnictAccessToken { get; set; } = "";
     }
 
     class TwitterChatService : IChatService
@@ -46,6 +47,10 @@ namespace TVTComment.Model.ChatService
         public string ApiAccessSecret
         {
             get { return settings.ApiAccessSecret; }
+        }
+        public string AnnictAccessToken
+        {
+            get { return settings.AnnictAccessToken; }
         }
 
         public TwitterChatService(TwitterChatServiceSettings settings, ChannelDatabase channelDatabase, string filepath)
@@ -146,6 +151,11 @@ namespace TVTComment.Model.ChatService
             IsLoggedin = false;
             settings.ApiAccessToken = "";
             settings.ApiAccessSecret = "";
+        }
+
+        public void SetAnnictToken(string token)
+        {
+            settings.AnnictAccessToken = token;
         }
 
         public void Dispose()

@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Windows.Input;
 using TVTComment.Model.TwitterUtils;
+using TVTComment.Model.TwitterUtils.AnnictUtils;
 
 namespace TVTComment.ViewModels
 {
@@ -31,6 +32,8 @@ namespace TVTComment.ViewModels
         public ObservableValue<string> TwitterApiAccessSecret { get; } = new ObservableValue<string>();
         public ObservableValue<string> TwitterStatus { get; } = new ObservableValue<string>();
         public ObservableValue<string> TwitterPinCode { get; } = new ObservableValue<string>();
+        public ObservableValue<string> AnnictAccessToken { get; } = new ObservableValue<string>();
+        public ObservableValue<string> AnnictPin { get; } = new ObservableValue<string>();
 
         public Model.ChatService.NichanChatService.BoardInfo SelectedNichanBoard { get; set; }
 
@@ -42,6 +45,8 @@ namespace TVTComment.ViewModels
         public ICommand LogoutTwitterCommand { get; }
         public ICommand OpenTwitter { get; }
         public ICommand EnterTwitter { get; }
+        public ICommand AnnictOAuthOpenCommand { get; }
+        public ICommand AnnictOAuthCertificationCommand { get; }
 
         public InteractionRequest<Notification> AlertRequest { get; } = new InteractionRequest<Notification>();
 
@@ -55,6 +60,7 @@ namespace TVTComment.ViewModels
 
         public SettingsWindowViewModel(Model.TVTComment model)
         {
+            var annict = new AnnictAuthentication("jh7atLhJwvYqsSPUFg5w-GAJ5ZzaAerTONYMLMWouds", "mkvE7k2UZktun5A_GHKH-0K60kKWGK_RJKYMmU1bQPg");
             DefaultChatCollectServices = new ShellContents.DefaultChatCollectServicesViewModel(model);
 
             niconico = model.ChatServices.OfType<Model.ChatService.NiconicoChatService>().Single();
@@ -166,11 +172,36 @@ namespace TVTComment.ViewModels
                 SyncTwitterStatus();
             });
 
+            AnnictOAuthOpenCommand = new DelegateCommand(() => {
+                try
+                {
+                    Process.Start(new ProcessStartInfo(annict.GetAuthorizeUri().ToString()) { UseShellExecute = true });
+                }
+                catch (Exception e)
+                {
+                    AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = e.Message });
+                }
+            });
+
+            AnnictOAuthCertificationCommand = new DelegateCommand(() => {
+                try
+                {
+                    var token = annict.GetToken(AnnictPin.Value);
+                    twitter.SetAnnictToken(token);
+                }
+                catch (Exception e)
+                {
+                    AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = e.Message });
+                }
+                SyncAnnictStatus();
+            });
+
             ChatPreserveCount = model.ChatModule.ChatPreserveCount;
 
             SyncNiconicoUserStatus();
             SyncNichanSettings();
             SyncTwitterStatus();
+            SyncAnnictStatus();
         }
 
         private void SyncNiconicoUserStatus()
@@ -199,6 +230,11 @@ namespace TVTComment.ViewModels
             TwitterApiAccessKey.Value = twitter.ApiAccessToken;
             TwitterApiAccessSecret.Value = twitter.ApiAccessSecret;
             TwitterStatus.Value = twitter.IsLoggedin ? twitter.UserName + "としてログイン中" : "未ログイン";
+        }
+
+        private void SyncAnnictStatus()
+        {
+            AnnictAccessToken.Value = twitter.AnnictAccessToken;
         }
     }
 }
