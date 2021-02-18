@@ -33,7 +33,7 @@ namespace TVTComment.Model.TwitterUtils.AnnictUtils
                 Debug.WriteLine(result);
                 return result.GetProperty("twitter_hashtag").GetString();
             }
-            catch (InvalidOperationException e) {
+            catch (InvalidOperationException) {
                 throw new AnnictNotFoundResponseException("Annictでアニメが見つかりませんでした");
             }
             catch (HttpRequestException e)
