@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -13,17 +14,22 @@ namespace TVTComment.Model.TwitterUtils.AnnictUtils
     class AnnictApis
     {
         private readonly string HOST = $"https://api.annict.com/";
+        private readonly string UA;
         private readonly string ACCESSTOKEN;
         
         public AnnictApis(string accsestoken)
         {
             ACCESSTOKEN = accsestoken;
+            var version = Assembly.GetExecutingAssembly().GetName().Version.ToString(3);
+            UA = $"TvtComment/{version}";
         }
 
         public async Task<string> GetTwitterHashtagAsync(string title)
         {
             const string endpoint = "v1/works";
             using var client = new HttpClient();
+            client.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", UA);
+
             Stream stream;
             try
             {

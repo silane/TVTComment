@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Net;
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -15,6 +16,7 @@ namespace TVTComment.Model.TwitterUtils.AnnictUtils
         private readonly string ResponseType = "code";
         private readonly string RedirectUri = "urn:ietf:wg:oauth:2.0:oob";
         private readonly string Scope = "read";
+        private readonly string UA;
         private readonly string ClientId;
         private readonly string ClientSecret;
 
@@ -23,6 +25,8 @@ namespace TVTComment.Model.TwitterUtils.AnnictUtils
         {
             ClientId = clientId;
             ClientSecret = clientSecret;
+            var version = Assembly.GetExecutingAssembly().GetName().Version.ToString(3);
+            UA = $"TvtComment/{version}";
         }
 
         public Uri GetAuthorizeUri()
@@ -35,6 +39,7 @@ namespace TVTComment.Model.TwitterUtils.AnnictUtils
         {
             const string endpoint = "oauth/token";
             using var web = new WebClient();
+            web.Headers.Add("User-Agent", UA);
             var postBodyParameters = new NameValueCollection();
             postBodyParameters.Add("client_id", ClientId);
             postBodyParameters.Add("client_secret", ClientSecret);
