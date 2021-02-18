@@ -47,6 +47,7 @@ namespace TVTComment.ViewModels
         public ICommand EnterTwitter { get; }
         public ICommand AnnictOAuthOpenCommand { get; }
         public ICommand AnnictOAuthCertificationCommand { get; }
+        public ICommand AnnictAccessTokenApplyCommand { get; }
 
         public InteractionRequest<Notification> AlertRequest { get; } = new InteractionRequest<Notification>();
 
@@ -170,6 +171,11 @@ namespace TVTComment.ViewModels
                     AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = e.Message });
                 }
                 SyncTwitterStatus();
+            });
+
+            AnnictAccessTokenApplyCommand = new DelegateCommand(() => {
+                twitter.SetAnnictToken(AnnictAccessToken.Value);
+                SyncAnnictStatus();
             });
 
             AnnictOAuthOpenCommand = new DelegateCommand(() => {
