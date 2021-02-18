@@ -189,10 +189,10 @@ namespace TVTComment.ViewModels
                 }
             });
 
-            AnnictOAuthCertificationCommand = new DelegateCommand(() => {
+            AnnictOAuthCertificationCommand = new DelegateCommand(async () => {
                 try
                 {
-                    var token = annict.GetToken(AnnictPin.Value);
+                    var token = await annict.GetTokenAsync(AnnictPin.Value);
                     twitter.SetAnnictToken(token);
                 }
                 catch (Exception e)
