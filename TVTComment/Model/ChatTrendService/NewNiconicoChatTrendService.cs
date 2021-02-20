@@ -44,6 +44,8 @@ namespace TVTComment.Model.ChatTrendService
                     {
                         forces[obj.Data[0].SocialGroupId] = new int[] { forces[obj.Data[0].SocialGroupId][1], obj.Data[0].CommentCount };
                     }
+                    var random = new Random();
+                    await Task.Delay(1000 + random.Next(0, 101));
                 }
             }
             catch (HttpRequestException e)

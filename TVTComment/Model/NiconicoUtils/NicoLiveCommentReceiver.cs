@@ -86,7 +86,8 @@ namespace TVTComment.Model.NiconicoUtils
 
             for (int disconnectedCount = 0; disconnectedCount < 5; ++disconnectedCount)
             {
-                await Task.Delay(disconnectedCount * 5000); //再試行時に立て続けのリクエストにならないようにする
+                var random = new Random();
+                await Task.Delay((disconnectedCount * 5000) + random.Next(0, 101)); //再試行時に立て続けのリクエストにならないようにする
                 Stream str;
                 try
                 {
