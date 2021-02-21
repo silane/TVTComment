@@ -129,14 +129,14 @@ namespace Nichan
         private int resNum;
         private bool isBeforeFirstLine;
 
-        private static readonly Regex reDate = new Regex(@"(\d+)/(\d+)/(\d+)[^ ]* (\d+):(\d+):(\d+)\.(\d+)");
+        private static readonly Regex reDate = new Regex(@"(\d+)/(\d+)/(\d+)[^ ]* (\d+):(\d+):(\d+)(\.(?<sec>\d+)| )");
         private static DateTime? getDate(string str)
         {
             Match m = reDate.Match(str);
             if (m.Success)
                 return new DateTime(
                     int.Parse(m.Groups[1].Value), int.Parse(m.Groups[2].Value), int.Parse(m.Groups[3].Value),
-                    int.Parse(m.Groups[4].Value), int.Parse(m.Groups[5].Value), int.Parse(m.Groups[6].Value), int.Parse(m.Groups[7].Value) * 10, DateTimeKind.Local
+                    int.Parse(m.Groups[4].Value), int.Parse(m.Groups[5].Value), int.Parse(m.Groups[6].Value), m.Groups["sec"].Success ? int.Parse(m.Groups["sec"].Value) * 10 : 0, DateTimeKind.Local
                 );
             else
                 return null;
