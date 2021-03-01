@@ -15,6 +15,9 @@ namespace TVTComment.ViewModels
         public ObservableValue<string> NiconicoLoginStatus { get; } = new ObservableValue<string>();
         public ObservableValue<string> NiconicoUserId { get; } = new ObservableValue<string>();
         public ObservableValue<string> NiconicoPassword { get; } = new ObservableValue<string>();
+        public ObservableValue<string> NiconicoSid { get; } = new ObservableValue<string>();
+        public ObservableValue<string> NiconicoSession { get; } = new ObservableValue<string>();
+        public ObservableValue<string> NiconicoSecure { get; } = new ObservableValue<string>();
         public ObservableValue<string> NichanResCollectInterval { get; } = new ObservableValue<string>();
         public ObservableValue<string> NichanThreadSearchInterval { get; } = new ObservableValue<string>();
         public ObservableValue<string> NichanApiHmKey { get; } = new ObservableValue<string>();
@@ -52,7 +55,7 @@ namespace TVTComment.ViewModels
 
                   try
                   {
-                      await niconico.SetUser(NiconicoUserId.Value, NiconicoPassword.Value);
+                      await niconico.SetUser(NiconicoUserId.Value, NiconicoPassword.Value, NiconicoSid.Value, NiconicoSession.Value, NiconicoSecure.Value);
                       syncNiconicoUserStatus();
                   }
                   catch (Model.NiconicoUtils.NiconicoLoginSessionException)
@@ -97,6 +100,9 @@ namespace TVTComment.ViewModels
             NiconicoLoginStatus.Value = niconico.IsLoggedin ? "ログイン済" : "未ログイン";
             NiconicoUserId.Value = niconico.UserId;
             NiconicoPassword.Value = niconico.UserPassword;
+            NiconicoSid.Value = niconico.NicoSid;
+            NiconicoSession.Value = niconico.Session;
+            NiconicoSecure.Value = niconico.SessionSecure;
         }
 
         private void syncNichanSettings()
