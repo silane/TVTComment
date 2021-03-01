@@ -1,7 +1,7 @@
 ﻿using ObservableUtils;
 using System;
 using System.Collections.Generic;
-using System.Configuration;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace TVTComment.Model.ChatService
@@ -94,6 +94,20 @@ namespace TVTComment.Model.ChatService
             this.loginSession.Value = tmpSession;
         }
 
-        public void Dispose(){ }
+        public void Dispose()
+        {
+            if(this.loginSession.Value?.IsLoggedin ?? false)
+            {
+                try
+                {
+                    this.loginSession.Value.Logout().Wait();
+                }
+                catch (AggregateException e) when (e.InnerExceptions.All(
+                    x => x is NiconicoUtils.NiconicoLoginSessionException
+                ))
+                {
+                }
+            }
+        }
     }
 }
