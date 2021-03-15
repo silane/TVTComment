@@ -81,7 +81,7 @@ namespace TVTComment.Model.ChatCollectService
             }, cancel);
         }
 
-        public IEnumerable<Chat> GetChats(ChannelInfo channel, DateTime time)
+        public IEnumerable<Chat> GetChats(ChannelInfo channel,EventInfo events, DateTime time)
         {
             if (ModeSelect == ModeSelectMethod.Auto)
             {

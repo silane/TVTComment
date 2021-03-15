@@ -76,6 +76,11 @@ namespace TVTComment.Model.ChatCollectService
             return $"生放送ID: {originalLiveId}" + (liveId != "" ? $" ({liveId})" : "");
         }
 
+        public IEnumerable<Chat> GetChats(ChannelInfo channel, EventInfo _, DateTime time)
+        {
+            return GetChats(channel, time);
+        }
+
         public IEnumerable<Chat> GetChats(ChannelInfo channel, DateTime time)
         {
             if (chatCollectTask.IsCanceled)
