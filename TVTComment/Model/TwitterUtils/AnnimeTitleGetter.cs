@@ -5,7 +5,7 @@ namespace TVTComment.Model.TwitterUtils
     class AnnimeTitleGetter
     {
         const string flag = @"\[新\]|\[終\]|\[再\]|\[字\]|\[デ\]|\[解\]|\[無\]|\[二\]|\[S\]|\[SS\]|\[初\]|\[生\]|\[Ｎ\]|\[映\]|\[多\]|\[双\]";
-        const string subtitleflag = @"「.+」|【.+】|▽.+ |▼.+|◆.+|★.+";
+        const string subtitleflag = @"「.+」|【.+】|▽.+ |▼.+|◆.+|★.+|／.+";
         const string tvIndex = @"[#＃♯](?<index>[0-9０-９]{1,3})|[第](?<index>[0-9０-９]{1,3})[話回]";
 
         public static string Convert(string eventname)
