@@ -106,6 +106,7 @@ namespace TVTComment.Model.ChatService
             settings.ApiAccessToken = apiAccessToken;
             settings.ApiAccessSecret = apiAccessSecret;
             twitterSession.Value = twitterAuthentication;
+            twitterSession.Value.AnnictSet(settings.AnnictAccessToken);
         }
         public TwitterAuthentication InitOAuthPin(string apiKey, string apiSecret)
         {
@@ -140,6 +141,7 @@ namespace TVTComment.Model.ChatService
             IsLoggedin = true;
             UserName = userResponse.Name;
             twitterSession.Value = twitterAuthentication;
+            twitterSession.Value.AnnictSet(settings.AnnictAccessToken);
             settings.ApiAccessToken = tokens.AccessToken;
             settings.ApiAccessSecret = tokens.AccessTokenSecret;
         }
@@ -156,6 +158,7 @@ namespace TVTComment.Model.ChatService
         public void SetAnnictToken(string token)
         {
             settings.AnnictAccessToken = token;
+            twitterSession.Value.AnnictSet(token);
         }
 
         public void Dispose()

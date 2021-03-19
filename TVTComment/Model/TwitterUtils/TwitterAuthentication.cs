@@ -25,6 +25,7 @@ namespace TVTComment.Model.TwitterUtils
     class TwitterAuthentication
     {
         private Tokens token = null;
+        private string annicttoken = null;
         public bool IsLoggedin => token != null;
         private readonly string apikey;
         private readonly string apiseecret;
@@ -37,6 +38,13 @@ namespace TVTComment.Model.TwitterUtils
             get
             {
                 return token;
+            }
+        }
+        public string AnnictToken
+        {
+            get
+            {
+                return annicttoken;
             }
         }
 
@@ -86,6 +94,9 @@ namespace TVTComment.Model.TwitterUtils
                 throw new InvalidOperationException("ログインしていません");
             token = null;
         }
-
+        public void AnnictSet(string token)
+        {
+            annicttoken = token;
+        }
     }
 }
