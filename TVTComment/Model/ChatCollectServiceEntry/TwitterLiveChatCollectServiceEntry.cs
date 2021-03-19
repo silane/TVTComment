@@ -1,6 +1,7 @@
 ﻿using ObservableUtils;
 using System;
 using TVTComment.Model.ChatCollectService;
+using TVTComment.Model.ChatService;
 using TVTComment.Model.NiconicoUtils;
 using TVTComment.Model.TwitterUtils;
 using static TVTComment.Model.ChatCollectServiceEntry.TwitterLiveChatCollectServiceEntry.ChatCollectServiceCreationOption;
@@ -21,7 +22,7 @@ namespace TVTComment.Model.ChatCollectServiceEntry
             }
         }
 
-        public ChatService.IChatService Owner { get; }
+        public IChatService Owner { get; }
         public string Id => "TwitterLive";
         public string Name => "Twitterリアルタイム実況";
         public string Description => "指定した検索ワードでTwitter実況";
@@ -30,7 +31,7 @@ namespace TVTComment.Model.ChatCollectServiceEntry
         private readonly ObservableValue<TwitterAuthentication> Session;
         private readonly SearchWordResolver searchWordResolver;
 
-        public TwitterLiveChatCollectServiceEntry(ChatService.TwitterChatService Owner, SearchWordResolver searchWordResolver, ObservableValue<TwitterAuthentication> Session)
+        public TwitterLiveChatCollectServiceEntry(TwitterChatService Owner, SearchWordResolver searchWordResolver, ObservableValue<TwitterAuthentication> Session)
         {
             this.Owner = Owner;
             this.searchWordResolver = searchWordResolver;
