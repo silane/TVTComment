@@ -68,7 +68,7 @@ namespace TVTComment.Model.ChatService
             {
                 if (!string.IsNullOrWhiteSpace(ApiKey) && !string.IsNullOrWhiteSpace(ApiSecret) &&
                     !string.IsNullOrWhiteSpace(ApiAccessToken) && !string.IsNullOrWhiteSpace(ApiAccessSecret))
-                    LoginAccessTokens(ApiKey, ApiSecret, ApiAccessToken, ApiAccessSecret,BearerToken).Wait();
+                    LoginAccessTokens(ApiKey, ApiSecret, ApiAccessToken, ApiAccessSecret, BearerToken).Wait();
             }
             catch (AggregateException e)
             when (e.InnerExceptions.Count == 1 && e.InnerExceptions[0] is TwiiterAuthException)
