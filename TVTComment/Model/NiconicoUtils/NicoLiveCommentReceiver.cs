@@ -104,9 +104,17 @@ namespace TVTComment.Model.NiconicoUtils
                 }
                 // WebSocketAPIに接続
                 ClientWebSocket ws = new ClientWebSocket();
+                // UAヘッダ追加
+                ws.Options.SetRequestHeader("User-Agent", WEBSOCKET_CLIENT_UA);
+                // Sec-WebSocket-Protocolヘッダ追加
+                ws.Options.SetRequestHeader("Sec-WebSocket-Protocol", WEBSOCKET_PROTOCOL);
+                // Sec-WebSocket-Versionヘッダ追加
+                ws.Options.SetRequestHeader("Sec-WebSocket-Extensions", WEBSOCKET_EXTENSIONS);
+
                 var uri = new Uri(msUriStr);
                 await ws.ConnectAsync(uri, cancellationToken);
                 var buffer = new byte[1024];
+
                 // threadId情報を送信
                 string body = "[{\"ping\":{\"content\":\"rs:0\"}},{\"ping\":{\"content\":\"ps:0\"}},{\"thread\":{\"thread\":\"" + threadId + "\",\"version\":\"20061206\",\"user_id\":\"guest\",\"res_from\":-10,\"with_global\":1,\"scores\":1,\"nicoru\":0}},{\"ping\":{\"content\":\"pf:0\"}},{\"ping\":{\"content\":\"rf:0\"}}]";
                 byte[] bodyEncoded = Encoding.UTF8.GetBytes(body);
@@ -178,5 +186,8 @@ namespace TVTComment.Model.NiconicoUtils
 
         private readonly HttpClient httpClient;
         private readonly NiconicoCommentJsonParser parser = new NiconicoCommentJsonParser(true);
+        private readonly string WEBSOCKET_CLIENT_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36";
+        private readonly string WEBSOCKET_PROTOCOL = "msg.nicovideo.jp#json";
+        private readonly string WEBSOCKET_EXTENSIONS = "permessage-deflate; client_max_window_bits";
     }
 }
