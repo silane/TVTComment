@@ -110,8 +110,8 @@ namespace TVTComment.Model.NiconicoUtils
                 ClientWebSocket ws = new ClientWebSocket();
                 // UAヘッダ追加
                 ws.Options.SetRequestHeader("User-Agent", WEBSOCKET_CLIENT_UA);
-                // Sec-WebSocket-Protocolヘッダ追加
-                ws.Options.SetRequestHeader("Sec-WebSocket-Protocol", WEBSOCKET_PROTOCOL);
+                // SubProtocol追加
+                ws.Options.AddSubProtocol(WEBSOCKET_PROTOCOL);
                 // Sec-WebSocket-Versionヘッダ追加
                 ws.Options.SetRequestHeader("Sec-WebSocket-Extensions", WEBSOCKET_EXTENSIONS);
 
