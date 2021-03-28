@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Net.Sockets;
+using System.Net.WebSockets;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -96,26 +97,23 @@ namespace TVTComment.Model.NiconicoUtils
                     throw new InvalidPlayerStatusNicoLiveCommentReceiverException("現在放送されていないか、コミュニティ限定配信のためコメント取得できませんでした");
 
                 var threadId = playerStatusRoot.GetProperty("data").GetProperty("rooms")[0].GetProperty("threadId").GetString();
-                var msUriStr = playerStatusRoot.GetProperty("data").GetProperty("rooms")[0].GetProperty("xmlSocketUri").GetString();
+                var msUriStr = playerStatusRoot.GetProperty("data").GetProperty("rooms")[0].GetProperty("webSocketUri").GetString();
                 if (threadId == null || msUriStr == null)
                 {
                     throw new InvalidPlayerStatusNicoLiveCommentReceiverException(str.ToString());
                 }
-                var msUri = new Uri(msUriStr);
-                using var tcpClinet = new TcpClient(msUri.Host, msUri.Port);
-                var socketStream = tcpClinet.GetStream();
-                using var socketReader = new StreamReader(socketStream, Encoding.UTF8);
+                ClientWebSocket ws = new ClientWebSocket();
+                var uri = new Uri(msUriStr);
 
-                using var __ = cancellationToken.Register(() =>
-                {
-                    socketReader.Dispose(); // socketReader.ReadAsyncを強制終了
-                });
+                //サーバに対し、接続を開始
+                await ws.ConnectAsync(uri, cancellationToken);
+                var buffer = new byte[1024];
 
-                string body = $"<thread res_from=\"-10\" version=\"20061206\" thread=\"{threadId}\" scores=\"1\" />\0";
+                string body= "[{\"ping\":{\"content\":\"rs:0\"}},{\"ping\":{\"content\":\"ps:0\"}},{\"thread\":{\"thread\":\"" + threadId + "\",\"version\":\"20061206\",\"user_id\":\"guest\",\"res_from\":-10,\"with_global\":1,\"scores\":1,\"nicoru\":0}},{\"ping\":{\"content\":\"pf:0\"}},{\"ping\":{\"content\":\"rf:0\"}}]";
                 byte[] bodyEncoded = Encoding.UTF8.GetBytes(body);
                 try
                 {
-                    await socketStream.WriteAsync(bodyEncoded, 0, bodyEncoded.Length, cancellationToken).ConfigureAwait(false);
+                    await ws.SendAsync(bodyEncoded, WebSocketMessageType.Text, true, cancellationToken).ConfigureAwait(false);
                 }
                 catch (Exception e) when (e is ObjectDisposedException || e is SocketException || e is IOException)
                 {
@@ -127,28 +125,46 @@ namespace TVTComment.Model.NiconicoUtils
                         throw new NetworkNicoLiveCommentReceiverException(e);
                 }
 
-                //コメント受信ループ
+                //情報取得待ちループ
                 while (true)
                 {
-                    char[] buf = new char[2048];
-                    int receivedByte;
-                    try
-                    {
-                        receivedByte = await socketReader.ReadAsync(buf, 0, buf.Length).ConfigureAwait(false);
-                    }
-                    catch (Exception e) when (e is ObjectDisposedException || e is SocketException || e is IOException)
-                    {
-                        if (cancellationToken.IsCancellationRequested)
-                            throw new OperationCanceledException(null, e, cancellationToken);
-                        if (e is ObjectDisposedException)
-                            throw;
-                        else
-                            throw new NetworkNicoLiveCommentReceiverException(e);
-                    }
-                    if (receivedByte == 0)
-                        break; // 4時リセットかもしれない→もう一度試す
+                    var segment = new ArraySegment<byte>(buffer);
+                    var result = await ws.ReceiveAsync(segment, cancellationToken);
 
-                    this.parser.Push(new string(buf[..receivedByte]));
+                    //エンドポイントCloseの場合、処理を中断
+                    if (result.MessageType == WebSocketMessageType.Close)
+                    {
+                        await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "OK",
+                          cancellationToken);
+                        break;
+                    }
+
+                    //バイナリの場合は、当処理では扱えないため、処理を中断
+                    if (result.MessageType == WebSocketMessageType.Binary)
+                    {
+                        await ws.CloseAsync(WebSocketCloseStatus.InvalidMessageType,
+                          "Binary not supported.", cancellationToken);
+                        break;
+                    }
+
+                    int count = result.Count;
+                    while (!result.EndOfMessage)
+                    {
+                        if (count >= buffer.Length)
+                        {
+                            await ws.CloseAsync(WebSocketCloseStatus.InvalidPayloadData,
+                              "That's too long", CancellationToken.None);
+                            throw new ConnectionClosedNicoLiveCommentReceiverException();
+                        }
+                        segment = new ArraySegment<byte>(buffer, count, buffer.Length - count);
+                        result = await ws.ReceiveAsync(segment, cancellationToken);
+
+                        count += result.Count;
+                    }
+
+                    //メッセージを取得
+                    var message = Encoding.UTF8.GetString(buffer, 0, count);
+                    this.parser.Push(message);
                     while (this.parser.DataAvailable())
                         yield return this.parser.Pop();
                 }
@@ -162,6 +178,6 @@ namespace TVTComment.Model.NiconicoUtils
         }
 
         private readonly HttpClient httpClient;
-        private readonly NiconicoCommentXmlParser parser = new NiconicoCommentXmlParser(true);
+        private readonly NiconicoCommentJsonParser parser = new NiconicoCommentJsonParser(true);
     }
 }
