@@ -60,7 +60,7 @@ namespace TVTComment.Model.NiconicoUtils
         private static ChatNiconicoCommentXmlTag getChatJSONTag(string str) {
             JObject jsonObj = JObject.Parse(str);
 
-            int vpos = int.Parse(jsonObj["chat"]["vpos"].ToString());
+            int vpos = jsonObj["chat"]["vpos"] == null ? 0 : int.Parse(jsonObj["chat"]["vpos"].ToString()); //ニコ生側の不具合で稀に必須項目のvposが抜けてるデータが流れてくる可能性があるので念の為JSONキー確認する。
             long date = long.Parse(jsonObj["chat"]["date"].ToString());
             int dateUsec = jsonObj["chat"]["date_usec"] == null ? 0 : int.Parse(jsonObj["chat"]["date_usec"].ToString());
             string mail = jsonObj["chat"]["mail"] == null ? "" : jsonObj["chat"]["mail"].ToString();
