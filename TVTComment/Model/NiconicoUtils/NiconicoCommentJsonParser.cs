@@ -10,7 +10,7 @@ namespace TVTComment.Model.NiconicoUtils
         private string buffer;
 
         /// <summary>
-        /// <see cref="NiconicoCommentXmlParser"/>を初期化する
+        /// <see cref="NiconicoCommentJsonParser"/>を初期化する
         /// </summary>
         /// <param name="socketFormat">ソケットを使うリアルタイムのデータ形式ならtrue 過去ログなどのデータ形式ならfalse</param>
         public NiconicoCommentJsonParser(bool socketFormat)
@@ -22,6 +22,7 @@ namespace TVTComment.Model.NiconicoUtils
         {
             if (socketFormat)
             {
+               // 一旦、コメント関連データのみ解析する
                if (str.StartsWith("{\"chat"))
                {
                    chats.Enqueue(getChatJSONTag(str));
@@ -58,7 +59,7 @@ namespace TVTComment.Model.NiconicoUtils
 
         private static ChatNiconicoCommentXmlTag getChatJSONTag(string str) {
             JObject jsonObj = JObject.Parse(str);
-            // {"chat":{"thread":"M.kk-tzPBrneGMsNfDNO1skg","no":45929,"vpos":6496293,"date":1616936565,"date_usec":664450,"mail":"184","user_id":"EvrCRqk2e04B-pYS7q44kVU5HR4","anonymity":1,"content":"結局SBの勝ちかいｗ"}}
+
             int vpos = int.Parse(jsonObj["chat"]["vpos"].ToString());
             long date = long.Parse(jsonObj["chat"]["date"].ToString());
             int dateUsec = jsonObj["chat"]["date_usec"] == null ? 0 : int.Parse(jsonObj["chat"]["date_usec"].ToString());
@@ -69,6 +70,7 @@ namespace TVTComment.Model.NiconicoUtils
             int abone = jsonObj["chat"]["abone"] == null ? 0 : int.Parse(jsonObj["chat"]["abone"].ToString());
             string content = (string)jsonObj["chat"]["content"];
             int no = int.Parse(jsonObj["chat"]["no"].ToString());
+
             return new ChatNiconicoCommentXmlTag(
                         content, 0, no, vpos, date, dateUsec, mail, userId, premium, anonymity, abone
                     );

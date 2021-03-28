@@ -102,14 +102,13 @@ namespace TVTComment.Model.NiconicoUtils
                 {
                     throw new InvalidPlayerStatusNicoLiveCommentReceiverException(str.ToString());
                 }
+                // WebSocketAPIに接続
                 ClientWebSocket ws = new ClientWebSocket();
                 var uri = new Uri(msUriStr);
-
-                //サーバに対し、接続を開始
                 await ws.ConnectAsync(uri, cancellationToken);
                 var buffer = new byte[1024];
-
-                string body= "[{\"ping\":{\"content\":\"rs:0\"}},{\"ping\":{\"content\":\"ps:0\"}},{\"thread\":{\"thread\":\"" + threadId + "\",\"version\":\"20061206\",\"user_id\":\"guest\",\"res_from\":-10,\"with_global\":1,\"scores\":1,\"nicoru\":0}},{\"ping\":{\"content\":\"pf:0\"}},{\"ping\":{\"content\":\"rf:0\"}}]";
+                // threadId情報を送信
+                string body = "[{\"ping\":{\"content\":\"rs:0\"}},{\"ping\":{\"content\":\"ps:0\"}},{\"thread\":{\"thread\":\"" + threadId + "\",\"version\":\"20061206\",\"user_id\":\"guest\",\"res_from\":-10,\"with_global\":1,\"scores\":1,\"nicoru\":0}},{\"ping\":{\"content\":\"pf:0\"}},{\"ping\":{\"content\":\"rf:0\"}}]";
                 byte[] bodyEncoded = Encoding.UTF8.GetBytes(body);
                 try
                 {
@@ -153,7 +152,7 @@ namespace TVTComment.Model.NiconicoUtils
                         if (count >= buffer.Length)
                         {
                             await ws.CloseAsync(WebSocketCloseStatus.InvalidPayloadData,
-                              "That's too long", CancellationToken.None);
+                              "That's too long", cancellationToken);
                             throw new ConnectionClosedNicoLiveCommentReceiverException();
                         }
                         segment = new ArraySegment<byte>(buffer, count, buffer.Length - count);
