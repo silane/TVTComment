@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Net.Sockets;
@@ -56,6 +57,39 @@ namespace TVTComment.Model.NiconicoUtils
             var assembly = Assembly.GetExecutingAssembly().GetName();
             var ua = assembly.Name + "/" + assembly.Version.ToString(3);
             httpClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", ua);
+        }
+
+        /// <summary>
+        /// KeepAliveコマンドの送信
+        /// </summary>
+        /// <exception cref="ObjectDisposedException"></exception>
+        /// <exception cref="NetworkNicoLiveCommentReceiverException"></exception>
+        private async void SendBlankAliveMessage(ClientWebSocket ws, [EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            if (ws == null || !WebSocketState.Open.Equals(ws.State))
+            {
+                Debug.WriteLine("websocket client is in wrong state.");
+                return;
+            }
+            while (true)
+            {
+                try
+                {
+                    await Task.Delay(60 * 1000, cancellationToken); // 1分待ちます。
+                    await ws.SendAsync(Encoding.UTF8.GetBytes(""), WebSocketMessageType.Text, true, cancellationToken).ConfigureAwait(false); //0byteデータ送信
+                }
+                catch (Exception e) when (e is ObjectDisposedException || e is SocketException || e is IOException || e is TaskCanceledException)
+                {
+                    if (cancellationToken.IsCancellationRequested)
+                        return;
+                    if (e is TaskCanceledException)
+                        return;
+                    if (e is ObjectDisposedException)
+                        throw;
+                    else
+                        throw new NetworkNicoLiveCommentReceiverException(e);
+                }
+            }
         }
 
         /// <summary>
@@ -135,6 +169,9 @@ namespace TVTComment.Model.NiconicoUtils
                     else
                         throw new NetworkNicoLiveCommentReceiverException(e);
                 }
+
+                // 1分間毎に0byteのKeepAliveコマンドを送信。
+                SendBlankAliveMessage(ws, cancellationToken);
 
                 //情報取得待ちループ
                 while (true)
