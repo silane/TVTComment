@@ -74,6 +74,10 @@ namespace TVTComment.Model.NiconicoUtils
 
             for (int disconnectedCount = 0; disconnectedCount < 5; ++disconnectedCount)
             {
+                // 万が一接続中断した場合、数秒空いたからリトライする。
+                var random = new Random();
+                await Task.Delay((disconnectedCount * 5000) + random.Next(0, 101));
+
                 Stream str;
                 try
                 {
