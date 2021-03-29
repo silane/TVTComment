@@ -143,7 +143,9 @@ namespace TVTComment.Model.NiconicoUtils
                 // WebSocketAPIに接続
                 ClientWebSocket ws = new ClientWebSocket();
                 // UAヘッダ追加
-                ws.Options.SetRequestHeader("User-Agent", WEBSOCKET_CLIENT_UA);
+                var assembly = Assembly.GetExecutingAssembly().GetName();
+                string version = assembly.Version.ToString(3);
+                ws.Options.SetRequestHeader("User-Agent", $"TvtComment/{version}");
                 // SubProtocol追加
                 ws.Options.AddSubProtocol(WEBSOCKET_PROTOCOL);
                 // Sec-WebSocket-Versionヘッダ追加
@@ -227,7 +229,6 @@ namespace TVTComment.Model.NiconicoUtils
 
         private readonly HttpClient httpClient;
         private readonly NiconicoCommentJsonParser parser = new NiconicoCommentJsonParser(true);
-        private readonly string WEBSOCKET_CLIENT_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36";
         private readonly string WEBSOCKET_PROTOCOL = "msg.nicovideo.jp#json";
         private readonly string WEBSOCKET_EXTENSIONS = "permessage-deflate; client_max_window_bits";
     }
