@@ -81,7 +81,8 @@ namespace TVTComment.Model.TwitterUtils
             if (string.IsNullOrWhiteSpace(apiaccesssecret) && string.IsNullOrWhiteSpace(apiaccesstoken))
                 throw new InvalidOperationException("Access tokenとAccess seecretが空白もしくは問題があります。");
             token = Tokens.Create(apikey, apiseecret, apiaccesstoken, apiaccesssecret);
-            if (bearertoken != null && !bearertoken.Equals("")) { 
+            if (bearertoken != null && !bearertoken.Equals(""))
+            {
                 oAuth2Token = OAuth2Token.Create(apikey, apiseecret, bearertoken);
                 Debug.WriteLine(oAuth2Token.BearerToken);
             }
@@ -96,8 +97,10 @@ namespace TVTComment.Model.TwitterUtils
             token = await OAuth.GetTokensAsync(authSession, pin);
             oAuth2Token = await OAuth2.GetTokenAsync(apikey, apiseecret);
             if (oAuth2Token.BearerToken != null && !oAuth2Token.BearerToken.Equals(""))
+            {
                 oAuth2Token = OAuth2Token.Create(apikey, apiseecret, oAuth2Token.BearerToken);
-            Debug.WriteLine(oAuth2Token.BearerToken);
+                Debug.WriteLine(oAuth2Token.BearerToken);
+            }
         }
 
         public void Logout()
