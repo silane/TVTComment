@@ -1,12 +1,10 @@
-﻿using CoreTweet;
-using CoreTweet.Streaming;
-using CoreTweet.V2;
+﻿using CoreTweet.V2;
 using ObservableUtils;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
+using System.Reactive;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -36,10 +34,9 @@ namespace TVTComment.Model.ChatCollectService
 
         private readonly TwitterAuthentication Twitter;
         private Task chatCollectTask;
-        private string oldSearchWord ="";
-        private readonly ConcurrentQueue<FilterStreamResponse> statusQueue = new ();
-        private readonly CancellationTokenSource cancel = new ();
-        private readonly ObservableValue<string> SearchWord = new ("");
+        private readonly ConcurrentQueue<FilterStreamResponse> statusQueue = new();
+        private readonly CancellationTokenSource cancel = new();
+        private readonly ObservableValue<string> SearchWord = new("");
         private readonly SearchWordResolver SearchWordResolver;
         private readonly ModeSelectMethod ModeSelect;
 
@@ -51,14 +48,25 @@ namespace TVTComment.Model.ChatCollectService
             ModeSelect = modeSelect;
             SearchWordResolver = searchWordResolver;
             if (Twitter.OAuth2Token == null)
-                throw new ChatCollectServiceCreationException("Twitter API v2の利用に失敗");
-            
-            SearchWord.Where(x => x != null && !x.Equals("")).Subscribe(res => {
+                throw new ChatCollectServiceCreationException("Twitter APIのBearerTokenが不明なためTwitter API v2 エンドポイントは利用できません。");
+
+            try
+            {
+                DeleteOldSearchWords();
+            }
+            catch (CoreTweet.TwitterException e)
+            {
+                throw new ChatCollectServiceCreationException($"このAPI KeyでTwitter API v2 エンドポイントが利用できないか\nTwitterのAPI制限に達したもしくは問題が発生したため切断されました\n\n{e.Message}");
+            }
+
+            SearchWord.Where(x => x != null && !x.Equals("")).Subscribe(res =>
+            {
+                DeleteOldSearchWords();
                 var filter = new FilterRule();
                 filter.Value = res;
+                filter.Tag = "TvTComment";
                 Twitter.OAuth2Token.V2.FilteredStreamApi.CreateRules(add: new[] { filter });
-                Twitter.OAuth2Token.V2.FilteredStreamApi.DeleteRules(values: new[] { oldSearchWord });
-                oldSearchWord = res;
+
             });
             SearchWord.Value = searchWord;
             chatCollectTask = SearchStreamAsync(cancel.Token);
@@ -74,7 +82,7 @@ namespace TVTComment.Model.ChatCollectService
             await Task.Run(() =>
             {
                 foreach (var status in Twitter.OAuth2Token.V2.FilteredStreamApi.Filter(expansions: TweetExpansions.AuthorId, tweet_fields: TweetFields.CreatedAt)
-                        .StreamAsEnumerable().OfType<FilterStreamResponse>())
+                    .StreamAsEnumerable().OfType<FilterStreamResponse>())
                 {
                     if (cancel.IsCancellationRequested)
                         break;
@@ -98,7 +106,7 @@ namespace TVTComment.Model.ChatCollectService
                 }
                 if (chatCollectTask.IsFaulted)
                 {
-                    throw new ChatCollectException("TwitterのAPI制限に達したか問題が発生したため切断されました");
+                    throw new ChatCollectException("このAPI KeyでTwitter API v2 エンドポイントが利用できないか\nTwitterのAPI制限に達したもしくは問題が発生したため切断されました");
                 }
             }
 
@@ -123,9 +131,29 @@ namespace TVTComment.Model.ChatCollectService
             }
         }
 
+        private void DeleteOldSearchWords()
+        {
+            try
+            {
+                var old = Twitter.OAuth2Token.V2.FilteredStreamApi.GetRules().Data.Where(res => res.Tag == "TvTComment").Select(res => res.Value);
+                Twitter.OAuth2Token.V2.FilteredStreamApi.DeleteRules(values: old);
+            }
+            catch (ArgumentNullException e)
+            {
+                Console.WriteLine(e);
+            }
+        }
+
         public void Dispose()
         {
-            Twitter.OAuth2Token.V2.FilteredStreamApi.DeleteRules(values: new[] { SearchWord.Value });
+            try
+            {
+                DeleteOldSearchWords();
+            }
+            catch (CoreTweet.TwitterException e)
+            {
+                Console.WriteLine(e);
+            }
             cancel.Cancel();
         }
     }
