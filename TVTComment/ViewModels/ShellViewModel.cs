@@ -75,7 +75,7 @@ namespace TVTComment.ViewModels
         public ReadOnlyObservableValue<Model.ChannelInfo> CurrentChannel { get; private set; }
         public ReadOnlyObservableValue<Model.EventInfo> CurrentEvent { get; private set; }
         public ObservableValue<bool> UseDefaultChatCollectService { get; private set; }
-        
+
         public ObservableValue<string> WindowTitle { get; } = new ObservableValue<string>("TVTComment");
         public ObservableValue<double> WindowOpacity => BasicSettingControlViewModel?.WindowOpacity;
         public ObservableValue<bool> WindowTopmost => BasicSettingControlViewModel?.WindowTopmost;
@@ -118,7 +118,7 @@ namespace TVTComment.ViewModels
             mainWindow.MouseLeftButtonDown += (_, __) => { mainWindow.DragMove(); };
             // 初期化が終わるまで最小化しておく
             mainWindow.WindowState = WindowState.Minimized;
-            
+
             model.ApplicationClose += CloseApplication;
         }
 
@@ -282,6 +282,13 @@ namespace TVTComment.ViewModels
 
         private void model_ErrorOccurredInChatCollecting(Model.ChatCollectService.IChatCollectService service, string errorText)
         {
+            // 「自動選択」が有効
+            if (UseDefaultChatCollectService.Value)
+            {
+                AddChatCollectServiceCommand.RaiseCanExecuteChanged();
+                return;
+            }
+
             AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = $"\"{service.Name}\"で以下のエラーが発生しました。このコメント元を無効化します。\n\n{errorText}" });
         }
 
