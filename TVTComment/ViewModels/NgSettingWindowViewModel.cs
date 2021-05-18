@@ -86,6 +86,7 @@ namespace TVTComment.ViewModels
         public ICommand AddRenderEmotionAsCommentCommand { get; private set; }
         public ICommand AddRenderInfoAsCommentCommand { get; private set; }
         public ICommand AddSetColorRuleCommand { get; private set; }
+        public ICommand AddRenderNicoadAsCommentCommand { get; private set; }
         public ICommand RemoveRuleCommand { get; private set; }
 
         public NgSettingWindowViewModel(Model.TVTComment model)
@@ -167,6 +168,11 @@ namespace TVTComment.ViewModels
                     TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value),
                     SetColorRuleColor.Value
                 ));
+            });
+
+            AddRenderNicoadAsCommentCommand = new DelegateCommand(() =>
+            {
+                model.ChatModule.AddChatModRule(new Model.ChatModRules.RenderNicoadAsCommentChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value)));
             });
 
             RemoveRuleCommand = new DelegateCommand(() =>

@@ -183,6 +183,9 @@ namespace TVTComment.Model
                             targetServices, Color.FromArgb(components[0], components[1], components[2], components[3])
                         );
                         break;
+                    case "RenderNicoadAsComment":
+                        entry.ChatModRule = new ChatModRules.RenderNicoadAsCommentChatModRule(targetServices);
+                        break;
                     default:
                         continue;
                 }
@@ -244,6 +247,9 @@ namespace TVTComment.Model
                         entity.Type = "SetColor";
                         Color color = setColor.Color;
                         entity.Expression = $"{color.A},{color.R},{color.G},{color.B}";
+                        break;
+                    case ChatModRules.RenderNicoadAsCommentChatModRule _:
+                        entity.Type = "RenderNicoadAsComment";
                         break;
                     default:
                         throw new Exception();
