@@ -12,7 +12,7 @@ namespace TVTComment.Model.ChatCollectServiceEntry
     {
         public class ChatCollectServiceCreationOption : IChatCollectServiceCreationOption
         {
-            public enum ModeSelectMethod { Auto, Manual }
+            public enum ModeSelectMethod { Auto, Preset, Manual }
             public string SearchWord { get; }
             public ModeSelectMethod Method;
             public ChatCollectServiceCreationOption(ModeSelectMethod method, string searchWord)
@@ -40,7 +40,7 @@ namespace TVTComment.Model.ChatCollectServiceEntry
 
         public IChatCollectService GetNewService(IChatCollectServiceCreationOption creationOption)
         {
-            creationOption ??= new ChatCollectServiceCreationOption(ModeSelectMethod.Auto, "");
+            creationOption ??= new ChatCollectServiceCreationOption(ModeSelectMethod.Preset, "");
             if (creationOption == null || creationOption is not ChatCollectServiceCreationOption co)
                 throw new ArgumentException($"Type of {nameof(creationOption)} must be {nameof(TwitterLiveChatCollectServiceEntry)}.{nameof(ChatCollectServiceCreationOption)}", nameof(creationOption));
             var session = Session.Value;

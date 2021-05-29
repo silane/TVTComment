@@ -52,7 +52,7 @@ namespace TVTComment.Model.ChatCollectService
             SearchWordResolver = searchWordResolver;
             switch (modeSelect)
             {
-                case ModeSelectMethod.Auto:
+                case ModeSelectMethod.Preset:
                     SearchWord.Where(x => x != null && !x.Equals("")).Subscribe(res => chatCollectTask = SearchStreamAsync(res, cancel.Token));
                     break;
 
@@ -95,7 +95,7 @@ namespace TVTComment.Model.ChatCollectService
 
         public IEnumerable<Chat> GetChats(ChannelInfo channel,EventInfo events, DateTime time)
         {
-            if (ModeSelect == ModeSelectMethod.Auto)
+            if (ModeSelect == ModeSelectMethod.Preset)
             {
                 SearchWord.Value = SearchWordResolver.Resolve(channel.NetworkId, channel.ServiceId);
             }
