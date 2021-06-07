@@ -72,6 +72,7 @@ namespace TVTComment.Model.ChatCollectService
                 foreach (var status in Twitter.Token.Streaming.Filter(track: searchWord)
                             .OfType<StatusMessage>()
                             .Where(x => !x.Status.Text.StartsWith("RT"))
+                            .Where(x => x.Status.Language is null or "und" || x.Status.Language.StartsWith("ja"))
                             .Select(x => x.Status))
                 {
                     if (cancel.IsCancellationRequested || !SearchWord.Value.Equals(searchWord))
