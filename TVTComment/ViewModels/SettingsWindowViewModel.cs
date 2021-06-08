@@ -174,7 +174,14 @@ namespace TVTComment.ViewModels
             });
 
             AnnictAccessTokenApplyCommand = new DelegateCommand(() => {
-                twitter.SetAnnictToken(AnnictAccessToken.Value);
+                try
+                {
+                    twitter.SetAnnictToken(AnnictAccessToken.Value);
+                }
+                catch (Exception e)
+                {
+                    AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = e.Message });
+                }
                 SyncAnnictStatus();
             });
 

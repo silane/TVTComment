@@ -157,8 +157,14 @@ namespace TVTComment.Model.ChatService
 
         public void SetAnnictToken(string token)
         {
-            settings.AnnictAccessToken = token;
-            twitterSession.Value.AnnictSet(token);
+            if (twitterSession.Value != null) { 
+                settings.AnnictAccessToken = token;
+                twitterSession.Value.AnnictSet(token);
+            }
+            else
+            {
+                throw new ArgumentException($"先にTwitterへのログインが必要です。");
+            }
         }
 
         public void Dispose()
