@@ -44,7 +44,7 @@ namespace TVTComment.Model.ChatCollectServiceEntry
                 throw new ArgumentException($"Type of {nameof(creationOption)} must be {nameof(TwitterLiveChatCollectServiceEntry)}.{nameof(ChatCollectServiceCreationOption)}", nameof(creationOption));
             var session = Session.Value;
             if (session == null)
-                throw new ChatCollectServiceCreationException("Twiiterリアルタイム実況にはTwitterへのログインが必要です");
+                throw new ChatCollectServiceCreationException("Twitterリアルタイム実況にはTwitterへのログインが必要です");
             return new TwitterLiveChatCollectService(this, co.SearchWord, co.Method, searchWordResolver, session);
         }
     }
