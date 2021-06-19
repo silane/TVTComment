@@ -82,7 +82,7 @@ namespace TVTComment.Model.NichanUtils
             return threads.TakeWhile(
                 x => x.EditDistance <= threads.First().EditDistance + 10
             ).Take(3).Select(
-                x => $"{boardHost}/test/read.cgi/{boardName}/{x.Thread.Name}/l50"
+                x => $"{boardHost}/test/read.cgi/{boardName}/{x.Thread.Name}"
             );
         }
     }

@@ -91,7 +91,7 @@ namespace TVTComment.ViewModels.ChatCollectServiceCreationOptionControl
             List<Nichan.Thread> threadsInBoard = (await Nichan.SubjecttxtParser.ParseFromStream(textReader)).ToList();
 
             foreach (var thread in threadsInBoard)
-                thread.Uri = new Uri($"{boardHost}/test/read.cgi/{boardName}/{thread.Name}/l50");
+                thread.Uri = new Uri($"{boardHost}/test/read.cgi/{boardName}/{thread.Name}");
 
             Threads = threadsInBoard;
         }

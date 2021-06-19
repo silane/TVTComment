@@ -43,7 +43,7 @@ namespace TVTComment.Model.NichanUtils
             ).Where(
                 x => Keywords.All(keyword => x.Title.Contains(keyword))
             ).Select(
-                x => $"{boardHost}/test/read.cgi/{boardName}/{x.Name}/l50"
+                x => $"{boardHost}/test/read.cgi/{boardName}/{x.Name}"
             );
         }
     }
