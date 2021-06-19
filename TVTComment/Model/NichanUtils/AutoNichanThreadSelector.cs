@@ -53,7 +53,7 @@ namespace TVTComment.Model.NichanUtils
                 ).Where(
                     x => x.ResCount <= 1000 && keywords.All(keyword => x.Title.Contains(keyword))
                 ).OrderByDescending(x => x.ResCount).Take(3).Select(
-                    x => $"{boardHost}/test/read.cgi/{boardName}/{x.Name}"
+                    x => $"{boardHost}/test/read.cgi/{boardName}/{x.Name}/l50"
                 );
                 threads.AddRange(urls);
             }
