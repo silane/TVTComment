@@ -43,8 +43,6 @@ namespace TVTComment.Model.ChatModRules
                     chat.SetText(text);
                     return true;
             }
-
-            return true;
         }
     }
 }
