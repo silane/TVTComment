@@ -19,30 +19,35 @@ namespace TVTComment.Model.NichanUtils
 
         public async Task<IEnumerable<string>> Get(ChannelInfo channel, DateTimeOffset time, CancellationToken cancellationToken)
         {
-            MatchingThread matchingThread = threadResolver.Resolve(channel, true);
-            if (matchingThread == null)
-                return Enumerable.Empty<string>();
+            IEnumerable<MatchingThread> matchingThreads = threadResolver.Resolve(channel, true);
+            List<string> result = new List<string>();
 
-            string[] keywords = matchingThread.ThreadTitleKeywords?.Select(
-                x => x.ToLower().Normalize(NormalizationForm.FormKD)
-            ).ToArray() ?? Array.Empty<string>();
-            (string server, string board) = GetServerAndBoardFromBoardUrl(matchingThread.BoardUri.ToString());
-
-            if (!pastThreadListerCache.TryGetValue(board, out var threadLister))
+            foreach (var thread in matchingThreads)
             {
-                threadLister = new Nichan.PastThreadLister(board, server, backTime);
-                await threadLister.Initialize(cancellationToken).ConfigureAwait(false);
-                pastThreadListerCache.Add(board, threadLister);
+                string[] keywords = thread.ThreadTitleKeywords?.Select(
+                    x => x.ToLower().Normalize(NormalizationForm.FormKD)
+                ).ToArray() ?? Array.Empty<string>();
+                (string server, string board) = GetServerAndBoardFromBoardUrl(thread.BoardUri.ToString());
+
+                if (!pastThreadListerCache.TryGetValue(board, out var threadLister))
+                {
+                    threadLister = new Nichan.PastThreadLister(board, server, backTime);
+                    await threadLister.Initialize(cancellationToken).ConfigureAwait(false);
+                    pastThreadListerCache.Add(board, threadLister);
+                }
+
+                DateTimeOffset startTime = time;
+                IEnumerable<Nichan.Thread> threads = await threadLister.GetBetween(
+                    startTime, startTime + getTimeSpan, cancellationToken
+                ).ConfigureAwait(false);
+
+                var urls = threads.Where(x => keywords.All(
+                    keyword => x.Title.ToLower().Normalize(NormalizationForm.FormKD).Contains(keyword)
+                )).Select(x => x.Uri.ToString());
+                result.AddRange(urls);
             }
 
-            DateTimeOffset startTime = time;
-            IEnumerable<Nichan.Thread> threads = await threadLister.GetBetween(
-                startTime, startTime + getTimeSpan, cancellationToken
-            ).ConfigureAwait(false);
-
-            return threads.Where(x => keywords.All(
-                keyword => x.Title.ToLower().Normalize(NormalizationForm.FormKD).Contains(keyword)
-            )).Select(x => x.Uri.ToString());
+            return result;
         }
 
         private readonly ThreadResolver threadResolver;
