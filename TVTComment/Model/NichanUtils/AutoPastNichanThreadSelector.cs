@@ -24,9 +24,9 @@ namespace TVTComment.Model.NichanUtils
 
             foreach (var thread in matchingThreads)
             {
-                string[] keywords = thread.ThreadTitleKeywords.Select(
+                string[] keywords = thread.ThreadTitleKeywords?.Select(
                     x => x.ToLower().Normalize(NormalizationForm.FormKD)
-                ).ToArray();
+                )?.ToArray() ?? Array.Empty<string>();
                 (string server, string board) = GetServerAndBoardFromBoardUrl(thread.BoardUri.ToString());
 
                 if (!pastThreadListerCache.TryGetValue(board, out var threadLister))
