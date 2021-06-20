@@ -19,7 +19,7 @@ namespace TVTComment.Model.NichanUtils
 
         public async Task<IEnumerable<string>> Get(ChannelInfo channel, DateTimeOffset time, CancellationToken cancellationToken)
         {
-            IEnumerable<MatchingThread> matchingThreads = threadResolver.Resolve(channel, true);
+            IEnumerable<MatchingThread> matchingThreads = threadResolver.Resolve(channel, false);
             List<string> result = new List<string>();
 
             foreach (var thread in matchingThreads)
