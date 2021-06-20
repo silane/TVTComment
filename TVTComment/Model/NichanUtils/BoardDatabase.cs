@@ -32,19 +32,19 @@ namespace TVTComment.Model.NichanUtils
                         {
                             yield return entry;
                         }
-                        break;
+                        continue;
                     case ThreadMappingRuleTarget.NSId:
                         if (entry.Value == (channel.NetworkId << 16 | channel.ServiceId))
                         {
                             yield return entry;
                         }
-                        break;
+                        continue;
                     case ThreadMappingRuleTarget.NId:
                         if (entry.Value == channel.NetworkId)
                         {
                             yield return entry;
                         }
-                        break;
+                        continue;
                 }
             }
         }
@@ -63,21 +63,24 @@ namespace TVTComment.Model.NichanUtils
         /// </summary>
         public IEnumerable<MatchingThread> GetMatchingThread(ChannelEntry channel)
         {
-            string[] threadTitleKeywords;
-
             var boardAndThread = GetMatchingThreadMappingRuleEntry(channel).ToList();//板名とスレッドタイトルを得る
             foreach (var entry in boardAndThread)
             {
-                if (boardAndThread.Count == 0)
-                    continue;
                 BoardEntry board = GetBoardEntryById(entry.BoardId);//板名から板URLと主要スレッド名を得る
                 if (board == null)
                     continue;
-                threadTitleKeywords = entry.ThreadTitleKeywords ?? board.MainThreadTitleKeywords;
-                if (threadTitleKeywords == null)
-                    continue;
 
-                yield return new MatchingThread(board.Title, board.Uri, threadTitleKeywords);
+                var threadTitleKeywords = new List<string>();
+                if (entry.ThreadTitleKeywords != null)
+                {
+                    threadTitleKeywords.AddRange(entry.ThreadTitleKeywords);
+                }
+                if (board.MainThreadTitleKeywords != null)
+                {
+                    threadTitleKeywords.AddRange(board.MainThreadTitleKeywords);
+                }
+
+                yield return new MatchingThread(board.Title, board.Uri, threadTitleKeywords.ToArray());
             }
         }
     }

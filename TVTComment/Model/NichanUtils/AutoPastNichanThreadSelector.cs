@@ -24,9 +24,9 @@ namespace TVTComment.Model.NichanUtils
 
             foreach (var thread in matchingThreads)
             {
-                string[] keywords = thread.ThreadTitleKeywords?.Select(
+                string[] keywords = thread.ThreadTitleKeywords.Select(
                     x => x.ToLower().Normalize(NormalizationForm.FormKD)
-                ).ToArray() ?? Array.Empty<string>();
+                ).ToArray();
                 (string server, string board) = GetServerAndBoardFromBoardUrl(thread.BoardUri.ToString());
 
                 if (!pastThreadListerCache.TryGetValue(board, out var threadLister))
@@ -41,9 +41,9 @@ namespace TVTComment.Model.NichanUtils
                     startTime, startTime + getTimeSpan, cancellationToken
                 ).ConfigureAwait(false);
 
-                var urls = threads.Where(x => keywords.All(
-                    keyword => x.Title.ToLower().Normalize(NormalizationForm.FormKD).Contains(keyword)
-                )).Select(x => x.Uri.ToString());
+                var urls = threads.Where(
+                    x => keywords.Length == 0 || keywords.Any(keyword => x.Title.ToLower().Normalize(NormalizationForm.FormKD).Contains(keyword))
+                ).Select(x => x.Uri.ToString());
                 result.AddRange(urls);
             }
 

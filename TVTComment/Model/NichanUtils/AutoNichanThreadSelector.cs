@@ -29,9 +29,9 @@ namespace TVTComment.Model.NichanUtils
 
             foreach (var entry in matchingThreads)
             {
-                IEnumerable<string> keywords = entry.ThreadTitleKeywords.Select(
+                var keywords = entry.ThreadTitleKeywords.Select(
                     x => x.ToLower().Normalize(NormalizationForm.FormKD)
-                );
+                ).ToList();
 
                 string boardUri = entry.BoardUri.ToString();
                 var uri = new Uri(boardUri);
@@ -51,8 +51,10 @@ namespace TVTComment.Model.NichanUtils
                 var urls = threadsInBoard.Select(
                     x => { x.Title = x.Title.ToLower().Normalize(NormalizationForm.FormKD); return x; }
                 ).Where(
-                    x => x.ResCount <= 1000 && keywords.All(keyword => x.Title.Contains(keyword))
-                ).OrderByDescending(x => x.ResCount).Take(3).Select(
+                    x => x.ResCount <= 1000
+                ).Where(
+                    x => keywords.Count == 0 || keywords.Any(keyword => x.Title.Contains(keyword))
+                ).OrderByDescending(x => x.ResCount).Take(5).Select(
                     x => $"{boardHost}/test/read.cgi/{boardName}/{x.Name}/l50"
                 );
                 threads.AddRange(urls);
