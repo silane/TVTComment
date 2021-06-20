@@ -19,14 +19,14 @@ namespace TVTComment.Model.NichanUtils
 
         public async Task<IEnumerable<string>> Get(ChannelInfo channel, DateTimeOffset time, CancellationToken cancellationToken)
         {
-            IEnumerable<MatchingThread> matchingThreads = threadResolver.Resolve(channel, true);
+            IEnumerable<MatchingThread> matchingThreads = threadResolver.Resolve(channel, false);
             List<string> result = new List<string>();
 
             foreach (var thread in matchingThreads)
             {
-                string[] keywords = thread.ThreadTitleKeywords.Select(
+                string[] keywords = thread.ThreadTitleKeywords?.Select(
                     x => x.ToLower().Normalize(NormalizationForm.FormKD)
-                ).ToArray();
+                )?.ToArray() ?? Array.Empty<string>();
                 (string server, string board) = GetServerAndBoardFromBoardUrl(thread.BoardUri.ToString());
 
                 if (!pastThreadListerCache.TryGetValue(board, out var threadLister))
