@@ -224,6 +224,7 @@
     - twittersearchword.txt で検索ワードを複数個指定できるように #18
     - 2chthreads.txt でチャンネルの板定義を複数設定できるように #19
     - 2ch スレッドキーワードがない場合に任意のスレッドを選択するように #20
+    - 各種.txtファイルを更新 [SlashNephy/TVTComment-txt](https://github.com/SlashNephy/TVTComment-txt) 
 
 > ## v1.10.2 (2021-02-21)
 > - 以下2つは [noriokun4649](https://github.com/noriokun4649) さんご提供です。ありがとうございます。
