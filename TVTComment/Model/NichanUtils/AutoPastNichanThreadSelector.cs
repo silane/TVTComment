@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace TVTComment.Model.NichanUtils
 {
@@ -17,10 +17,9 @@ namespace TVTComment.Model.NichanUtils
             this.backTime = backTime;
         }
 
-        public async Task<IEnumerable<string>> Get(ChannelInfo channel, DateTimeOffset time, CancellationToken cancellationToken)
+        public async IAsyncEnumerable<string> Get(ChannelInfo channel, DateTimeOffset time, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             IEnumerable<MatchingThread> matchingThreads = threadResolver.Resolve(channel, false);
-            List<string> result = new List<string>();
 
             foreach (var thread in matchingThreads)
             {
@@ -37,17 +36,12 @@ namespace TVTComment.Model.NichanUtils
                 }
 
                 DateTimeOffset startTime = time;
-                IEnumerable<Nichan.Thread> threads = await threadLister.GetBetween(
-                    startTime, startTime + getTimeSpan, cancellationToken
-                ).ConfigureAwait(false);
-
-                var urls = threads.Where(
-                    x => keywords.Length == 0 || keywords.Any(keyword => x.Title.ToLower().Normalize(NormalizationForm.FormKD).Contains(keyword))
-                ).Select(x => x.Uri.ToString());
-                result.AddRange(urls);
+                var threads = threadLister.GetBetween(startTime, startTime + getTimeSpan, keywords, cancellationToken);
+                await foreach (var x in threads)
+                {
+                    yield return x.Uri.ToString();
+                }
             }
-
-            return result;
         }
 
         private readonly ThreadResolver threadResolver;
