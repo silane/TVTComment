@@ -139,7 +139,7 @@ namespace TVTComment.Model.ChatCollectService
                 throw new ChatReceivingException("コメント取得できませんでした以下の原因が考えられます\n\n・放送されていない\n・視聴権がない\n・コミュニティフォロワー限定番組");
             
             liveId = playerStatusRoot.GetProperty("data").GetProperty("socialGroup").GetProperty("id").GetString();
-
+            await commentSender.ConnectWatchSession(originalLiveId,cancel);
             try
             {
                 await foreach (NiconicoUtils.NiconicoCommentXmlTag tag in commentReceiver.Receive(originalLiveId, cancel))

@@ -178,6 +178,7 @@ namespace TVTComment.Model.ChatCollectService
                 throw new LiveNotFoundChatReceivingException();
 
             liveId = playerStatusRoot.GetProperty("data").GetProperty("socialGroup").GetProperty("id").GetString();
+            await commentSender.ConnectWatchSession(originalLiveId,cancellationToken);
 
             try
             {
