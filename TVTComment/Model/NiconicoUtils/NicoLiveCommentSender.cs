@@ -1,13 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
+using System.Net.WebSockets;
+using System.Reactive.Linq;
 using System.Reflection;
-using System.Text;
-using System.Text.Encodings.Web;
 using System.Text.Json;
-using System.Text.Unicode;
+using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
+using Websocket.Client;
 
 namespace TVTComment.Model.NiconicoUtils
 {
@@ -55,6 +59,7 @@ namespace TVTComment.Model.NiconicoUtils
     class NicoLiveCommentSender : IDisposable
     {
         private readonly HttpClient httpClient;
+        private BlockingCollection<string[]> messageColl = new ();
 
         public NicoLiveCommentSender(NiconicoLoginSession niconicoSession)
         {
@@ -66,99 +71,108 @@ namespace TVTComment.Model.NiconicoUtils
             httpClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", ua);
         }
 
+
+        public async Task ConnectWatchSession(string liveId, CancellationToken cancellationToken)
+        {
+            var resp = await httpClient.GetStringAsync("https://live.nicovideo.jp/watch/" + liveId).ConfigureAwait(false);
+            var webSocketUrl = Regex.Matches(resp, @"wss://.+nicovideo.jp/[/a-z0-9]+[0-9]+\?audience_token=([_a-z0-9]*)").First().Value;
+            int.TryParse(Regex.Matches(resp, @"&quot;beginTime&quot;:(?<time>[0-9]+),").First().Groups["time"].Value,out var openTime);
+
+            var _ = Task.Run( async () =>
+            {
+                var factory = new Func<ClientWebSocket>(() => {
+
+                    var cl = new ClientWebSocket();
+                    var assembly = Assembly.GetExecutingAssembly().GetName();
+                    var ua = assembly.Name + "/" + assembly.Version.ToString(3);
+                    cl.Options.SetRequestHeader("User-Agent", ua);
+                    return cl;
+                });
+                using var ws = new WebsocketClient(new Uri(webSocketUrl), factory);
+
+                using var timer = new System.Timers.Timer(30 * 1000);
+
+                ElapsedEventHandler handler = null;
+                handler = async (sender, e) =>
+                {
+                    if (!ws.IsRunning)
+                    {
+                        timer.Elapsed -= handler;
+                        timer.Close();
+                        return;
+                    }
+                    await ws.SendInstant("{\"type\": \"keepSeat\"}");
+                };
+
+                ws.MessageReceived
+                    .Subscribe(async msg =>
+                    {
+                        var json = JsonDocument.Parse(msg.Text).RootElement;
+                        var type = json.GetProperty("type").GetString();
+                        switch (type)
+                        {
+                            case "error":
+                                break;
+                            case "seat":
+                                var keepInterval = json.GetProperty("data").GetProperty("keepIntervalSec").GetInt32();
+                                timer.Interval = keepInterval * 1000;
+                                timer.Elapsed += handler;
+                                timer.Start();
+                                break;
+                            case "ping":
+                                await ws.SendInstant("{\"type\": \"pong\"}");
+                                break;
+                            case "reconnect":
+                                var data = json.GetProperty("data");
+                                var token = data.GetProperty("audienceToken").GetString();
+                                var waittime = data.GetProperty("waitTimeSec").GetInt32();
+                                await ws.Stop(WebSocketCloseStatus.NormalClosure, "reconnect");
+                                /*ws.Stop(WebSocketCloseStatus.NormalClosure, "reconnect");
+                                ws.Url = new Uri(Regex.Replace(webSocketUrl, @"", ""));
+                                ws.Start();*/
+                                break;
+                            case "disconnect":
+                                await ws.Stop(WebSocketCloseStatus.NormalClosure, "disconnect");
+                                break;
+                            case "postCommentResult":
+                                break;
+                        }
+                    });
+
+                await ws.Start();
+                await ws.SendInstant("{\"type\": \"startWatching\",\"data\": {\"reconnect\": false}}");
+
+                while(true)
+                {
+                    if (!ws.IsStarted || cancellationToken.IsCancellationRequested)
+                    {
+                        await ws.Stop(WebSocketCloseStatus.NormalClosure, "IsCancellationRequested");
+                        timer.Elapsed -= handler;
+                        timer.Close();
+                        break;
+                    }
+                    while (messageColl.TryTake(out var text))
+                    {
+                        long vpos = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() / 10 - openTime * 100; // vposは10ミリ秒単位
+                        await ws.SendInstant("{ \"type\": \"postComment\", \"data\": { \"text\": \"" + text[0] + "\", \"vpos\":" + vpos + ", \"isAnonymous\": true } }");
+                    }
+                }
+
+            }, cancellationToken);
+        }
+
         /// <summary>
         /// コメントを投稿する
         /// </summary>
-        /// <exception cref="InvalidPlayerStatusNicoLiveCommentSenderException"></exception>
-        /// <exception cref="NetworkNicoLiveCommentSenderException"></exception>
-        /// <exception cref="ResponseFormatNicoLiveCommentSenderException"></exception>
-        /// <exception cref="ResponseErrorNicoLiveCommentSenderException"></exception>
         public async Task Send(string liveId, string message, string mail)
         {
-            Stream str;
-            try
-            {
-                if (!liveId.StartsWith("lv")) // 代替えAPIではコミュニティ・チャンネルにおけるコメント鯖取得ができないのでlvを取得しに行く
-                {
-                    var getLiveId = await httpClient.GetStreamAsync($"https://live2.nicovideo.jp/unama/tool/v1/broadcasters/social_group/{liveId}/program").ConfigureAwait(false);
-                    var liveIdJson = await JsonDocument.ParseAsync(getLiveId).ConfigureAwait(false);
-                    var liveIdRoot = liveIdJson.RootElement;
-                    if (!liveIdRoot.GetProperty("meta").GetProperty("errorCode").GetString().Equals("OK")) throw new InvalidPlayerStatusNicoLiveCommentSenderException("コミュニティ・チャンネルが見つかりませんでした");
-                    liveId = liveIdRoot.GetProperty("data").GetProperty("nicoliveProgramId").GetString(); // lvから始まるLiveIDに置き換え
-
-                }
-                str = await httpClient.GetStreamAsync($"https://live2.nicovideo.jp/unama/watch/{liveId}/programinfo").ConfigureAwait(false);
-            }
-            catch (HttpRequestException e)
-            {
-                throw new NetworkNicoLiveCommentSenderException(e);
-            }
-
-            var playerStatus = await JsonDocument.ParseAsync(str).ConfigureAwait(false);
-            var playerStatusRoot = playerStatus.RootElement;
-
-            playerStatusRoot.GetProperty("data").GetProperty("beginAt").TryGetInt64(out long openTime);
-
-            if (liveId == null || openTime == 0)
-            {
-                throw new InvalidPlayerStatusNicoLiveCommentSenderException(playerStatus.ToString());
-            }
-            // vposは10ミリ秒単位
-            long vpos = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() / 10 - openTime * 100;
-
-            var options = new JsonSerializerOptions
-            {
-                Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
-            };
-
-            HttpResponseMessage response;
-            try
-            {
-                response = await httpClient.PostAsync(
-                    $"https://api.cas.nicovideo.jp/v1/services/live/programs/{liveId}/comments",
-                    new StringContent(JsonSerializer.Serialize(new Dictionary<string, string> {
-                        { "message", message },
-                        { "command", mail },
-                        { "vpos", vpos.ToString() },
-                    }, options), Encoding.UTF8, "application/json")
-                );
-            }
-            catch (HttpRequestException e)
-            {
-                throw new NetworkNicoLiveCommentSenderException(e);
-            }
-            string responseBody = await response.Content.ReadAsStringAsync();
-            JsonDocument responseBodyJson;
-            try
-            {
-                responseBodyJson = JsonDocument.Parse(responseBody);
-            }
-            catch (JsonException)
-            {
-                throw new ResponseFormatNicoLiveCommentSenderException(responseBody);
-            }
-
-            using (responseBodyJson)
-            {
-                int status;
-                try
-                {
-                    status = responseBodyJson.RootElement.GetProperty("meta").GetProperty("status").GetInt32();
-                }
-                catch (Exception e) when (e is InvalidOperationException || e is KeyNotFoundException)
-                {
-                    throw new ResponseFormatNicoLiveCommentSenderException(responseBody);
-                }
-                if (status != 200)
-                {
-                    throw new ResponseErrorNicoLiveCommentSenderException();
-                }
-            }
+            messageColl.Add(new string[] { message, mail});
         }
 
         public void Dispose()
         {
             httpClient.Dispose();
+
         }
     }
 }
