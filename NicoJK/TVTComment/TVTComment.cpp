@@ -367,9 +367,8 @@ namespace TVTComment
 		pi.pszEventText = NULL;
 		pi.pszEventExtText = NULL;
 		this->tvtest->GetCurrentProgramInfo(&pi);//EventIDだけ取れればいい
-		if (pi.EventID != lastEventId && pi.Duration != 3435973836)
+		if (pi.EventID != lastEventId)
 		{
-			//チャンネル変更中などには情報が壊れてるので壊れてるときは送らないように変更
 			//EventIDが変わっていたら
 			TVTest::ChannelInfo ci;
 			ci.Size = sizeof(ci);
@@ -417,7 +416,8 @@ namespace TVTComment
 #pragma warning(disable: 4701)//未初期化のローカル変数siを使っているとする警告の抑止
 	void TVTComment::sendCurrentChannelIPCMessage(const TVTest::ChannelInfo &ci, const TVTest::ProgramInfo &pi)
 	{
-		if (!this->isConnected)
+		//チャンネル変更中などには情報が壊れてるので壊れてるときは抜けるように変更
+		if (!this->isConnected || pi.Duration == 3435973836)
 			return;
 
 		TVTest::ServiceInfo si;
