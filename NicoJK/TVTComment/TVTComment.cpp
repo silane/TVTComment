@@ -416,15 +416,14 @@ namespace TVTComment
 #pragma warning(disable: 4701)//未初期化のローカル変数siを使っているとする警告の抑止
 	void TVTComment::sendCurrentChannelIPCMessage(const TVTest::ChannelInfo &ci, const TVTest::ProgramInfo &pi)
 	{
-		//チャンネル変更中などには情報が壊れてるので壊れてるときは抜けるように変更
-		if (!this->isConnected || pi.Duration == 3435973836)
+		if (!this->isConnected)
 			return;
-
 		TVTest::ServiceInfo si;
 		si.Size = sizeof(si);
 		int serviceIdx=this->tvtest->GetService();
-		if (serviceIdx != -1)
-			this->tvtest->GetServiceInfo(serviceIdx, &si);
+		if (serviceIdx < 0) //チャンネル変更中などには情報が壊れてるので壊れてるときは抜けるように変更
+			return;
+		this->tvtest->GetServiceInfo(serviceIdx, &si);
 
 		CurrentChannelIPCMessage msg;
 		msg.SpaceIndex = ci.Space;
