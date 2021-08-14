@@ -367,8 +367,9 @@ namespace TVTComment
 		pi.pszEventText = NULL;
 		pi.pszEventExtText = NULL;
 		this->tvtest->GetCurrentProgramInfo(&pi);//EventIDだけ取れればいい
-		if (pi.EventID != lastEventId)
+		if (pi.EventID != lastEventId && pi.Duration != 3435973836)
 		{
+			//チャンネル変更中などには情報が壊れてるので壊れてるときは送らないように変更
 			//EventIDが変わっていたら
 			TVTest::ChannelInfo ci;
 			ci.Size = sizeof(ci);
