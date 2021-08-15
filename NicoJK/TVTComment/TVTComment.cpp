@@ -418,12 +418,12 @@ namespace TVTComment
 	{
 		if (!this->isConnected)
 			return;
-
 		TVTest::ServiceInfo si;
 		si.Size = sizeof(si);
 		int serviceIdx=this->tvtest->GetService();
-		if (serviceIdx != -1)
-			this->tvtest->GetServiceInfo(serviceIdx, &si);
+		if (serviceIdx < 0) //チャンネル変更中などには情報が壊れてるので壊れてるときは抜けるように変更
+			return;
+		this->tvtest->GetServiceInfo(serviceIdx, &si);
 
 		CurrentChannelIPCMessage msg;
 		msg.SpaceIndex = ci.Space;

@@ -7,8 +7,8 @@
     <TargetFramework>net5.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
-    <Version>1.6.17</Version>
-    <Copyright>© 2017 silane / © 2020 noriokun4649</Copyright>
+    <Version>1.6.18</Version>
+    <Copyright>© 2017 silane / © 2020-2021 noriokun4649</Copyright>
     <Authors>silane edit by noriokun4649</Authors>
     <Company>silane</Company>
     <NeutralLanguage>ja-JP</NeutralLanguage>
@@ -28,6 +28,7 @@
     <PackageReference Include="Prism.Unity" Version="6.3.0-pre1" />
     <PackageReference Include="Prism.Wpf" Version="6.3.0-pre1" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="5.0.0" />
+    <PackageReference Include="System.Linq.Async" Version="5.0.0" />
     <PackageReference Include="System.Reactive" Version="3.1.1" />
     <PackageReference Include="System.Text.Json" Version="5.0.0" />
     <PackageReference Include="Unity" Version="4.0.1" />
