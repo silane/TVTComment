@@ -90,6 +90,12 @@ namespace TVTComment.Model
                             ErrorOccurredInChatCollecting?.Invoke(service, e.Message);
                             service.Dispose();
                         }
+                        catch (ChatCollectService.ChatPostException e)
+                        {
+                            registeredServices.Remove(service);
+                            ErrorOccurredInChatPosting(service, null, e.Message);
+                            service.Dispose();
+                        }
                     }
                 }, null);
             }

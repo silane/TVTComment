@@ -43,6 +43,7 @@ namespace TVTComment.Model.ChatCollectService
 
         private readonly HttpClient httpClient;
         private readonly Task chatCollectTask;
+        private readonly Task chatSessionTask;
         private readonly ConcurrentQueue<NiconicoUtils.NiconicoCommentXmlTag> commentTagQueue = new ConcurrentQueue<NiconicoUtils.NiconicoCommentXmlTag>();
         private readonly NiconicoUtils.NicoLiveCommentReceiver commentReceiver;
         private readonly NiconicoUtils.NicoLiveCommentSender commentSender;
@@ -69,6 +70,7 @@ namespace TVTComment.Model.ChatCollectService
             commentSender = new NiconicoUtils.NicoLiveCommentSender(session);
 
             chatCollectTask = CollectChat(cancel.Token);
+            chatSessionTask = commentSender.ConnectWatchSession(originalLiveId, cancel.Token);
         }
 
         public string GetInformationText()
@@ -90,6 +92,14 @@ namespace TVTComment.Model.ChatCollectService
                     e is ChatReceivingException && e.InnerException == null ? e.Message : $"コメント取得でエラーが発生: {e}",
                     chatCollectTask.Exception
                 );
+            }
+
+            if (chatSessionTask?.IsFaulted ?? false)
+            {
+                //非同期部分で例外発生
+                var e = chatSessionTask.Exception.InnerExceptions.Count == 1
+                        ? chatSessionTask.Exception.InnerExceptions[0] : chatCollectTask.Exception;
+                throw new ChatPostException($"視聴セッションでエラーが発生: {e}", chatSessionTask.Exception);
             }
 
             //非同期部分で集めたデータからチャットを生成
@@ -139,7 +149,7 @@ namespace TVTComment.Model.ChatCollectService
                 throw new ChatReceivingException("コメント取得できませんでした以下の原因が考えられます\n\n・放送されていない\n・視聴権がない\n・コミュニティフォロワー限定番組");
             
             liveId = playerStatusRoot.GetProperty("data").GetProperty("socialGroup").GetProperty("id").GetString();
-            await commentSender.ConnectWatchSession(originalLiveId,cancel);
+
             try
             {
                 await foreach (NiconicoUtils.NiconicoCommentXmlTag tag in commentReceiver.Receive(originalLiveId, cancel))
@@ -169,27 +179,7 @@ namespace TVTComment.Model.ChatCollectService
         {
             if (liveId == "")
                 throw new ChatPostException("コメントが投稿できる状態にありません。しばらく待ってから再試行してください。");
-
-            try
-            {
-                await commentSender.Send(liveId, chatPostObject.Text, (chatPostObject as ChatPostObject)?.Mail ?? "");
-            }
-            catch (NiconicoUtils.NetworkNicoLiveCommentSenderException e)
-            {
-                throw new ChatPostException($"サーバーに接続できませんでした", e);
-            }
-            catch (NiconicoUtils.InvalidPlayerStatusNicoLiveCommentSenderException e)
-            {
-                throw new ChatPostException($"サーバーから無効な PlayerStatus が返されました\n\n{e.PlayerStatus}", e);
-            }
-            catch (NiconicoUtils.ResponseFormatNicoLiveCommentSenderException e)
-            {
-                throw new ChatPostException($"サーバーから予期しない形式の応答がありました\n\n{e.Response}", e);
-            }
-            catch (NiconicoUtils.ResponseErrorNicoLiveCommentSenderException e)
-            {
-                throw new ChatPostException($"サーバーからエラーが返されました", e);
-            }
+            await commentSender.Send(liveId, chatPostObject.Text, (chatPostObject as ChatPostObject)?.Mail ?? "");
         }
 
         public void Dispose()
