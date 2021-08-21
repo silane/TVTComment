@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using TVTComment.Model.NiconicoUtils;
 
 namespace TVTComment.Model.ChatCollectService
 {
@@ -103,7 +104,13 @@ namespace TVTComment.Model.ChatCollectService
                 //非同期部分で例外発生
                 var e = chatSessionTask.Exception.InnerExceptions.Count == 1
                         ? chatSessionTask.Exception.InnerExceptions[0] : chatCollectTask.Exception;
-                throw new ChatPostException($"視聴セッションでエラーが発生: {e}", chatSessionTask.Exception);
+                if (e is ResponseFormatNicoLiveCommentSenderException)
+                {
+                    throw new ChatPostException($"コメント投稿でエラーが発生: {e}", chatSessionTask.Exception);
+                }
+                else { 
+                    throw new ChatPostSessionException($"視聴セッションでエラーが発生: {e}", chatSessionTask.Exception);
+                }
             }
 
             string originalLiveId = liveIdResolver.Resolve(channel.NetworkId, channel.ServiceId);
