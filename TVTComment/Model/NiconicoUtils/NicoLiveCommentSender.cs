@@ -187,9 +187,9 @@ namespace TVTComment.Model.NiconicoUtils
                             throw new NicoLiveCommentSenderException("放送中ではない");
                         case "BROADCAST_NOT_FOUND":
                             throw new NicoLiveCommentSenderException("配信情報を取得できない");
-                        case "INTERNAL_SERVERERROR	":
+                        case "INTERNAL_SERVERERROR":
                             throw new NicoLiveCommentSenderException("内部サーバエラー");
-                        case "COMMENT_POST_NOT_ALLOWED	":
+                        case "COMMENT_POST_NOT_ALLOWED":
                             throw new ResponseFormatNicoLiveCommentSenderException("コメントの投稿が許可されませんでした、パラメータが不正な可能性があります");
 
                     }
