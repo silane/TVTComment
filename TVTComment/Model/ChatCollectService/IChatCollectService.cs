@@ -33,6 +33,17 @@ namespace TVTComment.Model.ChatCollectService
           System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     }
 
+    [System.Serializable]
+    public class ChatPostSessionException : Exception
+    {
+        public ChatPostSessionException() { }
+        public ChatPostSessionException(string message) : base(message) { }
+        public ChatPostSessionException(string message, Exception inner) : base(message, inner) { }
+        protected ChatPostSessionException(
+          System.Runtime.Serialization.SerializationInfo info,
+          System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+    }
+
     /// <summary>
     /// 投稿するコメントを表すオブジェクトのベース
     /// </summary>
