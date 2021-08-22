@@ -53,6 +53,12 @@ namespace TVTComment.Model
         /// </summary>
         public event ErrorOccurredInChatPostingEventHandler ErrorOccurredInChatPosting;
 
+        public delegate void ErrorOccurredInChatPostSessionEventHandler(ChatCollectService.IChatCollectService service, ChatCollectService.BasicChatPostObject postObject, string errorText);
+        /// <summary>
+        /// <see cref="PostChat(IChatCollectService, BasicChatPostObject)"/>で視聴セッションのエラー時に呼ばれる
+        /// </summary>
+        public event ErrorOccurredInChatPostSessionEventHandler ErrorOccurredInChatPostSession;
+
         /// <summary>
         /// コンストラクタの引数で指定した<seealso cref="ChannelInformationModule"/>の<seealso cref="ChannelInformationModule.SynchronizationContext"/>と同じ
         /// </summary>
@@ -94,6 +100,12 @@ namespace TVTComment.Model
                         {
                             registeredServices.Remove(service);
                             ErrorOccurredInChatPosting(service, null, e.Message);
+                            service.Dispose();
+                        }
+                        catch (ChatCollectService.ChatPostSessionException e)
+                        {
+                            registeredServices.Remove(service);
+                            ErrorOccurredInChatPostSession(service, null, e.Message);
                             service.Dispose();
                         }
                     }
