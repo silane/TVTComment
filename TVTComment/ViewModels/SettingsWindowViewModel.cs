@@ -34,6 +34,7 @@ namespace TVTComment.ViewModels
         public ObservableValue<string> TwitterPinCode { get; } = new ObservableValue<string>();
         public ObservableValue<string> AnnictAccessToken { get; } = new ObservableValue<string>();
         public ObservableValue<string> AnnictPin { get; } = new ObservableValue<string>();
+        public ObservableValue<bool> AnnictAutoEnable { get; } = new ObservableValue<bool>();
 
         public Model.ChatService.NichanChatService.BoardInfo SelectedNichanBoard { get; set; }
 
@@ -61,7 +62,8 @@ namespace TVTComment.ViewModels
 
         public SettingsWindowViewModel(Model.TVTComment model)
         {
-            var annict = new AnnictAuthentication("jh7atLhJwvYqsSPUFg5w-GAJ5ZzaAerTONYMLMWouds", "mkvE7k2UZktun5A_GHKH-0K60kKWGK_RJKYMmU1bQPg");
+            var secrets = App.Configuration;
+            var annict = new AnnictAuthentication(secrets["Annict:ClientId"], secrets["Annict:ClientSecret"]);
             DefaultChatCollectServices = new ShellContents.DefaultChatCollectServicesViewModel(model);
 
             niconico = model.ChatServices.OfType<Model.ChatService.NiconicoChatService>().Single();
@@ -69,6 +71,9 @@ namespace TVTComment.ViewModels
             twitter = model.ChatServices.OfType<Model.ChatService.TwitterChatService>().Single();
 
             ChatCollectServiceCreationPresetSettingControlViewModel = new SettingsWindowContents.ChatCollectServiceCreationPresetSettingControlViewModel(model);
+
+            AnnictAutoEnable.Value = twitter.AnnictAutoEnable;
+            AnnictAutoEnable.Subscribe(par => twitter.AnnictAutoEnable = par);
 
             LoginNiconicoCommand = new DelegateCommand(async () =>
               {
@@ -174,7 +179,14 @@ namespace TVTComment.ViewModels
             });
 
             AnnictAccessTokenApplyCommand = new DelegateCommand(() => {
-                twitter.SetAnnictToken(AnnictAccessToken.Value);
+                try
+                {
+                    twitter.SetAnnictToken(AnnictAccessToken.Value);
+                }
+                catch (Exception e)
+                {
+                    AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = e.Message });
+                }
                 SyncAnnictStatus();
             });
 

@@ -15,6 +15,7 @@ namespace TVTComment.Model.ChatService
         public string ApiAccessToken { get; set; } = "";
         public string ApiAccessSecret { get; set; } = "";
         public string AnnictAccessToken { get; set; } = "";
+        public bool AnnictAutoEnable { get; set; } = false;
     }
 
     class TwitterChatService : IChatService
@@ -51,6 +52,12 @@ namespace TVTComment.Model.ChatService
         public string AnnictAccessToken
         {
             get { return settings.AnnictAccessToken; }
+        }
+
+        public bool AnnictAutoEnable
+        {
+            get { return settings.AnnictAutoEnable; }
+            set { settings.AnnictAutoEnable = value; }
         }
 
         public TwitterChatService(TwitterChatServiceSettings settings, ChannelDatabase channelDatabase, string filepath)
@@ -106,6 +113,7 @@ namespace TVTComment.Model.ChatService
             settings.ApiAccessToken = apiAccessToken;
             settings.ApiAccessSecret = apiAccessSecret;
             twitterSession.Value = twitterAuthentication;
+            twitterSession.Value.AnnictSet(settings.AnnictAccessToken);
         }
         public TwitterAuthentication InitOAuthPin(string apiKey, string apiSecret)
         {
@@ -140,6 +148,7 @@ namespace TVTComment.Model.ChatService
             IsLoggedin = true;
             UserName = userResponse.Name;
             twitterSession.Value = twitterAuthentication;
+            twitterSession.Value.AnnictSet(settings.AnnictAccessToken);
             settings.ApiAccessToken = tokens.AccessToken;
             settings.ApiAccessSecret = tokens.AccessTokenSecret;
         }
@@ -155,7 +164,14 @@ namespace TVTComment.Model.ChatService
 
         public void SetAnnictToken(string token)
         {
-            settings.AnnictAccessToken = token;
+            if (twitterSession.Value != null) { 
+                settings.AnnictAccessToken = token;
+                twitterSession.Value.AnnictSet(token);
+            }
+            else
+            {
+                throw new ArgumentException($"先にTwitterへのログインが必要です。");
+            }
         }
 
         public void Dispose()
