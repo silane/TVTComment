@@ -249,11 +249,7 @@ namespace TVTComment.ViewModels
 
         private void UpdateWindowTitle()
         {
-            var time = "";
-            if (!model.ChatModule.UiFlashingDeterrence.Value)
-            {
-                time = CurrentPlayTime.Value?.ToString("yy/M/d(ddd) HH:mm:ss");
-            }
+            var time = model.ChatModule.UiFlashingDeterrence.Value ? "" : CurrentPlayTime.Value?.ToString("yy/M/d(ddd) HH:mm:ss");
             WindowTitle.Value = $"{CurrentChannel.Value?.ServiceName} {time} - TVTComment";
         }
 
