@@ -98,15 +98,24 @@ namespace TVTComment.Model.ChatCollectService
 
         private async Task annictSearch(string evetnText)
         {
-            var result = await Annict.GetTwitterHashtagAsync(evetnText);
-            if (result != null && !result.Equals("")) SearchWord.Value = $"#{result}";
+            try
+            {
+                var result = await Annict.GetTwitterHashtagAsync(evetnText);
+                SearchWord.Value = result != null && !result.Equals("") ? $"#{result}" : "";
+            }
+            catch (AnnictException)
+            {
+                SearchWord.Value = "";
+            }
         }
 
         public IEnumerable<Chat> GetChats(ChannelInfo channel,EventInfo events, DateTime time)
         {
-            if (ModeSelect == ModeSelectMethod.Preset)
+            if (ModeSelect == ModeSelectMethod.Preset || (SearchWord.Value != null && SearchWord.Value.Equals(""))) SearchWord.Value = SearchWordResolver.Resolve(channel.NetworkId, channel.ServiceId);
+            if (ModeSelect == ModeSelectMethod.Auto)
             {
-                SearchWord.Value = SearchWordResolver.Resolve(channel.NetworkId, channel.ServiceId);
+                var result = AnnimeTitleGetter.Convert(events.EventName);
+                if (result != null && !result.Equals("")) EventTextWord.Value = result;
             }
             if (chatCollectTask != null)
             {
@@ -119,9 +128,6 @@ namespace TVTComment.Model.ChatCollectService
                     throw new ChatCollectException("TwitterのAPI制限に達したか問題が発生したため切断されました");
                 }
             }
-
-            var result = AnnimeTitleGetter.Convert(events.EventName);
-            if (result != null && !result.Equals("")) EventTextWord.Value = result;
 
             var list = new List<Chat>();
             while (statusQueue.TryDequeue(out var status))
