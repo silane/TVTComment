@@ -62,7 +62,8 @@ namespace TVTComment.ViewModels
 
         public SettingsWindowViewModel(Model.TVTComment model)
         {
-            var annict = new AnnictAuthentication("jh7atLhJwvYqsSPUFg5w-GAJ5ZzaAerTONYMLMWouds", "mkvE7k2UZktun5A_GHKH-0K60kKWGK_RJKYMmU1bQPg");
+            var secrets = App.Configuration;
+            var annict = new AnnictAuthentication(secrets["Annict:ClientId"], secrets["Annict:ClientSecret"]);
             DefaultChatCollectServices = new ShellContents.DefaultChatCollectServicesViewModel(model);
 
             niconico = model.ChatServices.OfType<Model.ChatService.NiconicoChatService>().Single();
