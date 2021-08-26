@@ -34,6 +34,7 @@ namespace TVTComment.ViewModels
         public ObservableValue<string> TwitterPinCode { get; } = new ObservableValue<string>();
         public ObservableValue<string> AnnictAccessToken { get; } = new ObservableValue<string>();
         public ObservableValue<string> AnnictPin { get; } = new ObservableValue<string>();
+        public ObservableValue<bool> AnnictAutoEnable { get; } = new ObservableValue<bool>();
 
         public Model.ChatService.NichanChatService.BoardInfo SelectedNichanBoard { get; set; }
 
@@ -69,6 +70,9 @@ namespace TVTComment.ViewModels
             twitter = model.ChatServices.OfType<Model.ChatService.TwitterChatService>().Single();
 
             ChatCollectServiceCreationPresetSettingControlViewModel = new SettingsWindowContents.ChatCollectServiceCreationPresetSettingControlViewModel(model);
+
+            AnnictAutoEnable.Value = twitter.AnnictAutoEnable;
+            AnnictAutoEnable.Subscribe(par => twitter.AnnictAutoEnable = par);
 
             LoginNiconicoCommand = new DelegateCommand(async () =>
               {

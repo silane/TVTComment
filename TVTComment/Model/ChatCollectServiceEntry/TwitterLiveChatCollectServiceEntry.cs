@@ -40,7 +40,9 @@ namespace TVTComment.Model.ChatCollectServiceEntry
 
         public IChatCollectService GetNewService(IChatCollectServiceCreationOption creationOption)
         {
-            creationOption ??= new ChatCollectServiceCreationOption(ModeSelectMethod.Preset, "");
+            var annictmode = false;
+            if (this.Owner is TwitterChatService twitter) annictmode = twitter.AnnictAutoEnable;
+            creationOption ??= annictmode ? new ChatCollectServiceCreationOption(ModeSelectMethod.Auto, "") : new ChatCollectServiceCreationOption(ModeSelectMethod.Preset, "");
             if (creationOption == null || creationOption is not ChatCollectServiceCreationOption co)
                 throw new ArgumentException($"Type of {nameof(creationOption)} must be {nameof(TwitterLiveChatCollectServiceEntry)}.{nameof(ChatCollectServiceCreationOption)}", nameof(creationOption));
             var session = Session.Value;

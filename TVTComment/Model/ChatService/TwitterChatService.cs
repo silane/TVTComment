@@ -15,6 +15,7 @@ namespace TVTComment.Model.ChatService
         public string ApiAccessToken { get; set; } = "";
         public string ApiAccessSecret { get; set; } = "";
         public string AnnictAccessToken { get; set; } = "";
+        public bool AnnictAutoEnable { get; set; } = false;
     }
 
     class TwitterChatService : IChatService
@@ -51,6 +52,12 @@ namespace TVTComment.Model.ChatService
         public string AnnictAccessToken
         {
             get { return settings.AnnictAccessToken; }
+        }
+
+        public bool AnnictAutoEnable
+        {
+            get { return settings.AnnictAutoEnable; }
+            set { settings.AnnictAutoEnable = value; }
         }
 
         public TwitterChatService(TwitterChatServiceSettings settings, ChannelDatabase channelDatabase, string filepath)
