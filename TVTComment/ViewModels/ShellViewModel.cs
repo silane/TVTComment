@@ -249,7 +249,12 @@ namespace TVTComment.ViewModels
 
         private void UpdateWindowTitle()
         {
-            WindowTitle.Value = $"{CurrentChannel.Value?.ServiceName} {CurrentPlayTime.Value?.ToString("yy/M/d(ddd) HH:mm:ss")} - TVTComment";
+            var time = "";
+            if (!model.ChatModule.UiFlashingDeterrence.Value)
+            {
+                time = CurrentPlayTime.Value?.ToString("yy/M/d(ddd) HH:mm:ss");
+            }
+            WindowTitle.Value = $"{CurrentChannel.Value?.ServiceName} {time} - TVTComment";
         }
 
         private async Task AddChatCollectService(ShellContents.ChatCollectServiceAddListItemViewModel item)
