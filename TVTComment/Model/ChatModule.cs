@@ -28,6 +28,7 @@ namespace TVTComment.Model
 
         public ObservableValue<int> ChatPreserveCount { get; } = new ObservableValue<int>();
         public ObservableValue<bool> ClearChatsOnChannelChange { get; } = new ObservableValue<bool>();
+        public ObservableValue<bool> UiFlashingDeterrence { get; } = new ObservableValue<bool>();
 
         private readonly ObservableCollection<Chat> chats = new ObservableCollection<Chat>();
         public ReadOnlyObservableCollection<Chat> Chats { get; }
@@ -130,6 +131,7 @@ namespace TVTComment.Model
         {
             ChatPreserveCount.Value = settings.ChatPreserveCount;
             ClearChatsOnChannelChange.Value = settings.ClearChatsOnChannelChange;
+            UiFlashingDeterrence.Value = settings.UiFlashingDeterrence;
             var chatCollectServiceEntries = chatServices.SelectMany(x => x.ChatCollectServiceEntries).ToArray();
             var entities = settings.ChatModRules;
             foreach (var entity in entities)
@@ -217,6 +219,7 @@ namespace TVTComment.Model
         {
             settings.ChatPreserveCount = ChatPreserveCount.Value;
             settings.ClearChatsOnChannelChange = ClearChatsOnChannelChange.Value;
+            settings.UiFlashingDeterrence = UiFlashingDeterrence.Value;
             settings.ChatModRules = chatModRules.Select(x =>
             {
                 var entity = new Serialization.ChatModRuleEntity
