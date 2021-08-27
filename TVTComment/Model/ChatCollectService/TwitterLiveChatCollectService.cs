@@ -36,7 +36,7 @@ namespace TVTComment.Model.ChatCollectService
         private readonly TwitterAuthentication Twitter;
         private Task chatCollectTask;
         private readonly ConcurrentQueue<Status> statusQueue = new ConcurrentQueue<Status>();
-        private readonly CancellationTokenSource cancel = new CancellationTokenSource();
+        private CancellationTokenSource cancel = new CancellationTokenSource();
         private readonly ObservableValue<string> SearchWord = new ObservableValue<string>("");
         private readonly ObservableValue<string> EventTextWord = new ObservableValue<string>("");
         private readonly SearchWordResolver SearchWordResolver;
@@ -53,7 +53,12 @@ namespace TVTComment.Model.ChatCollectService
             switch (modeSelect)
             {
                 case ModeSelectMethod.Preset:
-                    SearchWord.Where(x => x != null && !x.Equals("")).Subscribe(res => chatCollectTask = SearchStreamAsync(res, cancel.Token));
+                    SearchWord.Where(x => x != null && !x.Equals("")).Subscribe(res =>
+                    {
+                        if (!cancel.Token.IsCancellationRequested) cancel.Cancel();
+                        cancel = new CancellationTokenSource();
+                        chatCollectTask = SearchStreamAsync(res, cancel.Token);
+                    });
                     break;
 
                 case ModeSelectMethod.Manual:
