@@ -27,6 +27,7 @@ namespace TVTComment.Model.TwitterUtils
     class TwitterAuthentication
     {
         private Tokens token = null;
+        private string annicttoken = null;
         private OAuth2Token oAuth2Token = null;
         public bool IsLoggedin => token != null;
         private readonly string apikey;
@@ -41,6 +42,13 @@ namespace TVTComment.Model.TwitterUtils
             get
             {
                 return token;
+            }
+        }
+        public string AnnictToken
+        {
+            get
+            {
+                return annicttoken;
             }
         }
         public OAuth2Token OAuth2Token
@@ -110,6 +118,9 @@ namespace TVTComment.Model.TwitterUtils
             token = null;
             oAuth2Token = null;
         }
-
+        public void AnnictSet(string token)
+        {
+            annicttoken = token;
+        }
     }
 }

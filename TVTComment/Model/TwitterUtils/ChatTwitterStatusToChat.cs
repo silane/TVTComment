@@ -8,7 +8,7 @@ namespace TVTComment.Model.TwitterUtils
     {
         public static Chat Convert(Status status)
         {
-            return new Chat(status.CreatedAt.LocalDateTime, status.Text, Chat.PositionType.Normal, Chat.SizeType.Normal, Color.FromArgb(0, 172, 238), status.User.ScreenName, (int)status.Id);
+            return new Chat(status.CreatedAt.DateTime.ToLocalTime(), status.FullText ?? status.Text, Chat.PositionType.Normal, Chat.SizeType.Normal, Color.FromArgb(0, 172, 238), status.User.ScreenName, (int)status.Id);
         }
         public static Chat Convert(FilterStreamResponse status)
         {

@@ -136,7 +136,7 @@ namespace Nichan
             if (m.Success)
                 return new DateTime(
                     int.Parse(m.Groups[1].Value), int.Parse(m.Groups[2].Value), int.Parse(m.Groups[3].Value),
-                    int.Parse(m.Groups[4].Value), int.Parse(m.Groups[5].Value), int.Parse(m.Groups[6].Value),m.Groups["sec"].Success ? int.Parse(m.Groups["sec"].Value) * 10 : 0, DateTimeKind.Local
+                    int.Parse(m.Groups[4].Value), int.Parse(m.Groups[5].Value), int.Parse(m.Groups[6].Value), m.Groups["sec"].Success ? int.Parse(m.Groups["sec"].Value) * 10 : 0, DateTimeKind.Local
                 );
             else
                 return null;

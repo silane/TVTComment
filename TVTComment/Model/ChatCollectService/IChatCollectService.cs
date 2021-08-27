@@ -68,7 +68,7 @@ namespace TVTComment.Model.ChatCollectService
         /// <param name="channel">コメントを取得したい対象チャンネル</param>
         /// <param name="time">コメントを取得したい対象時刻</param>
         /// <returns>取得したコメント</returns>
-        IEnumerable<Chat> GetChats(ChannelInfo channel, DateTime time);
+        IEnumerable<Chat> GetChats(ChannelInfo channel,EventInfo events , DateTime time);
 
         /// <summary>
         /// コメント投稿に対応しているか

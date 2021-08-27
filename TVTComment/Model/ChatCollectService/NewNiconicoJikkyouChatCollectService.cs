@@ -83,6 +83,11 @@ namespace TVTComment.Model.ChatCollectService
             commentSender = new NiconicoUtils.NicoLiveCommentSender(niconicoLoginSession);
         }
 
+        public IEnumerable<Chat> GetChats(ChannelInfo channel, EventInfo _, DateTime time)
+        {
+            return GetChats(channel, time);
+        }
+
         public IEnumerable<Chat> GetChats(ChannelInfo channel, DateTime time)
         {
             if (chatCollectTask?.IsFaulted ?? false)
