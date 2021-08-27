@@ -103,7 +103,7 @@ namespace TVTComment.Model.ChatCollectService
                 var result = await Annict.GetTwitterHashtagAsync(evetnText);
                 SearchWord.Value = result != null && !result.Equals("") ? $"#{result}" : "";
             }
-            catch (AnnictException)
+            catch (AnnictNotFoundResponseException)
             {
                 SearchWord.Value = "";
             }
