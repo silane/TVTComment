@@ -28,6 +28,7 @@ namespace TVTComment.ViewModels
         public ObservableValue<string> NichanPastCollectServiceBackTime { get; } = new ObservableValue<string>();
         public ObservableValue<string> TwitterApiKey { get; } = new ObservableValue<string>();
         public ObservableValue<string> TwitterApiSecret { get; } = new ObservableValue<string>();
+        public ObservableValue<string> TwitterBearerToken { get; } = new ObservableValue<string>();
         public ObservableValue<string> TwitterApiAccessKey { get; } = new ObservableValue<string>();
         public ObservableValue<string> TwitterApiAccessSecret { get; } = new ObservableValue<string>();
         public ObservableValue<string> TwitterStatus { get; } = new ObservableValue<string>();
@@ -120,6 +121,7 @@ namespace TVTComment.ViewModels
             {
                 twitter.ApiKey = TwitterApiKey.Value;
                 twitter.ApiSecret = TwitterApiSecret.Value;
+                twitter.BearerToken = TwitterBearerToken.Value;
                 AlertRequest.Raise(new Notification { Title = "TVTCommentメッセージ", Content = "適用しました" });
             });
 
@@ -127,7 +129,7 @@ namespace TVTComment.ViewModels
             {
                 try
                 {
-                    await twitter.LoginAccessTokens(TwitterApiKey.Value, TwitterApiSecret.Value, TwitterApiAccessKey.Value, TwitterApiAccessSecret.Value);
+                    await twitter.LoginAccessTokens(TwitterApiKey.Value, TwitterApiSecret.Value, TwitterApiAccessKey.Value, TwitterApiAccessSecret.Value, TwitterBearerToken.Value);
                     SyncTwitterStatus();
                 }
                 catch (Exception e)
@@ -247,6 +249,7 @@ namespace TVTComment.ViewModels
             TwitterApiSecret.Value = twitter.ApiSecret;
             TwitterApiAccessKey.Value = twitter.ApiAccessToken;
             TwitterApiAccessSecret.Value = twitter.ApiAccessSecret;
+            TwitterBearerToken.Value = twitter.BearerToken;
             TwitterStatus.Value = twitter.IsLoggedin ? twitter.UserName + "としてログイン中" : "未ログイン";
         }
 

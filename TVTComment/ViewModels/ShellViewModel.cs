@@ -274,6 +274,7 @@ namespace TVTComment.ViewModels
                     case Model.ChatCollectServiceEntry.FileChatCollectServiceEntry _:
                     case Model.ChatCollectServiceEntry.NiconicoLiveChatCollectServiceEntry _:
                     case Model.ChatCollectServiceEntry.TwitterLiveChatCollectServiceEntry _:
+                    case Model.ChatCollectServiceEntry.TwitterLiveV2ChatCollectServiceEntry _:
                         var confirmation = await ChatCollectServiceCreationSettingsRequest.RaiseAsync(
                             new Notifications.ChatCollectServiceCreationSettingsConfirmation { Title = "コメント元設定", TargetChatCollectServiceEntry = item.ServiceEntry }
                         );

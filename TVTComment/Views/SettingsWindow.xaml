@@ -132,6 +132,8 @@
                                     <TextBox Text="{Binding TwitterApiAccessKey.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="1"/>
                                     <Label Content="Access secret" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="2"/>
                                     <TextBox Text="{Binding TwitterApiAccessSecret.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="2"/>
+                                    <Label Content="Bearer token" HorizontalAlignment="Right" Grid.Column="0" Grid.Row="3"/>
+                                    <TextBox Text="{Binding TwitterBearerToken.Value}" VerticalAlignment="Center" Grid.Column="1" Grid.Row="3"/>
                                 </Grid>
                                 <Button Content="ログイン" Command="{Binding LoginTokensTwitterCommand}"  Grid.Column="1" Grid.Row="0" HorizontalAlignment="Stretch" Margin="5,5,5,0"/>
 
