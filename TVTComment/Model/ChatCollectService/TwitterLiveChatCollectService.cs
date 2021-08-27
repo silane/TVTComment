@@ -65,6 +65,12 @@ namespace TVTComment.Model.ChatCollectService
                     chatCollectTask = SearchStreamAsync(searchWord, cancel.Token);
                     break;
                 case ModeSelectMethod.Auto:
+                    SearchWord.Where(x => x != null && !x.Equals("")).Subscribe(res =>
+                    {
+                        if (!cancel.Token.IsCancellationRequested) cancel.Cancel();
+                        cancel = new CancellationTokenSource();
+                        chatCollectTask = SearchStreamAsync(res, cancel.Token);
+                    });
                     if (Twitter.AnnictToken != null && !Twitter.AnnictToken.Equals(""))
                     {
                         Annict = new(Twitter.AnnictToken);
@@ -108,7 +114,7 @@ namespace TVTComment.Model.ChatCollectService
                 var result = await Annict.GetTwitterHashtagAsync(evetnText);
                 SearchWord.Value = result != null && !result.Equals("") ? $"#{result}" : "";
             }
-            catch (AnnictException)
+            catch (AnnictNotFoundResponseException)
             {
                 SearchWord.Value = "";
             }
