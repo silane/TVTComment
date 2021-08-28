@@ -20,7 +20,7 @@ namespace TVTComment.Model
 
         public Task<IChatTrendService> GetNewService()
         {
-            return Task.FromResult((IChatTrendService)new NewNiconicoChatTrendService(liveIdResolver, session.Value));
+            return Task.FromResult((IChatTrendService)new NewNiconicoChatTrendService(liveIdResolver, session != null ? session.Value : null));
         }
     }
 }
