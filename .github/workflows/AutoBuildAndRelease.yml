@@ -116,6 +116,7 @@ jobs:
       - name: Move misc files
         run: |
           mv Asset/TvtComment/misc/* Asset/ 
+          rm Asset/OLDCHANGELOG.txt
           rmdir Asset/TvtComment/misc
 
       - name: Repack assets
