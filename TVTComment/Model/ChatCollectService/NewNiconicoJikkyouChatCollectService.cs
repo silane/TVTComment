@@ -99,20 +99,6 @@ namespace TVTComment.Model.ChatCollectService
                     throw new ChatCollectException($"コメント取得でエラーが発生: {e}", chatCollectTask.Exception);
             }
 
-            if (chatSessionTask?.IsFaulted ?? false)
-            {
-                //非同期部分で例外発生
-                var e = chatSessionTask.Exception.InnerExceptions.Count == 1
-                        ? chatSessionTask.Exception.InnerExceptions[0] : chatCollectTask.Exception;
-                if (e is ResponseFormatNicoLiveCommentSenderException)
-                {
-                    throw new ChatPostException($"コメント投稿でエラーが発生: {e}", chatSessionTask.Exception);
-                }
-                else { 
-                    throw new ChatPostSessionException($"視聴セッションでエラーが発生: {e}", chatSessionTask.Exception);
-                }
-            }
-
             string originalLiveId = liveIdResolver.Resolve(channel.NetworkId, channel.ServiceId);
 
             if (originalLiveId != this.originalLiveId)
@@ -226,9 +212,25 @@ namespace TVTComment.Model.ChatCollectService
         public async Task PostChat(BasicChatPostObject chatPostObject)
         {
             string liveId = this.liveId;
-            if (liveId == "")
+            if (liveId != "")
+            {
+                try { 
+                    await commentSender.Send(liveId, chatPostObject.Text, (chatPostObject as ChatPostObject)?.Mail ?? "");
+                }
+                catch (ResponseFormatNicoLiveCommentSenderException e)
+                {
+                    throw new ChatPostException($"サーバーからエラーが返されました\n{e.Response}", e);
+                }
+                catch (NicoLiveCommentSenderException e)
+                {
+                    throw new ChatPostException($"サーバーに接続できませんでした\n{e.Message}", e);
+                }
+            }
+            else
+            {
                 throw new ChatPostException("コメントが投稿できる状態にありません。しばらく待ってから再試行してください。");
-            await commentSender.Send(liveId, chatPostObject.Text, (chatPostObject as ChatPostObject)?.Mail ?? "");
+            }
+            
         }
 
         public void Dispose()
@@ -241,6 +243,7 @@ namespace TVTComment.Model.ChatCollectService
                 try
                 {
                     if (chatCollectTask != null) chatCollectTask.Wait();
+                    if (chatSessionTask != null) chatSessionTask.Wait();
 
                 }
                 //Waitからの例外がタスクがキャンセルされたことによるものか、通信エラー等なら無視

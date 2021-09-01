@@ -32,6 +32,5 @@
     <PackageReference Include="System.Reactive" Version="5.0.0" />
     <PackageReference Include="System.Text.Json" Version="5.0.0" />
     <PackageReference Include="Unity" Version="4.0.1" />
-    <PackageReference Include="Websocket.Client" Version="4.3.35" />
   </ItemGroup>
 </Project>

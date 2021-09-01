@@ -1,5 +1,4 @@
-﻿using Prism.Interactivity.InteractionRequest;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
@@ -7,14 +6,12 @@ using System.Net.Http;
 using System.Net.WebSockets;
 using System.Reactive.Linq;
 using System.Reflection;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
-using TVTComment.Model.ChatCollectService;
-using Websocket.Client;
-using static TVTComment.Model.ChatCollectServiceModule;
 
 namespace TVTComment.Model.NiconicoUtils
 {
@@ -64,10 +61,9 @@ namespace TVTComment.Model.NiconicoUtils
         private readonly HttpClient httpClient;
         private BlockingCollection<string[]> messageColl = new();
         private BlockingCollection<string> errorMesColl = new();
-        /// <summary>
-        /// <see cref="PostChat(IChatCollectService, BasicChatPostObject)"/>で投稿に失敗した時に呼ばれる
-        /// </summary>
-        public event ErrorOccurredInChatPostingEventHandler ErrorOccurredInChatPosting;
+        private readonly string ua;
+        private int openTime;
+        private ClientWebSocket clientWebSocket;
 
         public NicoLiveCommentSender(NiconicoLoginSession niconicoSession)
         {
@@ -75,7 +71,7 @@ namespace TVTComment.Model.NiconicoUtils
             handler.CookieContainer.Add(niconicoSession.Cookie);
             httpClient = new HttpClient(handler);
             var assembly = Assembly.GetExecutingAssembly().GetName();
-            var ua = assembly.Name + "/" + assembly.Version.ToString(3);
+            ua = assembly.Name + "/" + assembly.Version.ToString(3);
             httpClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", ua);
         }
 
@@ -84,117 +80,112 @@ namespace TVTComment.Model.NiconicoUtils
         {
             var resp = await httpClient.GetStringAsync("https://live.nicovideo.jp/watch/" + liveId).ConfigureAwait(false);
             var webSocketUrl = Regex.Matches(resp, @"wss://.+nicovideo.jp/[/a-z0-9]+[0-9]+\?audience_token=([_a-z0-9]*)").First().Value;
+            var webScoketUri = new Uri(webSocketUrl);
             int.TryParse(Regex.Matches(resp, @"&quot;beginTime&quot;:(?<time>[0-9]+),").First().Groups["time"].Value, out var openTime);
-            var factory = new Func<ClientWebSocket>(() =>
-            {
+            this.openTime = openTime;
 
-                var cl = new ClientWebSocket();
-                var assembly = Assembly.GetExecutingAssembly().GetName();
-                var ua = assembly.Name + "/" + assembly.Version.ToString(3);
-                cl.Options.SetRequestHeader("User-Agent", ua);
-                return cl;
-            });
-            using var ws = new WebsocketClient(new Uri(webSocketUrl), factory);
+            clientWebSocket = new ClientWebSocket();
+            clientWebSocket.Options.SetRequestHeader("User-Agent", ua);
+
+            await clientWebSocket.ConnectAsync(webScoketUri, cancellationToken);
+            await WsSend("{\"type\": \"startWatching\",\"data\": {\"reconnect\": false}}", cancellationToken);
 
             using var timer = new System.Timers.Timer(30 * 1000);
 
             ElapsedEventHandler handler = null;
             handler = async (sender, e) =>
             {
-                if (!ws.IsRunning)
+                if (clientWebSocket.State != WebSocketState.Open)
                 {
                     timer.Elapsed -= handler;
                     timer.Close();
                     return;
                 }
-                await ws.SendInstant("{\"type\": \"keepSeat\"}");
+                await WsSend("{\"type\": \"keepSeat\"}", cancellationToken);
             };
-
-            ws.MessageReceived
-                .Subscribe(async msg =>
-                {
-                    var json = JsonDocument.Parse(msg.Text).RootElement;
-                    var type = json.GetProperty("type").GetString();
-                    switch (type)
-                    {
-                        case "error":
-                            await ws.Stop(WebSocketCloseStatus.NormalClosure, "error disconnect");
-                            timer.Elapsed -= handler;
-                            timer.Close();
-                            var reason = json.GetProperty("data").GetProperty("code").GetString();
-                            errorMesColl.Add(reason);
-                            break;
-                        case "seat":
-                            var keepInterval = json.GetProperty("data").GetProperty("keepIntervalSec").GetInt32();
-                            timer.Interval = keepInterval * 1000;
-                            timer.Elapsed += handler;
-                            timer.Start();
-                            break;
-                        case "ping":
-                            await ws.SendInstant("{\"type\": \"pong\"}");
-                            break;
-                        case "reconnect":
-                            var data = json.GetProperty("data");
-                            var token = data.GetProperty("audienceToken").GetString();
-                            var waittime = data.GetProperty("waitTimeSec").GetInt32();
-                            await ws.Stop(WebSocketCloseStatus.NormalClosure, "reconnect");
-                                /*ws.Stop(WebSocketCloseStatus.NormalClosure, "reconnect");
-                                ws.Url = new Uri(Regex.Replace(webSocketUrl, @"", ""));
-                                ws.Start();*/
-                            break;
-                        case "disconnect":
-                            await ws.Stop(WebSocketCloseStatus.NormalClosure, "disconnect");
-                            timer.Elapsed -= handler;
-                            timer.Close();
-                            errorMesColl.Add("disconnect");
-                            break;
-                        case "postCommentResult":
-                            break;
-
-                    }
-                });
-
-            await ws.Start();
-            await ws.SendInstant("{\"type\": \"startWatching\",\"data\": {\"reconnect\": false}}");
-
+            var buffer = new byte[4096];
             while (true)
             {
                 if (cancellationToken.IsCancellationRequested)
                 {
-                    await ws.Stop(WebSocketCloseStatus.NormalClosure, "IsCancellationRequested");
+                    await clientWebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "IsCancellationRequested", CancellationToken.None);
                     timer.Elapsed -= handler;
                     timer.Close();
                     break;
                 }
-                while (messageColl.TryTake(out var text))
+                var segment = new ArraySegment<byte>(buffer);
+                WebSocketReceiveResult result;
+                try
                 {
-                    long vpos = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() / 10 - openTime * 100; // vposは10ミリ秒単位
-                    await ws.SendInstant("{ \"type\": \"postComment\", \"data\": { \"text\": \"" + text[0] + "\", \"vpos\":" + vpos + ", \"isAnonymous\": true } }");
+                    result = await clientWebSocket.ReceiveAsync(segment, cancellationToken);
                 }
-                while (errorMesColl.TryTake(out var text))
+                catch (Exception e) when (e is ObjectDisposedException || e is WebSocketException || e is IOException)
                 {
-                    switch (text)
-                    {
-                        case "disconnect":
-                            throw new NicoLiveCommentSenderException("視聴セッションの切断要求がサーバから通知されたため切断します");
-                        case "INVALID_MESSAGE":
-                            throw new NicoLiveCommentSenderException("クライアントが送信したコマンドが無効な形式だった、またはリクエスト頻度が高すぎる");
-                        case "CONTENT_NOT_READY":
-                            throw new NicoLiveCommentSenderException("配信できない状態である（配信用ストリームエラー）");
-                        case "NO_PERMISSION":
-                            throw new NicoLiveCommentSenderException("APIにアクセスする権限がない");
-                        case "NOT_ON_AIR":
-                            throw new NicoLiveCommentSenderException("放送中ではない");
-                        case "BROADCAST_NOT_FOUND":
-                            throw new NicoLiveCommentSenderException("配信情報を取得できない");
-                        case "INTERNAL_SERVERERROR":
-                            throw new NicoLiveCommentSenderException("内部サーバエラー");
-                        case "COMMENT_POST_NOT_ALLOWED":
-                            throw new ResponseFormatNicoLiveCommentSenderException("コメントの投稿が許可されませんでした、パラメータが不正な可能性があります");
+                    if (cancellationToken.IsCancellationRequested)
+                        throw new OperationCanceledException(null, e, cancellationToken);
+                    if (e is ObjectDisposedException)
+                        throw;
+                    else
+                        throw new NetworkNicoLiveCommentReceiverException(e);
+                }
+                var message = Encoding.UTF8.GetString(buffer, 0, result.Count);
 
-                    }
+                var json = JsonDocument.Parse(message).RootElement;
+                var type = json.GetProperty("type").GetString();
+                switch (type)
+                {
+                    case "error":
+                        var reason = json.GetProperty("data").GetProperty("code").GetString();
+                        switch (reason)
+                        {
+                            case "CONTENT_NOT_READY":
+                            case "NO_PERMISSION":
+                            case "NOT_ON_AIR":
+                            case "BROADCAST_NOT_FOUND":
+                                await clientWebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "error disconnect", CancellationToken.None);
+                                timer.Elapsed -= handler;
+                                timer.Close();
+                                return;
+                        }
+                        errorMesColl.Add(reason);
+                        break;
+                    case "seat":
+                        var keepInterval = json.GetProperty("data").GetProperty("keepIntervalSec").GetInt32();
+                        timer.Interval = keepInterval * 1000;
+                        timer.Elapsed += handler;
+                        timer.Start();
+                        break;
+                    case "ping":
+                        await WsSend("{\"type\": \"pong\"}", cancellationToken);
+                        break;
+                    case "reconnect":
+                        var data = json.GetProperty("data");
+                        var token = data.GetProperty("audienceToken").GetString();
+                        var waittime = data.GetProperty("waitTimeSec").GetInt32();
+                        await clientWebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "reconnect", CancellationToken.None);
+                        /*ws.Stop(WebSocketCloseStatus.NormalClosure, "reconnect");
+                        ws.Url = new Uri(Regex.Replace(webSocketUrl, @"", ""));
+                        ws.Start();*/
+                        break;
+                    case "disconnect":
+                        await clientWebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "disconnect", CancellationToken.None);
+                        timer.Elapsed -= handler;
+                        timer.Close();
+                        errorMesColl.Add("disconnect");
+                        break;
+                    case "postCommentResult":
+                        var postres = json.GetProperty("data").GetProperty("chat").GetProperty("content").GetString();
+                        errorMesColl.Add(postres);
+                        break;
                 }
             }
+        }
+
+        private async Task WsSend(string text, CancellationToken cancellationToken)
+        {
+            var encoded = Encoding.UTF8.GetBytes(text);
+            var vs = new ArraySegment<byte>(encoded);
+            await clientWebSocket.SendAsync(vs, WebSocketMessageType.Text, true, cancellationToken);
         }
 
         /// <summary>
@@ -202,7 +193,30 @@ namespace TVTComment.Model.NiconicoUtils
         /// </summary>
         public async Task Send(string liveId, string message, string mail)
         {
-            messageColl.Add(new string[] { message, mail });
+
+            long vpos = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() / 10 - openTime * 100; // vposは10ミリ秒単位
+            await WsSend("{ \"type\": \"postComment\", \"data\": { \"text\": \"" + message + "\", \"vpos\":" + vpos + ", \"isAnonymous\": true } }", new CancellationTokenSource().Token);
+
+            errorMesColl.TryTake(out var text, Timeout.Infinite); //結果を待つ
+            switch (text)
+            {
+                case "disconnect":
+                    throw new NicoLiveCommentSenderException("視聴セッションの切断要求がサーバから通知されたため切断します");
+                case "CONTENT_NOT_READY":
+                    throw new NicoLiveCommentSenderException("配信できない状態である（配信用ストリームエラー）");
+                case "NO_PERMISSION":
+                    throw new NicoLiveCommentSenderException("APIにアクセスする権限がない");
+                case "NOT_ON_AIR":
+                    throw new NicoLiveCommentSenderException("放送中ではない");
+                case "BROADCAST_NOT_FOUND":
+                    throw new NicoLiveCommentSenderException("配信情報を取得できない");
+                case "INTERNAL_SERVERERROR":
+                    throw new NicoLiveCommentSenderException("内部サーバエラー");
+                case "INVALID_MESSAGE":
+                    throw new ResponseFormatNicoLiveCommentSenderException("クライアントが送信したコマンドが無効な形式だった、またはリクエスト頻度が高すぎる");
+                case "COMMENT_POST_NOT_ALLOWED":
+                    throw new ResponseFormatNicoLiveCommentSenderException("コメントの投稿が許可されませんでした、パラメータが不正な可能性があります");
+            }
         }
 
         public void Dispose()
@@ -210,6 +224,7 @@ namespace TVTComment.Model.NiconicoUtils
             httpClient.Dispose();
             messageColl.Dispose();
             errorMesColl.Dispose();
+            clientWebSocket.Dispose();
         }
     }
 }
