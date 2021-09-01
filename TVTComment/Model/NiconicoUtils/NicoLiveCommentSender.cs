@@ -195,9 +195,23 @@ namespace TVTComment.Model.NiconicoUtils
         /// </summary>
         public async Task Send(string liveId, string message, string mail)
         {
-
+            if (clientWebSocket.State == WebSocketState.Closed) throw new NicoLiveCommentSenderException("視聴セッションは切断されています");
+            var arrayMail = mail.Split(" ");
+            var size = arrayMail.FirstOrDefault(x => IsSize(x)) ?? "medium";
+            var position = arrayMail.FirstOrDefault(x => IsPosition(x)) ?? "naka";
+            var font = arrayMail.FirstOrDefault(x => IsFont(x)) ?? "defont";
+            var color = arrayMail.FirstOrDefault(x => IsColor(x) || Regex.IsMatch(x, @"^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$")) ?? "white";
+            var isAnonymous = arrayMail.Contains("184") ? "true" : "false"; //C#はTrue Falseの頭文字が大文字なので
             long vpos = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() / 10 - openTime * 100; // vposは10ミリ秒単位
-            await WsSend("{ \"type\": \"postComment\", \"data\": { \"text\": \"" + message + "\", \"vpos\":" + vpos + ", \"isAnonymous\": true } }", CancellationToken.None);
+            await WsSend("{\"type\":\"postComment\",\"data\":{" +
+                "\"text\":\"" + message + "\"," +
+                "\"vpos\":" + vpos + "," +
+                "\"isAnonymous\":" + isAnonymous + "," +
+                "\"color\":\"" + color + "\"," +
+                "\"size\":\"" + size + "\"," +
+                "\"position\":\"" + position + "\"," +
+                "\"font\":\"" + font + "\"" +
+                "}}", CancellationToken.None);
 
             errorMesColl.TryTake(out var text, Timeout.Infinite); //結果を待つ
             switch (text)
@@ -219,6 +233,49 @@ namespace TVTComment.Model.NiconicoUtils
                 case "COMMENT_POST_NOT_ALLOWED":
                     throw new ResponseFormatNicoLiveCommentSenderException("コメントの投稿が許可されませんでした、パラメータが不正な可能性があります");
             }
+        }
+
+        private bool IsSize(string text)
+        {
+            return text switch
+            {
+                "big" or "medium" or "small" => true,
+                _ => false,
+            };
+        }
+
+        private bool IsPosition(string text)
+        {
+            return text switch
+            {
+                "ue" or "naka" or "shita" => true,
+                _ => false,
+            };
+        }
+
+        private bool IsFont(string text)
+        {
+            return text switch
+            {
+                "defont" or "mincho" or "gothic" => true,
+                _ => false,
+            };
+        }
+
+        private bool IsColor(string text)
+        {
+            return text switch
+            {
+                "white" or "red" or "pink" or
+                "orange" or "yellow" or "green" or
+                "cyan" or "blue" or "purple" or
+                "black" => true,
+                "white2" or "red2" or "pink2" or
+                "orange2" or "yellow2" or "green2" or
+                "cyan2" or "blue2" or "purple2" or
+                "black2" => true,
+                _ => false,
+            };
         }
 
         public void Dispose()
