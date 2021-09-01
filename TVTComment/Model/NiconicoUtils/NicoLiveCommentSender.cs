@@ -163,9 +163,11 @@ namespace TVTComment.Model.NiconicoUtils
                         var token = data.GetProperty("audienceToken").GetString();
                         var waittime = data.GetProperty("waitTimeSec").GetInt32();
                         await clientWebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "reconnect", CancellationToken.None);
-                        /*ws.Stop(WebSocketCloseStatus.NormalClosure, "reconnect");
-                        ws.Url = new Uri(Regex.Replace(webSocketUrl, @"", ""));
-                        ws.Start();*/
+                        var path = webScoketUri.GetLeftPart(UriPartial.Path);
+                        var newUri = new Uri(path + "?audience_token=" + token);
+                        await Task.Delay(waittime * 1000);
+                        await clientWebSocket.ConnectAsync(newUri, cancellationToken);
+                        await WsSend("{\"type\": \"startWatching\",\"data\": {\"reconnect\": false}}", cancellationToken);
                         break;
                     case "disconnect":
                         await clientWebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "disconnect", CancellationToken.None);
@@ -195,7 +197,7 @@ namespace TVTComment.Model.NiconicoUtils
         {
 
             long vpos = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() / 10 - openTime * 100; // vposは10ミリ秒単位
-            await WsSend("{ \"type\": \"postComment\", \"data\": { \"text\": \"" + message + "\", \"vpos\":" + vpos + ", \"isAnonymous\": true } }", new CancellationTokenSource().Token);
+            await WsSend("{ \"type\": \"postComment\", \"data\": { \"text\": \"" + message + "\", \"vpos\":" + vpos + ", \"isAnonymous\": true } }", CancellationToken.None);
 
             errorMesColl.TryTake(out var text, Timeout.Infinite); //結果を待つ
             switch (text)
