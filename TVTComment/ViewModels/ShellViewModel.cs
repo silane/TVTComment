@@ -169,7 +169,6 @@ namespace TVTComment.ViewModels
             // モデルのイベントハンドラを登録
             model.ChatCollectServiceModule.ErrorOccurredInChatCollecting += Model_ErrorOccurredInChatCollecting;
             model.ChatCollectServiceModule.ErrorOccurredInChatPosting += Model_ErrorOccurredInChatPosting;
-            model.ChatCollectServiceModule.ErrorOccurredInChatPostSession += Model_ErrorOccurredInChatPostSession;
             model.ChatCollectServiceModule.ErrorOccurredInServiceCreation += Model_ErrorOccurredAtChatCollectServiceCreation;
 
             // モデルのプロパティを結びつける
@@ -304,11 +303,6 @@ namespace TVTComment.ViewModels
             AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = $"\"{service.Name}\"にコメントを投稿するとき以下のエラーが発生しました。\n\n{errorText}" });
         }
 
-        private void Model_ErrorOccurredInChatPostSession(Model.ChatCollectService.IChatCollectService service, Model.ChatCollectService.BasicChatPostObject postObject, string errorText)
-        {
-            AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = $"\"{service.Name}\"のコメント機能に以下のエラーが発生しました。\n\n{errorText}" });
-        }
-
         private void Model_ErrorOccurredAtChatCollectServiceCreation(Model.ChatCollectServiceEntry.IChatCollectServiceEntry serviceEntry, string errorText)
         {
             AlertRequest.Raise(new Notification { Title = "TVTCommentエラー", Content = $"コメント元、\"{serviceEntry.Name}\"を有効にしようとしたとき以下のエラーが発生し、有効化できませんでした。\n\n{errorText}" });
@@ -333,7 +327,6 @@ namespace TVTComment.ViewModels
             {
                 model.ChatCollectServiceModule.ErrorOccurredInServiceCreation -= Model_ErrorOccurredAtChatCollectServiceCreation;
                 model.ChatCollectServiceModule.ErrorOccurredInChatPosting -= Model_ErrorOccurredInChatPosting;
-                model.ChatCollectServiceModule.ErrorOccurredInChatPostSession -= Model_ErrorOccurredInChatPostSession;
                 model.ChatCollectServiceModule.ErrorOccurredInChatCollecting -= Model_ErrorOccurredInChatCollecting;
             }
 
