@@ -87,7 +87,8 @@ namespace TVTComment.Model.ChatCollectService
 
         public string GetInformationText()
         {
-            return $"検索モード:{ModeSelect}\n検索ワード:{SearchWord.Value}";
+            var modename = new string[] { "自動(アニメ用・Annictからハッシュタグ取得)", "プリセット", "手動" };
+            return $"検索モード:{modename[ModeSelect.GetHashCode()]}\n検索ワード:{SearchWord.Value}";
         }
 
         private async Task SearchStreamAsync(CancellationToken cancel)
