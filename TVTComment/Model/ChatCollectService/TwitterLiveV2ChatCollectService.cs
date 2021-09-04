@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using TVTComment.Model.ChatCollectServiceEntry;
 using TVTComment.Model.NiconicoUtils;
 using TVTComment.Model.TwitterUtils;
+using TVTComment.Model.TwitterUtils.AnnictUtils;
 using static TVTComment.Model.ChatCollectServiceEntry.TwitterLiveChatCollectServiceEntry.ChatCollectServiceCreationOption;
 
 namespace TVTComment.Model.ChatCollectService
@@ -37,8 +38,10 @@ namespace TVTComment.Model.ChatCollectService
         private readonly ConcurrentQueue<FilterStreamResponse> statusQueue = new();
         private readonly CancellationTokenSource cancel = new();
         private readonly ObservableValue<string> SearchWord = new("");
+        private readonly ObservableValue<string> EventTextWord = new("");
         private readonly SearchWordResolver SearchWordResolver;
         private readonly ModeSelectMethod ModeSelect;
+        private readonly AnnictApis Annict;
 
 
         public TwitterLiveV2ChatCollectService(IChatCollectServiceEntry serviceEntry, string searchWord, ModeSelectMethod modeSelect, SearchWordResolver searchWordResolver, TwitterAuthentication twitter)
@@ -58,7 +61,17 @@ namespace TVTComment.Model.ChatCollectService
             {
                 throw new ChatCollectServiceCreationException($"このAPI KeyでTwitter API v2 エンドポイントが利用できないか\nTwitterのAPI制限に達したもしくは問題が発生したため切断されました\n\n{e.Message}");
             }
-
+            if(ModeSelect == ModeSelectMethod.Auto) { 
+                if (Twitter.AnnictToken != null && !Twitter.AnnictToken.Equals(""))
+                {
+                    Annict = new(Twitter.AnnictToken);
+                    EventTextWord.Where(x => x != null && !x.Equals("")).Subscribe(res => _ = annictSearch(EventTextWord.Value));
+                }
+                else
+                {
+                    throw new ChatCollectServiceCreationException("AnnictAPIの認証設定がされていません");
+                }
+            }
             SearchWord.Where(x => x != null && !x.Equals("")).Subscribe(res =>
             {
                 DeleteOldSearchWords();
@@ -81,8 +94,11 @@ namespace TVTComment.Model.ChatCollectService
         {
             await Task.Run(() =>
             {
-                foreach (var status in Twitter.OAuth2Token.V2.FilteredStreamApi.Filter(expansions: TweetExpansions.AuthorId, tweet_fields: TweetFields.CreatedAt)
-                    .StreamAsEnumerable().OfType<FilterStreamResponse>())
+                foreach (var status in Twitter.OAuth2Token.V2.FilteredStreamApi.Filter(expansions: TweetExpansions.AuthorId , tweet_fields: TweetFields.CreatedAt)
+                    .StreamAsEnumerable().
+                    OfType<FilterStreamResponse>()
+                    .Where(x => !x.Data.Text.StartsWith("RT"))
+                    .Where(x => x.Data.Lang is null or "und" || x.Data.Lang.StartsWith("ja")))
                 {
                     if (cancel.IsCancellationRequested)
                         break;
@@ -91,12 +107,26 @@ namespace TVTComment.Model.ChatCollectService
             }, cancel);
         }
 
+        private async Task annictSearch(string evetnText)
+        {
+            try
+            {
+                var result = await Annict.GetTwitterHashtagAsync(evetnText);
+                SearchWord.Value = result != null && !result.Equals("") ? $"#{result}" : "";
+            }
+            catch (AnnictNotFoundResponseException)
+            {
+                SearchWord.Value = "";
+            }
+        }
+
         public IEnumerable<Chat> GetChats(ChannelInfo channel,EventInfo eventInfo, DateTime time)
         {
+            if (ModeSelect == ModeSelectMethod.Preset || (SearchWord.Value != null && SearchWord.Value.Equals(""))) SearchWord.Value = SearchWordResolver.Resolve(channel.NetworkId, channel.ServiceId);
             if (ModeSelect == ModeSelectMethod.Auto)
             {
-
-                SearchWord.Value = SearchWordResolver.Resolve(channel.NetworkId, channel.ServiceId);
+                var result = AnnimeTitleGetter.Convert(eventInfo.EventName);
+                if (result != null && !result.Equals("")) EventTextWord.Value = result;
             }
             if (chatCollectTask != null)
             {
