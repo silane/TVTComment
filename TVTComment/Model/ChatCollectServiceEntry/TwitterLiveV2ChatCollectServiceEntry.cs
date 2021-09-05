@@ -1,9 +1,11 @@
 ﻿using ObservableUtils;
 using System;
 using TVTComment.Model.ChatCollectService;
+using TVTComment.Model.ChatService;
 using TVTComment.Model.NiconicoUtils;
 using TVTComment.Model.TwitterUtils;
 using static TVTComment.Model.ChatCollectServiceEntry.TwitterLiveChatCollectServiceEntry;
+using static TVTComment.Model.ChatCollectServiceEntry.TwitterLiveChatCollectServiceEntry.ChatCollectServiceCreationOption;
 
 namespace TVTComment.Model.ChatCollectServiceEntry
 {
@@ -18,16 +20,18 @@ namespace TVTComment.Model.ChatCollectServiceEntry
         private readonly ObservableValue<TwitterAuthentication> Session;
         private readonly SearchWordResolver searchWordResolver;
 
-        public TwitterLiveV2ChatCollectServiceEntry(ChatService.TwitterChatService Owner, SearchWordResolver searchWordResolver, ObservableValue<TwitterAuthentication> Session)
+        public TwitterLiveV2ChatCollectServiceEntry(TwitterChatService Owner, SearchWordResolver searchWordResolver, ObservableValue<TwitterAuthentication> Session)
         {
             this.Owner = Owner;
             this.searchWordResolver = searchWordResolver;
             this.Session = Session;
         }
-        
+
         public IChatCollectService GetNewService(IChatCollectServiceCreationOption creationOption)
         {
-            creationOption ??= new ChatCollectServiceCreationOption(ChatCollectServiceCreationOption.ModeSelectMethod.Auto, "");
+            var annictmode = false;
+            if (this.Owner is TwitterChatService twitter) annictmode = twitter.AnnictAutoEnable;
+            creationOption ??= annictmode ? new ChatCollectServiceCreationOption(ModeSelectMethod.Auto, "") : new ChatCollectServiceCreationOption(ModeSelectMethod.Preset, "");
             if (creationOption == null || creationOption is not ChatCollectServiceCreationOption co)
                 throw new ArgumentException($"Type of {nameof(creationOption)} must be {nameof(TwitterLiveV2ChatCollectServiceEntry)}.{nameof(ChatCollectServiceCreationOption)}", nameof(creationOption));
             var session = Session.Value;
