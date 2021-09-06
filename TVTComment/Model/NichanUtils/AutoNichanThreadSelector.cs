@@ -26,6 +26,7 @@ namespace TVTComment.Model.NichanUtils
         )
         {
             IEnumerable<MatchingThread> matchingThreads = threadResolver.Resolve(channel, false);
+            if (matchingThreads == null) yield break;
 
             foreach (var entry in matchingThreads)
             {
