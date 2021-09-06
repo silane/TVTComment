@@ -19,6 +19,7 @@ jobs:
       - name: checkout
         uses: actions/checkout@v2
         with:
+          submodules: recursive
           fetch-depth: 0
 
       - name: Setup .NET
