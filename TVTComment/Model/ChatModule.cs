@@ -208,6 +208,12 @@ namespace TVTComment.Model
                     case "RegexNg":
                         entry.ChatModRule = new ChatModRules.RegexNgChatModRule(targetServices, entity.Expression);
                         break;
+                    case "UrlNg":
+                        entry.ChatModRule = new ChatModRules.UrlNgChatModRule(targetServices);
+                        break;
+                    case "MentionNg":
+                        entry.ChatModRule = new ChatModRules.MentionNgChatModRule(targetServices);
+                        break;
                     default:
                         continue;
                 }
@@ -292,6 +298,12 @@ namespace TVTComment.Model
                     case ChatModRules.RegexNgChatModRule regexNg:
                         entity.Type = "RegexNg";
                         entity.Expression = regexNg.Regex;
+                        break;
+                    case ChatModRules.UrlNgChatModRule _:
+                        entity.Type = "UrlNg";
+                        break;
+                    case ChatModRules.MentionNgChatModRule _:
+                        entity.Type = "MentionNg";
                         break;
                     default:
                         throw new Exception();

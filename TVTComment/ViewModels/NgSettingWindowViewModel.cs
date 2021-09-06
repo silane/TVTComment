@@ -96,6 +96,8 @@ namespace TVTComment.ViewModels
         public ICommand AddReplaceRegexCommand { get; private set; }
         public ICommand AddRegexNgCommand { get; private set; }
         public ICommand RemoveRuleCommand { get; private set; }
+        public ICommand AddUrlNgCommand { get; private set; }
+        public ICommand AddMentionNgCommand { get; private set; }
 
         public NgSettingWindowViewModel(Model.TVTComment model)
         {
@@ -208,11 +210,21 @@ namespace TVTComment.ViewModels
                 model.ChatModule.AddChatModRule(new Model.ChatModRules.RegexNgChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value), NgText));
             });
 
+            AddUrlNgCommand = new DelegateCommand(() =>
+            {
+                model.ChatModule.AddChatModRule(new Model.ChatModRules.UrlNgChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value)));
+            });
+
+            AddMentionNgCommand = new DelegateCommand(() =>
+            {
+                model.ChatModule.AddChatModRule(new Model.ChatModRules.MentionNgChatModRule(TargetChatCollectServiceEntries.Where(x => x.IsSelected).Select(x => x.Value)));
+            });
+
             RemoveRuleCommand = new DelegateCommand(() =>
-              {
-                  if (SelectedRule == null) return;
-                  model.ChatModule.RemoveChatModRule(SelectedRule.ChatModRule);
-              });
+            {
+                if (SelectedRule == null) return;
+                model.ChatModule.RemoveChatModRule(SelectedRule.ChatModRule);
+            });
         }
 
         public void Dispose()
