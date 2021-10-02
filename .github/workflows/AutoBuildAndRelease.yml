@@ -45,6 +45,14 @@ jobs:
           nuget restore CoreTweet-All.sln
           msbuild CoreTweet-All.sln /m /p:Configuration=Release
 
+      - name: Replace id & secret
+        shell: powershell
+        run: |
+          $data=Get-Content TVTComment/ViewModels/SettingsWindowViewModel.cs | % { $_ -replace 'secrets\["Annict:ClientId"\]','"${{ secrets.CLIENT_ID }}"' }
+          $data | Out-File TVTComment/ViewModels/SettingsWindowViewModel.cs
+          $data=Get-Content TVTComment/ViewModels/SettingsWindowViewModel.cs | % { $_ -replace 'secrets\["Annict:ClientSecret"\]','"${{ secrets.CLIENT_SECRET }}"' }
+          $data | Out-File TVTComment/ViewModels/SettingsWindowViewModel.cs
+
       - name: Build (TVTComment.exe)
         run: dotnet publish -m -c Release /p:PublishProfile="TVTComment/Properties/PublishProfiles/ReleaseProfile.pubxml"
 
