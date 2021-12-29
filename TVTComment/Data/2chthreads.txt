@@ -3,11 +3,11 @@
 [boards]
 NHK	番組ch(NHK)	https://nhk2.5ch.net/livenhk/subback.html	
 ETV	番組ch(教育)	https://nhk2.5ch.net/liveetv/subback.html	
-NTV	番組ch(NTV)	https://himawari.5ch.net/liventv/subback.html	
-TBS	番組ch(TBS)	https://himawari.5ch.net/livetbs/subback.html	
-CX	番組ch(フジ)	https://himawari.5ch.net/livecx/subback.html	
-ANB	番組ch(朝日)	https://himawari.5ch.net/liveanb/subback.html	
-TX	番組ch(TX)	https://himawari.5ch.net/livetx/subback.html	
+NTV	番組ch(NTV)	https://sora.5ch.net/liventv/subback.html	
+TBS	番組ch(TBS)	https://sora.5ch.net/livetbs/subback.html	
+CX	番組ch(フジ)	https://sora.5ch.net/livecx/subback.html	
+ANB	番組ch(朝日)	https://sora.5ch.net/liveanb/subback.html	
+TX	番組ch(TX)	https://sora.5ch.net/livetx/subback.html	
 MX	番組ch(MX)	https://fate.5ch.net/livemx/subback.html	
 BSNHK_BS1	BS実況(NHK)	https://nhk2.5ch.net/livebs/subback.html	BS1
 BSNHK_BSP	BS実況(NHK)	https://nhk2.5ch.net/livebs/subback.html	BSプレミアム
@@ -20,48 +20,48 @@ BSFREE_BS11	BS実況(無料)	https://tanuki.5ch.net/livebs2/subback.html	BS11
 BSFREE_BS12	BS実況(無料)	https://tanuki.5ch.net/livebs2/subback.html	BS12 TwellV
 BSFREE_OUJ	BS実況(無料)	https://tanuki.5ch.net/livebs2/subback.html	放送大学
 BSFREE_DLIFE	BS実況(無料)	https://tanuki.5ch.net/livebs2/subback.html	Dlife
-BSPAY_WOWOWP	BS実況(有料)	https://himawari.5ch.net/livewowow/subback.html	WOWOWプライム
-BSPAY_WOWOWC	BS実況(有料)	https://himawari.5ch.net/livewowow/subback.html	WOWOWシネマ
-BSPAY_WOWOWL	BS実況(有料)	https://himawari.5ch.net/livewowow/subback.html	WOWOWライブ
-BSPAY_STAR	BS実況(有料)	https://himawari.5ch.net/livewowow/subback.html	スターチャンネル スタチャン
-BSPAY_SKYPER	BS実況(有料)	https://himawari.5ch.net/livewowow/subback.html	BSスカパー
-SKYPER	スカパー実況	https://himawari.5ch.net/liveskyp/subback.html	
-SKYPER_GREEN	スカパー実況	https://himawari.5ch.net/liveskyp/subback.html	グリーンチャンネル
-SKYPER_ANIMAX	スカパー実況	https://himawari.5ch.net/liveskyp/subback.html	アニマックス
-SKYPER_225	スカパー実況	https://himawari.5ch.net/liveskyp/subback.html	日本映画専門
-SKYPER_218	スカパー実況	https://himawari.5ch.net/liveskyp/subback.html	東映チャンネル
-SKYPER_NECO	スカパー実況	https://himawari.5ch.net/liveskyp/subback.html	NECO NEKO
-SKYPER_GTASU	スカパー実況	https://himawari.5ch.net/liveskyp/subback.html	G+
-SKYPER_KIDS	スカパー実況	https://himawari.5ch.net/liveskyp/subback.html	キッズステーション ｷｯｽﾞｽﾃｰｼｮﾝ
-SKYPER_CARTOON	スカパー実況	https://himawari.5ch.net/liveskyp/subback.html	カートゥーン
-SKYPER_ATX	スカパー実況	https://himawari.5ch.net/liveskyp/subback.html	AT-X
-SKYPER_TBS	スカパー実況	https://himawari.5ch.net/liveskyp/subback.html	TBSチャンネル
-SKYPER_ANB	スカパー実況	https://himawari.5ch.net/liveskyp/subback.html	テレ朝チャンネル
-SKYPER_NTVPLUS	スカパー実況	https://himawari.5ch.net/liveskyp/subback.html	日テレプラス
-SKYPER_GINGA	スカパー実況	https://himawari.5ch.net/liveskyp/subback.html	チャンネル銀河
-SKYPER_CXONE	スカパー実況	https://himawari.5ch.net/liveskyp/subback.html	ONE
-SKYPER_CXTWO	スカパー実況	https://himawari.5ch.net/liveskyp/subback.html	TWO
-SKYPER_CXNEXT	スカパー実況	https://himawari.5ch.net/liveskyp/subback.html	NEXT
-SKYPER_SKYSTAGE	スカパー実況	https://himawari.5ch.net/liveskyp/subback.html	タカラヅカスカイステージ
-SKYPER_292	スカパー実況	https://himawari.5ch.net/liveskyp/subback.html	時代劇専門
-SKYPER_FAMILY	スカパー実況	https://himawari.5ch.net/liveskyp/subback.html	ファミリー劇場
-SKYPER_MONDO	スカパー実況	https://himawari.5ch.net/liveskyp/subback.html	MONDOTV
-SKYPER_DISCOVERY	スカパー実況	https://himawari.5ch.net/liveskyp/subback.html	ﾃﾞｨｽｶﾊﾞ
-SKYPER_ANIMAL	スカパー実況	https://himawari.5ch.net/liveskyp/subback.html	ｱﾆﾌﾟﾗ
-SKYPER_HISTORY	スカパー実況	https://himawari.5ch.net/liveskyp/subback.html	ﾋｽﾄﾘ
-SKYPER_NATIONAL	スカパー実況	https://himawari.5ch.net/liveskyp/subback.html	ﾅｼｮｼﾞｵ
-SKYPER_NEWS24	スカパー実況	https://himawari.5ch.net/liveskyp/subback.html	NEWS24
-SKYPER_TBSNEWS	スカパー実況	https://himawari.5ch.net/liveskyp/subback.html	TBS NEWS
-SKYPER_DRAMA	スカパー実況	https://himawari.5ch.net/liveskyp/subback.html	FOX・スパドラ・AXN・AXNミステリー
+BSPAY_WOWOWP	BS実況(有料)	https://sora.5ch.net/livewowow/subback.html	WOWOWプライム
+BSPAY_WOWOWC	BS実況(有料)	https://sora.5ch.net/livewowow/subback.html	WOWOWシネマ
+BSPAY_WOWOWL	BS実況(有料)	https://sora.5ch.net/livewowow/subback.html	WOWOWライブ
+BSPAY_STAR	BS実況(有料)	https://sora.5ch.net/livewowow/subback.html	スターチャンネル スタチャン
+BSPAY_SKYPER	BS実況(有料)	https://sora.5ch.net/livewowow/subback.html	BSスカパー
+SKYPER	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	
+SKYPER_GREEN	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	グリーンチャンネル
+SKYPER_ANIMAX	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	アニマックス
+SKYPER_225	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	日本映画専門
+SKYPER_218	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	東映チャンネル
+SKYPER_NECO	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	NECO NEKO
+SKYPER_GTASU	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	G+
+SKYPER_KIDS	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	キッズステーション ｷｯｽﾞｽﾃｰｼｮﾝ
+SKYPER_CARTOON	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	カートゥーン
+SKYPER_ATX	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	AT-X
+SKYPER_TBS	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	TBSチャンネル
+SKYPER_ANB	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	テレ朝チャンネル
+SKYPER_NTVPLUS	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	日テレプラス
+SKYPER_GINGA	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	チャンネル銀河
+SKYPER_CXONE	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	ONE
+SKYPER_CXTWO	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	TWO
+SKYPER_CXNEXT	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	NEXT
+SKYPER_SKYSTAGE	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	タカラヅカスカイステージ
+SKYPER_292	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	時代劇専門
+SKYPER_FAMILY	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	ファミリー劇場
+SKYPER_MONDO	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	MONDOTV
+SKYPER_DISCOVERY	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	ﾃﾞｨｽｶﾊﾞ
+SKYPER_ANIMAL	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	ｱﾆﾌﾟﾗ
+SKYPER_HISTORY	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	ﾋｽﾄﾘ
+SKYPER_NATIONAL	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	ﾅｼｮｼﾞｵ
+SKYPER_NEWS24	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	NEWS24
+SKYPER_TBSNEWS	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	TBS NEWS
+SKYPER_DRAMA	スカパー実況	https://sora.5ch.net/liveskyp/subback.html	FOX・スパドラ・AXN・AXNミステリー
 ANIME_BS11	アニメ特撮実況	https://mao.5ch.net/liveanime/subback.html	BS11
 ANIME_MX	アニメ特撮実況	https://mao.5ch.net/liveanime/subback.html	TOKYO MX
-LOCAL_MX	番組ch	https://himawari.5ch.net/weekly/subback.html	MX
-LOCAL_TVK	番組ch	https://himawari.5ch.net/weekly/subback.html	tvk
-LOCAL_TVS	番組ch	https://himawari.5ch.net/weekly/subback.html	テレ玉
-LOCAL_CTC	番組ch	https://himawari.5ch.net/weekly/subback.html	チバ
-LOCAL_GTV	番組ch	https://himawari.5ch.net/weekly/subback.html	群馬
-LOCAL_GYT	番組ch	https://himawari.5ch.net/weekly/subback.html	とちぎ
-LOCAL_WEST	番組ch(西日本)	https://himawari.5ch.net/livewkwest/subback.html	関西ローカル ｱﾆﾒ関西ﾛｰｶﾙ
+LOCAL_MX	番組ch	https://sora.5ch.net/weekly/subback.html	MX
+LOCAL_TVK	番組ch	https://sora.5ch.net/weekly/subback.html	tvk
+LOCAL_TVS	番組ch	https://sora.5ch.net/weekly/subback.html	テレ玉
+LOCAL_CTC	番組ch	https://sora.5ch.net/weekly/subback.html	チバ
+LOCAL_GTV	番組ch	https://sora.5ch.net/weekly/subback.html	群馬
+LOCAL_GYT	番組ch	https://sora.5ch.net/weekly/subback.html	とちぎ
+LOCAL_WEST	番組ch(西日本)	https://sora.5ch.net/livewkwest/subback.html	関西ローカル ｱﾆﾒ関西ﾛｰｶﾙ
 
 [threadmapping]
 # GR: NHK 総合
