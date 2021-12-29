@@ -200,6 +200,8 @@ namespace TVTComment.Model.ChatCollectService
                 errored = true;
                 if (e.InnerExceptions.Count == 1 && e.InnerExceptions[0] is ChatCollectException)
                     throw e.InnerExceptions[0];
+                else if (e.InnerExceptions.Count == 1 && e.InnerExceptions[0] is HttpRequestException)
+                    throw new ChatCollectException($"収集スレッドリストの更新処理でHTTPエラーが発生しました\n{e}", e);
                 else
                     resCollectTask.Wait();
             }
