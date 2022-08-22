@@ -18,7 +18,7 @@
 
 namespace TVTComment
 {
-	enum class TVTCommentCommand
+	enum class Command
 	{
 		ShowWindow,
 	};
@@ -78,7 +78,7 @@ namespace TVTComment
 		void OnChannelListChange();
 		void OnChannelSelectionChange();
 		void OnForward(std::time_t tot);//TOT時刻の更新間隔より細かい間隔で呼ぶ
-		void OnCommandInvoked(TVTCommentCommand command);
+		void OnCommandInvoked(Command command);
 		~TVTComment() noexcept;
 	};
 }

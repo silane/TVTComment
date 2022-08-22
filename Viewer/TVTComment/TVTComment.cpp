@@ -400,11 +400,11 @@ namespace TVTComment
 		}
 	}
 
-	void TVTComment::OnCommandInvoked(TVTCommentCommand command)
+	void TVTComment::OnCommandInvoked(Command command)
 	{
 		switch (command)
 		{
-		case TVTCommentCommand::ShowWindow:
+		case Command::ShowWindow:
 			CommandIPCMessage msg;
 			msg.CommandId = "ShowWindow";
 			this->sendMessage(msg);

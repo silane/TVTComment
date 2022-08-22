@@ -5,14 +5,10 @@
 
 #include "stdafx.h"
 #include "NicoJK/Util.h"
-#include "NicoJK/AsyncSocket.h"
-#include "NicoJK/TextFileReader.h"
 #include "NicoJK/CommentWindow.h"
 #define TVTEST_PLUGIN_CLASS_IMPLEMENT
 #include "NicoJK/TVTestPlugin.h"
 #include "NicoJK/resource.h"
-#include "NicoJK/NetworkServiceIDTable.h"
-#include "NicoJK/JKIDNameTable.h"
 #include "Viewer.h"
 
 #ifdef _DEBUG
@@ -31,36 +27,17 @@ inline void dprintf_real( const _TCHAR * fmt, ... )
 #  define dprintf __noop
 #endif
 
-// 通信用
-#define WMS_FORCE (WM_APP + 101)
-#define WMS_JK (WM_APP + 102)
-#define WMS_POST (WM_APP + 103)
-
 #define WM_RESET_STREAM (WM_APP + 105)
-#define WM_UPDATE_LIST (WM_APP + 106)
-#define WM_SET_ZORDER (WM_APP + 107)
-#define WM_POST_COMMENT (WM_APP + 108)
-
-#define JK_HOST_NAME "jk.nicovideo.jp"
 
 enum {
-	TIMER_UPDATE = 1,
-	TIMER_JK_WATCHDOG,
-	TIMER_FORWARD,
+	TIMER_FORWARD = 1,
 	TIMER_SETUP_CURJK,
 	TIMER_DONE_MOVE,
 	TIMER_DONE_SIZE,
-	TIMER_DONE_POSCHANGE,
 };
 
-enum {
-	COMMAND_HIDE_FORCE,
-	COMMAND_HIDE_COMMENT,
-	COMMAND_FORWARD_A,
-};
-
-CNicoJK::CNicoJK()
-	: hForce_(NULL)
+CViewer::CViewer()
+	: hDummy_(NULL)
 	, forwardTick_(0)
 	, hSyncThread_(NULL)
 	, bQuitSyncThread_(false)
@@ -83,7 +60,7 @@ CNicoJK::CNicoJK()
 	pcrPids_[0] = -1;
 }
 
-bool CNicoJK::GetPluginInfo(TVTest::PluginInfo *pInfo)
+bool CViewer::GetPluginInfo(TVTest::PluginInfo *pInfo)
 {
 	// プラグインの情報を返す
 	pInfo->Type           = TVTest::PLUGIN_TYPE_NORMAL;
@@ -94,7 +71,7 @@ bool CNicoJK::GetPluginInfo(TVTest::PluginInfo *pInfo)
 	return true;
 }
 
-bool CNicoJK::Initialize()
+bool CViewer::Initialize()
 {
 	// 初期化処理
 	if (!GetLongModuleFileName(g_hinstDLL, szIniFileName_, _countof(szIniFileName_)) ||
@@ -115,13 +92,13 @@ bool CNicoJK::Initialize()
 		m_pApp->AddLog(L"OsdCompositorを初期化しました。");
 	}
 	// コマンドを登録
-	m_pApp->RegisterCommand(COMMAND_HIDE_FORCE, L"ShowWindow", L"ウィンドウの前面表示");
+	m_pApp->RegisterCommand(static_cast<int>(TVTComment::Command::ShowWindow), L"ShowWindow", L"ウィンドウの前面表示");
 	// イベントコールバック関数を登録
 	m_pApp->SetEventCallback(EventCallback, this);
 	return true;
 }
 
-bool CNicoJK::Finalize()
+bool CViewer::Finalize()
 {
 	// 終了処理
 	if (m_pApp->IsPluginEnabled()) {
@@ -132,10 +109,10 @@ bool CNicoJK::Finalize()
 	return true;
 }
 
-bool CNicoJK::TogglePlugin(bool bEnabled)
+bool CViewer::TogglePlugin(bool bEnabled)
 {
 	if (bEnabled) {
-		if (!hForce_) {
+		if (!hDummy_) {
 			LoadFromIni();
 
 #pragma region TVTComment
@@ -147,13 +124,13 @@ bool CNicoJK::TogglePlugin(bool bEnabled)
 			PathAppendW(modulePath, exePath);
 
 			//tvtCommentオブジェクトは勢いウィンドウより生存期間が長い
-			this->tvtComment.reset(new TVTComment::TVTComment(this->m_pApp, &this->commentWindow_, modulePath));
+			tvtComment = std::make_unique<TVTComment::TVTComment>(m_pApp, &commentWindow_, modulePath);
 #pragma endregion
 
-			// 勢い窓作成
-			hForce_ = CreateDialogParam(g_hinstDLL, MAKEINTRESOURCE(IDD_FORCE), NULL,
+			// ダミー窓作成
+			hDummy_ = CreateDialogParam(g_hinstDLL, MAKEINTRESOURCE(IDD_FORCE), NULL,
 			                            ForceDialogProc, reinterpret_cast<LPARAM>(this));
-			if (hForce_) {
+			if (hDummy_) {
 				// ウィンドウコールバック関数を登録
 				m_pApp->SetWindowMessageCallback(WindowMsgCallback, this);
 				// ストリームコールバック関数を登録(指定ファイル再生機能のために常に登録)
@@ -173,14 +150,14 @@ bool CNicoJK::TogglePlugin(bool bEnabled)
 					}
 					if (!hSyncThread_) {
 						m_pApp->AddLog(L"Aeroが無効のため設定timerIntervalのリフレッシュ同期機能はオフになります。");
-						SetTimer(hForce_, TIMER_FORWARD, 166667 / -s_.timerInterval, NULL);
+						SetTimer(hDummy_, TIMER_FORWARD, 166667 / -s_.timerInterval, NULL);
 					}
 				}
 			}
 		}
-		return hForce_ != NULL;
+		return hDummy_ != NULL;
 	} else {
-		if (hForce_) {
+		if (hDummy_) {
 			if (hSyncThread_) {
 				bQuitSyncThread_ = true;
 				WaitForSingleObject(hSyncThread_, INFINITE);
@@ -189,20 +166,19 @@ bool CNicoJK::TogglePlugin(bool bEnabled)
 			}
 			ToggleStreamCallback(false);
 			m_pApp->SetWindowMessageCallback(NULL);
-			DestroyWindow(hForce_);
-			hForce_ = NULL;
-			SaveToIni();
+			DestroyWindow(hDummy_);
+			hDummy_ = NULL;
 		}
 #pragma region TVTComment
-		this->tvtComment = nullptr;
+		tvtComment = nullptr;
 #pragma endregion
 		return true;
 	}
 }
 
-unsigned int __stdcall CNicoJK::SyncThread(void *pParam)
+unsigned int __stdcall CViewer::SyncThread(void *pParam)
 {
-	CNicoJK *pThis = static_cast<CNicoJK*>(pParam);
+	CViewer *pThis = static_cast<CViewer*>(pParam);
 	DWORD count = 0;
 	int timeout = 0;
 	while (!pThis->bQuitSyncThread_) {
@@ -218,14 +194,14 @@ unsigned int __stdcall CNicoJK::SyncThread(void *pParam)
 			count -= 10000;
 			timeout = 30;
 			pThis->bPendingTimerForward_ = true;
-			SendNotifyMessage(pThis->hForce_, WM_TIMER, TIMER_FORWARD, 0);
+			SendNotifyMessage(pThis->hDummy_, WM_TIMER, TIMER_FORWARD, 0);
 		}
 		count += pThis->bHalfSkip_ ? -pThis->s_.timerInterval / 2 : -pThis->s_.timerInterval;
 	}
 	return 0;
 }
 
-void CNicoJK::ToggleStreamCallback(bool bSet)
+void CViewer::ToggleStreamCallback(bool bSet)
 {
 	if (bSet) {
 		if (!bSetStreamCallback_) {
@@ -242,7 +218,7 @@ void CNicoJK::ToggleStreamCallback(bool bSet)
 	}
 }
 
-void CNicoJK::LoadFromIni()
+void CViewer::LoadFromIni()
 {
 	// iniはセクション単位で読むと非常に速い。起動時は処理が混み合うのでとくに有利
 	TCHAR *pBuf = NewGetPrivateProfileSection(TEXT("Setting"), szIniFileName_);
@@ -266,11 +242,7 @@ void CNicoJK::LoadFromIni()
 	delete [] pBuf;
 }
 
-void CNicoJK::SaveToIni()
-{
-}
-
-HWND CNicoJK::GetFullscreenWindow()
+HWND CViewer::GetFullscreenWindow()
 {
 	TVTest::HostInfo hostInfo;
 	if (m_pApp->GetFullscreen() && m_pApp->GetHostInfo(&hostInfo)) {
@@ -303,7 +275,7 @@ static BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
 }
 
 // TVTestのVideo Containerウィンドウを探す
-HWND CNicoJK::FindVideoContainer()
+HWND CViewer::FindVideoContainer()
 {
 	HWND hwndFound = NULL;
 	TVTest::HostInfo hostInfo;
@@ -319,52 +291,8 @@ HWND CNicoJK::FindVideoContainer()
 	return hwndFound;
 }
 
-// 再生中のストリームのネットワーク/サービスIDを取得する
-DWORD CNicoJK::GetCurrentNetworkServiceID()
-{
-	TVTest::ServiceInfo si;
-	int index = m_pApp->GetService();
-	if (index >= 0 && m_pApp->GetServiceInfo(index, &si)) {
-		TVTest::ChannelInfo ci;
-		if (m_pApp->GetCurrentChannelInfo(&ci) && ci.NetworkID) {
-			if (0x7880 <= ci.NetworkID && ci.NetworkID <= 0x7FEF) {
-				// 地上波のサービス種別とサービス番号はマスクする
-				return (static_cast<DWORD>(si.ServiceID&~0x0187) << 16) | 0x000F;
-			}
-			return (static_cast<DWORD>(si.ServiceID) << 16) | ci.NetworkID;
-		}
-		// チャンネルスキャンしていないとGetCurrentChannelInfo()もネットワークIDの取得に失敗するよう
-		if (si.ServiceID >= 0x0400) {
-			// 地上波っぽいのでマスクする
-			return (static_cast<DWORD>(si.ServiceID&~0x0187) << 16) | 0;
-		}
-		return (static_cast<DWORD>(si.ServiceID) << 16) | 0;
-	}
-	return 0;
-}
-
-// 指定チャンネルのネットワーク/サービスIDを取得する
-bool CNicoJK::GetChannelNetworkServiceID(int tuningSpace, int channelIndex, DWORD *pNtsID)
-{
-	TVTest::ChannelInfo ci;
-	if (m_pApp->GetChannelInfo(tuningSpace, channelIndex, &ci)) {
-		if (ci.NetworkID && ci.ServiceID) {
-			if (0x7880 <= ci.NetworkID && ci.NetworkID <= 0x7FEF) {
-				// 地上波のサービス種別とサービス番号はマスクする
-				*pNtsID = (static_cast<DWORD>(ci.ServiceID&~0x0187) << 16) | 0x000F;
-				return true;
-			}
-			*pNtsID = (static_cast<DWORD>(ci.ServiceID) << 16) | ci.NetworkID;
-			return true;
-		}
-		*pNtsID = 0;
-		return true;
-	}
-	return false;
-}
-
 // 再生中のストリームのTOT時刻(取得からの経過時間で補正済み)をUTCで取得する
-bool CNicoJK::GetCurrentTot(FILETIME *pft)
+bool CViewer::GetCurrentTot(FILETIME *pft)
 {
 	CBlockLock lock(&streamLock_);
 	DWORD tick = GetTickCount();
@@ -392,25 +320,6 @@ bool CNicoJK::GetCurrentTot(FILETIME *pft)
 	}
 }
 
-// 現在のBonDriverが':'区切りのリストに含まれるかどうか調べる
-bool CNicoJK::IsMatchDriverName(LPCTSTR drivers)
-{
-	TCHAR path[MAX_PATH];
-	m_pApp->GetDriverName(path, _countof(path));
-	LPCTSTR name = PathFindFileName(path);
-	int len = lstrlen(name);
-	if (len > 0) {
-		for (LPCTSTR p = drivers; (p = StrStrI(p, name)) != NULL; p += len) {
-			if ((p == drivers || p[-1] == TEXT(':')) && (p[len] == TEXT('\0') || p[len] == TEXT(':'))) {
-				return true;
-			}
-		}
-	}
-	return false;
-}
-
-#define DWORD_MSB(x) ((x) & 0x80000000)
-
 static int GetWindowHeight(HWND hwnd)
 {
 	RECT rc;
@@ -419,9 +328,9 @@ static int GetWindowHeight(HWND hwnd)
 
 // イベントコールバック関数
 // 何かイベントが起きると呼ばれる
-LRESULT CALLBACK CNicoJK::EventCallback(UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData)
+LRESULT CALLBACK CViewer::EventCallback(UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData)
 {
-	CNicoJK *pThis = static_cast<CNicoJK*>(pClientData);
+	CViewer *pThis = static_cast<CViewer*>(pClientData);
 	switch (Event) {
 	case TVTest::EVENT_PLUGINENABLE:
 		// プラグインの有効状態が変化した
@@ -436,10 +345,6 @@ LRESULT CALLBACK CNicoJK::EventCallback(UINT Event, LPARAM lParam1, LPARAM lPara
 				pThis->commentWindow_.Create(hwnd);
 				pThis->bHalfSkip_ = GetWindowHeight(hwnd) >= pThis->s_.halfSkipThreshold;
 			}
-			// 全画面遷移時は隠れたほうが使い勝手がいいので呼ばない
-			if (!lParam1) {
-				SendMessage(pThis->hForce_, WM_SET_ZORDER, 0, 0);
-			}
 		}
 		break;
 	case TVTest::EVENT_PREVIEWCHANGE:
@@ -449,7 +354,6 @@ LRESULT CALLBACK CNicoJK::EventCallback(UINT Event, LPARAM lParam1, LPARAM lPara
 				HWND hwnd = pThis->FindVideoContainer();
 				pThis->commentWindow_.Create(hwnd);
 				pThis->bHalfSkip_ = GetWindowHeight(hwnd) >= pThis->s_.halfSkipThreshold;
-				//pThis->ProcessChatTag("<!--<chat date=\"0\" mail=\"cyan ue\" user_id=\"-\">(NicoJK ON)</chat>-->");
 			} else {
 				pThis->commentWindow_.Destroy();
 			}
@@ -458,14 +362,14 @@ LRESULT CALLBACK CNicoJK::EventCallback(UINT Event, LPARAM lParam1, LPARAM lPara
 	case TVTest::EVENT_CHANNELCHANGE:
 		// チャンネルが変更された
 		if (pThis->m_pApp->IsPluginEnabled()) {
-			PostMessage(pThis->hForce_, WM_RESET_STREAM, 0, 0);
+			PostMessage(pThis->hDummy_, WM_RESET_STREAM, 0, 0);
 		}
 		// FALL THROUGH!
 	case TVTest::EVENT_SERVICECHANGE:
 		// サービスが変更された
 		if (pThis->m_pApp->IsPluginEnabled()) {
 			// 重複やザッピング対策のためタイマで呼ぶ
-			SetTimer(pThis->hForce_, TIMER_SETUP_CURJK, SETUP_CURJK_DELAY, NULL);
+			SetTimer(pThis->hDummy_, TIMER_SETUP_CURJK, SETUP_CURJK_DELAY, NULL);
 		}
 		break;
 	case TVTest::EVENT_SERVICEUPDATE:
@@ -473,101 +377,74 @@ LRESULT CALLBACK CNicoJK::EventCallback(UINT Event, LPARAM lParam1, LPARAM lPara
 		if (pThis->m_pApp->IsPluginEnabled()) {
 			// ユーザの自発的なチャンネル変更(EVENT_CHANNELCHANGE)を捉えるのが原則だが
 			// 非チューナ系のBonDriverだとこれでは不十分なため
-			//if (pThis->IsMatchDriverName(pThis->s_.nonTunerDrivers)) {
-				SetTimer(pThis->hForce_, TIMER_SETUP_CURJK, SETUP_CURJK_DELAY, NULL);
-			//}
+			SetTimer(pThis->hDummy_, TIMER_SETUP_CURJK, SETUP_CURJK_DELAY, NULL);
 		}
 		break;
 	case TVTest::EVENT_COMMAND:
 		// コマンドが選択された
 		if (pThis->m_pApp->IsPluginEnabled()) {
-			switch (lParam1) {
-			case COMMAND_HIDE_FORCE:
-				pThis->tvtComment->OnCommandInvoked(TVTComment::TVTCommentCommand::ShowWindow);
-				break;
-			}
+			pThis->tvtComment->OnCommandInvoked(static_cast<TVTComment::Command>(lParam1));
 		}
 		break;
 	}
 	return 0;
 }
 
-BOOL CALLBACK CNicoJK::WindowMsgCallback(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *pResult, void *pUserData)
+BOOL CALLBACK CViewer::WindowMsgCallback(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *pResult, void *pUserData)
 {
-	CNicoJK *pThis = static_cast<CNicoJK*>(pUserData);
+	CViewer *pThis = static_cast<CViewer*>(pUserData);
 	switch (uMsg) {
-	case WM_ACTIVATE:
-		if (LOWORD(wParam) != WA_INACTIVE) {
-			SendMessage(pThis->hForce_, WM_SET_ZORDER, 0, 0);
-		}
-		break;
-	case WM_WINDOWPOSCHANGED:
-		// WM_ACTIVATEされないZオーダーの変化を捉える。フルスクリーンでもなぜか送られてくるので注意
-		SetTimer(pThis->hForce_, TIMER_DONE_POSCHANGE, 1000, NULL);
-		break;
 	case WM_MOVE:
 		pThis->commentWindow_.OnParentMove();
 		// 実際に捉えたいVideo Containerウィンドウの変化はすこし遅れるため
-		SetTimer(pThis->hForce_, TIMER_DONE_MOVE, 500, NULL);
+		SetTimer(pThis->hDummy_, TIMER_DONE_MOVE, 500, NULL);
 		break;
 	case WM_SIZE:
 		pThis->commentWindow_.OnParentSize();
-		SetTimer(pThis->hForce_, TIMER_DONE_SIZE, 500, NULL);
+		SetTimer(pThis->hDummy_, TIMER_DONE_SIZE, 500, NULL);
 		break;
 	}
 	return FALSE;
 }
 
-INT_PTR CALLBACK CNicoJK::ForceDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK CViewer::ForceDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	if (uMsg == WM_MEASUREITEM) {
-		// WM_INITDIALOGの前に呼ばれる
-		LPMEASUREITEMSTRUCT lpmis = reinterpret_cast<LPMEASUREITEMSTRUCT>(lParam);
-		if (lpmis->CtlID == IDC_FORCELIST) {
-			CNicoJK *pThis = dynamic_cast<CNicoJK*>(g_pPlugin);
-		}
-		return FALSE;
-	}
 	if (uMsg == WM_INITDIALOG) {
 		SetWindowLongPtr(hwnd, DWLP_USER, lParam);
 	}
-	CNicoJK *pThis = reinterpret_cast<CNicoJK*>(GetWindowLongPtr(hwnd, DWLP_USER));
+	CViewer *pThis = reinterpret_cast<CViewer*>(GetWindowLongPtr(hwnd, DWLP_USER));
 	return pThis ? pThis->ForceDialogProcMain(hwnd, uMsg, wParam, lParam) : FALSE;
 }
 
-INT_PTR CNicoJK::ForceDialogProcMain(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR CViewer::ForceDialogProcMain(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 #pragma region TVTComment
-	if (this && tvtComment->DialogProc(hwnd, uMsg, wParam, lParam))
+	if (tvtComment->DialogProc(hwnd, uMsg, wParam, lParam))
 		return TRUE;
 #pragma endregion
 
 	switch (uMsg) {
 	case WM_INITDIALOG:
-		{
-			commentWindow_.SetStyle(s_.commentFontName, s_.commentFontNameMulti, s_.bCommentFontBold, s_.bCommentFontAntiAlias,
-			                        s_.commentFontOutline, s_.bUseOsdCompositor, s_.bUseTexture, s_.bUseDrawingThread);
-			commentWindow_.SetCommentSize(s_.commentSize, s_.commentSizeMin, s_.commentSizeMax, s_.commentLineMargin);
-			commentWindow_.SetDisplayDuration(s_.commentDuration);
-			commentWindow_.SetDrawLineCount(s_.commentDrawLineCount);
-			if (commentWindow_.GetOpacity() != 0 && m_pApp->GetPreview()) {
-				HWND hwndContainer = FindVideoContainer();
-				commentWindow_.Create(hwndContainer);
-				bHalfSkip_ = GetWindowHeight(hwndContainer) >= s_.halfSkipThreshold;
-			}
-			forwardTick_ = timeGetTime();
-			forwardOffset_ = 0;
-			forwardOffsetDelta_ = 0;
-			SendMessage(hwnd, WM_RESET_STREAM, 0, 0);
-			if (s_.timerInterval >= 0) {
-				SetTimer(hwnd, TIMER_FORWARD, s_.timerInterval, NULL);
-			}
-			SetTimer(hwnd, TIMER_SETUP_CURJK, SETUP_CURJK_DELAY, NULL);
-			// PostMessage(hwnd, WM_TIMER, TIMER_UPDATE, 0);
-			// PostMessage(hwnd, WM_TIMER, TIMER_JK_WATCHDOG, 0);
-			// TVTest起動直後はVideo Containerウィンドウの配置が定まっていないようなので再度整える
-			SetTimer(hwnd, TIMER_DONE_SIZE, 500, NULL);
+		commentWindow_.SetStyle(s_.commentFontName, s_.commentFontNameMulti, s_.bCommentFontBold, s_.bCommentFontAntiAlias,
+		                        s_.commentFontOutline, s_.bUseOsdCompositor, s_.bUseTexture, s_.bUseDrawingThread);
+		commentWindow_.SetCommentSize(s_.commentSize, s_.commentSizeMin, s_.commentSizeMax, s_.commentLineMargin);
+		commentWindow_.SetDisplayDuration(s_.commentDuration);
+		commentWindow_.SetDrawLineCount(s_.commentDrawLineCount);
+		if (commentWindow_.GetOpacity() != 0 && m_pApp->GetPreview()) {
+			HWND hwndContainer = FindVideoContainer();
+			commentWindow_.Create(hwndContainer);
+			bHalfSkip_ = GetWindowHeight(hwndContainer) >= s_.halfSkipThreshold;
 		}
+		forwardTick_ = timeGetTime();
+		forwardOffset_ = 0;
+		forwardOffsetDelta_ = 0;
+		SendMessage(hwnd, WM_RESET_STREAM, 0, 0);
+		if (s_.timerInterval >= 0) {
+			SetTimer(hwnd, TIMER_FORWARD, s_.timerInterval, NULL);
+		}
+		SetTimer(hwnd, TIMER_SETUP_CURJK, SETUP_CURJK_DELAY, NULL);
+		// TVTest起動直後はVideo Containerウィンドウの配置が定まっていないようなので再度整える
+		SetTimer(hwnd, TIMER_DONE_SIZE, 500, NULL);
 		return TRUE;
 	case WM_DESTROY:
 		{
@@ -581,9 +458,9 @@ INT_PTR CNicoJK::ForceDialogProcMain(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 		BYTE newOpacity = (BYTE)wParam;
 		if (commentWindow_.GetOpacity() == 0 && newOpacity != 0 && m_pApp->GetPreview()) {
 			commentWindow_.ClearChat();
-			HWND hwnd = FindVideoContainer();
-			commentWindow_.Create(hwnd);
-			bHalfSkip_ = GetWindowHeight(hwnd) >= s_.halfSkipThreshold;
+			HWND hwndContainer = FindVideoContainer();
+			commentWindow_.Create(hwndContainer);
+			bHalfSkip_ = GetWindowHeight(hwndContainer) >= s_.halfSkipThreshold;
 		}
 		else if (commentWindow_.GetOpacity() != 0 && newOpacity == 0) {
 			commentWindow_.Destroy();
@@ -625,7 +502,6 @@ INT_PTR CNicoJK::ForceDialogProcMain(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 					commentWindow_.ClearChat();
 				} else if (resyncComment) {
 					// シーク時のコメント再生位置の再調整
-					//ReadFromLogfile(-1);
 					commentWindow_.ClearChat();
 				}
 				if (bNotify) {
@@ -640,20 +516,14 @@ INT_PTR CNicoJK::ForceDialogProcMain(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 				// 過去ログがあれば処理する
 				FILETIME ft;
 				if (GetCurrentTot(&ft)) {
-					bool bRead = false;
-					//char text[CHAT_TAG_MAX];
 					unsigned int tm = FileTimeToUnixTime(ft);
 					tm = forwardOffset_ < 0 ? tm - (-forwardOffset_ / 1000) : tm + forwardOffset_ / 1000;
 
 #pragma region TVTComment
 					tvtComment->OnForward(tm);
-					bRead = true;
 #pragma endregion
-					if (bRead) {
-						// date属性値は秒精度しかないのでコメント表示が団子にならないよう適当にごまかす
-						commentWindow_.ScatterLatestChats(1000);
-						// PostMessage(hwnd, WM_UPDATE_LIST, FALSE, 0);
-					}
+					// date属性値は秒精度しかないのでコメント表示が団子にならないよう適当にごまかす
+					commentWindow_.ScatterLatestChats(1000);
 				}
 				commentWindow_.Update();
 				bPendingTimerForward_ = false;
@@ -662,13 +532,12 @@ INT_PTR CNicoJK::ForceDialogProcMain(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 		case TIMER_SETUP_CURJK:
 			{
 				// 視聴状態が変化したので視聴中のサービスに対応する実況IDを調べて変更する
+				KillTimer(hwnd, TIMER_SETUP_CURJK);
 
 #pragma region TVTComment
 			tvtComment->OnChannelListChange();
 			tvtComment->OnChannelSelectionChange();
 #pragma endregion
-
-				KillTimer(hwnd, TIMER_SETUP_CURJK);
 			}
 			break;
 		case TIMER_DONE_MOVE:
@@ -680,31 +549,13 @@ INT_PTR CNicoJK::ForceDialogProcMain(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 			commentWindow_.OnParentSize();
 			bHalfSkip_ = GetWindowHeight(FindVideoContainer()) >= s_.halfSkipThreshold;
 			break;
-		case TIMER_DONE_POSCHANGE:
-			KillTimer(hwnd, TIMER_DONE_POSCHANGE);
-			if (!m_pApp->GetFullscreen() && ((s_.hideForceWindow & 4) || (GetWindowLong(m_pApp->GetAppWindow(), GWL_STYLE) & WS_MAXIMIZE))) {
-				SendMessage(hwnd, WM_SET_ZORDER, 0, 0);
-			}
-			break;
 		}
 		break;
 	case WM_RESET_STREAM:
 		{
-			dprintf(TEXT("CNicoJK::ForceDialogProcMain() WM_RESET_STREAM\n")); // DEBUG
+			dprintf(TEXT("CViewer::ForceDialogProcMain() WM_RESET_STREAM\n")); // DEBUG
 			CBlockLock lock(&streamLock_);
 			ftTot_[0].dwHighDateTime = 0xFFFFFFFF;
-		}
-		return TRUE;
-	case WM_SET_ZORDER:
-		// 全画面や最大化時は前面のほうが都合がよいはず
-		if ((s_.hideForceWindow & 4) || m_pApp->GetFullscreen() || (GetWindowLong(m_pApp->GetAppWindow(), GWL_STYLE) & WS_MAXIMIZE)) {
-			// TVTestウィンドウの前面にもってくる
-			SetWindowPos(hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE);
-			SetWindowPos(hwnd, m_pApp->GetFullscreen() || m_pApp->GetAlwaysOnTop() ? HWND_TOPMOST : HWND_TOP,
-			             0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE);
-		} else {
-			// TVTestウィンドウの背面にもってくる
-			SetWindowPos(hwnd, m_pApp->GetAppWindow(), 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE);
 		}
 		return TRUE;
 	}
@@ -712,9 +563,9 @@ INT_PTR CNicoJK::ForceDialogProcMain(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 }
 
 // ストリームコールバック(別スレッド)
-BOOL CALLBACK CNicoJK::StreamCallback(BYTE *pData, void *pClientData)
+BOOL CALLBACK CViewer::StreamCallback(BYTE *pData, void *pClientData)
 {
-	CNicoJK *pThis = static_cast<CNicoJK*>(pClientData);
+	CViewer *pThis = static_cast<CViewer*>(pClientData);
 	int pid = ((pData[1]&0x1F)<<8) | pData[2];
 	BYTE bTransportError = pData[1]&0x80;
 	BYTE bPayloadUnitStart = pData[1]&0x40;
@@ -779,7 +630,7 @@ BOOL CALLBACK CNicoJK::StreamCallback(BYTE *pData, void *pClientData)
 		}
 		if (bReset) {
 			pThis->ftTot_[0].dwHighDateTime = 0xFFFFFFFF;
-			PostMessage(pThis->hForce_, WM_RESET_STREAM, 0, 0);
+			PostMessage(pThis->hDummy_, WM_RESET_STREAM, 0, 0);
 		}
 	}
 
@@ -805,7 +656,7 @@ BOOL CALLBACK CNicoJK::StreamCallback(BYTE *pData, void *pClientData)
 				if (AribToSystemTime(&pTable[3], &st) && SystemTimeToFileTime(&st, &ft)) {
 					// UTCに変換
 					ft += -32400000LL * FILETIME_MILLISECOND;
-					dprintf(TEXT("CNicoJK::StreamCallback() TOT\n")); // DEBUG
+					dprintf(TEXT("CViewer::StreamCallback() TOT\n")); // DEBUG
 					CBlockLock lock(&pThis->streamLock_);
 					pThis->ftTot_[1] = pThis->ftTot_[0];
 					pThis->ftTot_[0] = ft;
@@ -820,5 +671,5 @@ BOOL CALLBACK CNicoJK::StreamCallback(BYTE *pData, void *pClientData)
 
 TVTest::CTVTestPlugin *CreatePluginClass()
 {
-	return new CNicoJK();
+	return new CViewer();
 }

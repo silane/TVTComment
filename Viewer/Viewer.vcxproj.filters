@@ -21,34 +21,22 @@
     <ClInclude Include="stdafx.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="NicoJK.h">
+    <ClInclude Include="Viewer.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="resource.h">
+    <ClInclude Include="NicoJK\resource.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="AsyncSocket.h">
+    <ClInclude Include="NicoJK\CommentWindow.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="CommentWindow.h">
+    <ClInclude Include="NicoJK\TVTestPlugin.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="TVTestPlugin.h">
+    <ClInclude Include="NicoJK\Util.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="NetworkServiceIDTable.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="Util.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="TextFileReader.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="OsdCompositor.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="JKIDNameTable.h">
+    <ClInclude Include="NicoJK\OsdCompositor.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="TVTComment\IPC\IPCMessage\ChannelListIPCMessage.h">
@@ -119,22 +107,16 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="NicoJK.cpp">
+    <ClCompile Include="Viewer.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="AsyncSocket.cpp">
+    <ClCompile Include="NicoJK\CommentWindow.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="CommentWindow.cpp">
+    <ClCompile Include="NicoJK\Util.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="Util.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="TextFileReader.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="OsdCompositor.cpp">
+    <ClCompile Include="NicoJK\OsdCompositor.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="TVTComment\IPC\IPCMessage\ChannelListIPCMessage.cpp">
@@ -194,10 +176,5 @@
     <ClCompile Include="TVTComment\IPC\IPCMessage\CommandIPCMessage.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="NicoJK.rc">
-      <Filter>リソース ファイル</Filter>
-    </ResourceCompile>
   </ItemGroup>
 </Project>
