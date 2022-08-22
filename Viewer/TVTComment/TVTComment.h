@@ -1,7 +1,7 @@
 ﻿#pragma once
-#include "../TVTestPlugin.h"
-#include "../CommentWindow.h"
-#include "../Util.h"
+#include "../NicoJK/TVTestPlugin.h"
+#include "../NicoJK/Util.h"
+#include "../NicoJK/CommentWindow.h"
 #include "IPC/IPCTunnel.h"
 #include "ChannelInfo.h"
 #include <vector>

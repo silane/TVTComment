@@ -184,16 +184,16 @@
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AsyncSocket.h" />
+    <ClInclude Include="NicoJK/AsyncSocket.h" />
     <ClInclude Include="TVTComment\IPC\IPCMessage\CommandIPCMessage.h" />
-    <ClInclude Include="CommentWindow.h" />
-    <ClInclude Include="JKIDNameTable.h" />
-    <ClInclude Include="NetworkServiceIDTable.h" />
-    <ClInclude Include="NicoJK.h" />
-    <ClInclude Include="OsdCompositor.h" />
-    <ClInclude Include="resource.h" />
+    <ClInclude Include="NicoJK/CommentWindow.h" />
+    <ClInclude Include="NicoJK/JKIDNameTable.h" />
+    <ClInclude Include="NicoJK/NetworkServiceIDTable.h" />
+    <ClInclude Include="Viewer.h" />
+    <ClInclude Include="NicoJK/OsdCompositor.h" />
+    <ClInclude Include="NicoJK/resource.h" />
     <ClInclude Include="stdafx.h" />
-    <ClInclude Include="TextFileReader.h" />
+    <ClInclude Include="NicoJK/TextFileReader.h" />
     <ClInclude Include="TVTComment\ChannelInfo.h" />
     <ClInclude Include="TVTComment\Chat.h" />
     <ClInclude Include="TVTComment\Color.h" />
@@ -213,21 +213,21 @@
     <ClInclude Include="TVTComment\TVTComment.h" />
     <ClInclude Include="TVTComment\win32filebuf.h" />
     <ClInclude Include="TVTComment\win32filestream.h" />
-    <ClInclude Include="TVTestPlugin.h" />
-    <ClInclude Include="Util.h" />
+    <ClInclude Include="NicoJK/TVTestPlugin.h" />
+    <ClInclude Include="NicoJK/Util.h" />
     <ClInclude Include="TVTComment\Utils.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="AsyncSocket.cpp" />
+    <ClCompile Include="NicoJK/AsyncSocket.cpp" />
     <ClCompile Include="TVTComment\IPC\IPCMessage\CommandIPCMessage.cpp" />
-    <ClCompile Include="CommentWindow.cpp">
+    <ClCompile Include="NicoJK/CommentWindow.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MaxSpeed</Optimization>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="NicoJK.cpp" />
-    <ClCompile Include="OsdCompositor.cpp">
+    <ClCompile Include="Viewer.cpp" />
+    <ClCompile Include="NicoJK/OsdCompositor.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MaxSpeed</Optimization>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
@@ -239,7 +239,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="TextFileReader.cpp" />
+    <ClCompile Include="NicoJK/TextFileReader.cpp" />
     <ClCompile Include="TVTComment\Chat.cpp" />
     <ClCompile Include="TVTComment\Color.cpp" />
     <ClCompile Include="TVTComment\IPC\IPCMessageDecodeError.cpp" />
@@ -257,11 +257,11 @@
     <ClCompile Include="TVTComment\TVTComment.cpp" />
     <ClCompile Include="TVTComment\win32filebuf.cpp" />
     <ClCompile Include="TVTComment\win32filestream.cpp" />
-    <ClCompile Include="Util.cpp" />
+    <ClCompile Include="NicoJK/Util.cpp" />
     <ClCompile Include="TVTComment\Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="NicoJK.rc" />
+    <ResourceCompile Include="NicoJK/NicoJK.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

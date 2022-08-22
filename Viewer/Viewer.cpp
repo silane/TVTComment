@@ -4,16 +4,16 @@
 */
 
 #include "stdafx.h"
-#include "Util.h"
-#include "AsyncSocket.h"
-#include "TextFileReader.h"
-#include "CommentWindow.h"
+#include "NicoJK/Util.h"
+#include "NicoJK/AsyncSocket.h"
+#include "NicoJK/TextFileReader.h"
+#include "NicoJK/CommentWindow.h"
 #define TVTEST_PLUGIN_CLASS_IMPLEMENT
-#include "TVTestPlugin.h"
-#include "resource.h"
-#include "NetworkServiceIDTable.h"
-#include "JKIDNameTable.h"
-#include "NicoJK.h"
+#include "NicoJK/TVTestPlugin.h"
+#include "NicoJK/resource.h"
+#include "NicoJK/NetworkServiceIDTable.h"
+#include "NicoJK/JKIDNameTable.h"
+#include "Viewer.h"
 
 #ifdef _DEBUG
 #include <stdarg.h>

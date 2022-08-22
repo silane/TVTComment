@@ -94,18 +94,21 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v2
+        with:
+          submodules: recursive
+          fetch-depth: 0
 
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v1.0.2
 
       - name: Build (tvtcomment.tvtp)
-        run: msbuild NicoJK/NicoJK.vcxproj -m /p:Configuration="Release" /p:Platform="${{ matrix.platform }}" /p:CodePage=932
+        run: msbuild Viewer/Viewer.vcxproj -m /p:Configuration="Release" /p:Platform="${{ matrix.platform }}" /p:CodePage=932
 
       - name: Copy asset (tvtcomment.tvtp)
         shell: powershell
         run: |
           New-Item -Path Asset -ItemType Directory
-          Copy-Item -Path NicoJK/${{ matrix.platform }}/Release/TvtComment.tvtp -Destination Asset/
+          Copy-Item -Path Viewer/${{ matrix.platform }}/Release/TvtComment.tvtp -Destination Asset/
 
       - name: Upload asset to Artifacts (tvtcomment.tvtp)
         uses: actions/upload-artifact@v2
