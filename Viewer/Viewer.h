@@ -1,14 +1,15 @@
 ﻿#pragma once
 
 #include "TVTComment/TVTComment.h"
-#include <memory>
+#include <atomic>
+#include <thread>
 
 // プラグインクラス
 class CViewer : public TVTest::CTVTestPlugin
 {
 public:
 	// チャンネル変更などの後に適当な実況IDのチェックを行うまでの猶予
-	static const int SETUP_CURJK_DELAY = 5000;
+	static const int SETUP_CURJK_DELAY = 3000;
 	// CTVTestPlugin
 	CViewer();
 	bool GetPluginInfo(TVTest::PluginInfo *pInfo);
@@ -16,7 +17,7 @@ public:
 	bool Finalize();
 private:
 	struct SETTINGS {
-		// memset()するためフィールドはすべてPOD型でなければならない
+		int hideForceWindow;
 		int timerInterval;
 		int halfSkipThreshold;
 		int commentLineMargin;
@@ -26,6 +27,7 @@ private:
 		int commentSizeMax;
 		TCHAR commentFontName[LF_FACESIZE];
 		TCHAR commentFontNameMulti[LF_FACESIZE];
+		TCHAR commentFontNameEmoji[LF_FACESIZE];
 		bool bCommentFontBold;
 		bool bCommentFontAntiAlias;
 		int commentDuration;
@@ -36,22 +38,23 @@ private:
 		int defaultPlaybackDelay;
 		int forwardList[26];
 		int commentOpacity;
+		tstring tvtCommentPath;
 	};
 	bool TogglePlugin(bool bEnabled);
 	void ToggleStreamCallback(bool bSet);
-	static unsigned int __stdcall SyncThread(void *pParam);
+	void SyncThread();
 	void LoadFromIni();
 	HWND GetFullscreenWindow();
 	HWND FindVideoContainer();
-	bool GetCurrentTot(FILETIME *pft);
+	LONGLONG GetCurrentTot();
 	static LRESULT CALLBACK EventCallback(UINT Event, LPARAM lParam1, LPARAM lParam2, void *pClientData);
 	static BOOL CALLBACK WindowMsgCallback(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *pResult, void *pUserData);
-	static INT_PTR CALLBACK ForceDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-	INT_PTR ForceDialogProcMain(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+	static LRESULT CALLBACK ForceWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+	LRESULT ForceWindowProcMain(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	static BOOL CALLBACK StreamCallback(BYTE *pData, void *pClientData);
 
-	// 設定ファイルの名前(Shlwapi使うのでMAX_PATHより大きくしても意味がない)
-	TCHAR szIniFileName_[MAX_PATH];
+	// 設定ファイルの名前
+	tstring iniFileName_;
 	SETTINGS s_;
 
 	// タイマーとかを管理するためのダミー窓
@@ -60,25 +63,30 @@ private:
 	// コメント描画ウィンドウ
 	CCommentWindow commentWindow_;
 	DWORD forwardTick_;
-	HANDLE hSyncThread_;
-	bool bQuitSyncThread_;
-	bool bPendingTimerForward_;
-	bool bHalfSkip_;
+	std::thread syncThread_;
+	std::atomic_bool bQuitSyncThread_;
+	std::atomic_bool bPendingTimerForward_;
+	std::atomic_bool bHalfSkip_;
 	bool bFlipFlop_;
-	int forwardOffset_;
-	int forwardOffsetDelta_;
+	LONGLONG forwardOffset_;
+	LONGLONG forwardOffsetDelta_;
 
 	// 過去ログ関係
 	bool bSetStreamCallback_;
 	bool bResyncComment_;
-	FILETIME ftTot_[2];
-	DWORD totTick_[2];
+	LONGLONG llftTot_;
+	LONGLONG llftTotLast_;
+	LONGLONG llftTotPending_;
+	DWORD totTick_;
+	DWORD totTickLast_;
+	DWORD totTickPending_;
+	DWORD totPcr_;
 	DWORD pcr_;
 	DWORD pcrTick_;
 	int pcrPid_;
 	int pcrPids_[8];
 	int pcrPidCounts_[8];
-	CCriticalLock streamLock_;
+	recursive_mutex_ streamLock_;
 
 #pragma region TVTComment
 	std::unique_ptr<TVTComment::TVTComment> tvtComment;
