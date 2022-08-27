@@ -21,6 +21,7 @@ namespace TVTComment
 	enum class Command
 	{
 		ShowWindow,
+		HideComment
 	};
 
 	//TVTCommentの最上位クラス
@@ -36,6 +37,7 @@ namespace TVTComment
 		std::time_t lastTOT;
 		uint16_t lastEventId;
 
+		WPARAM lastOpacity;
 		int errorCount;//受信エラーが起きた回数
 		static constexpr int FETALERROR_COUNT = 10;//errorCountがこの値以上になるとプラグインを無効化する
 

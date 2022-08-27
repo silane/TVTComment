@@ -145,6 +145,8 @@ namespace TVTComment
 		}
 		else if (auto message = dynamic_cast<const SetChatOpacityIPCMessage *>(&msg))
 		{
+			lastOpacity = (WPARAM)message->Opacity;
+			this->tvtest->SetPluginCommandState(static_cast<int>(Command::HideComment), 0);
 			PostMessage(this->dialog, WM_SETCHATOPACITY, (WPARAM)message->Opacity, 0);
 		}
 #pragma warning(pop)
@@ -402,13 +404,24 @@ namespace TVTComment
 
 	void TVTComment::OnCommandInvoked(Command command)
 	{
+		CommandIPCMessage msg;
 		switch (command)
 		{
-		case Command::ShowWindow:
-			CommandIPCMessage msg;
-			msg.CommandId = "ShowWindow";
-			this->sendMessage(msg);
-			break;
+			case Command::ShowWindow:
+				msg.CommandId = "ShowWindow";
+				this->sendMessage(msg);
+				break;
+			case Command::HideComment:
+				if (this->commentWindow->GetOpacity() != 0) {
+					lastOpacity = this->commentWindow->GetOpacity();
+					PostMessage(this->dialog, WM_SETCHATOPACITY, 0, 0);
+					this->tvtest->SetPluginCommandState(static_cast<int>(Command::HideComment), TVTest::COMMAND_ICON_STATE_CHECKED);
+				}
+				else {
+					PostMessage(this->dialog, WM_SETCHATOPACITY, lastOpacity, 0);
+					this->tvtest->SetPluginCommandState(static_cast<int>(Command::HideComment), 0);
+				}
+				break;
 		}
 	}
 
