@@ -20,24 +20,21 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <WindowsX.h>
-#include <WinSock2.h>
-#include <MMSystem.h>
-#include <Shlwapi.h>
-#include <GdiPlus.h>
+#include <objbase.h>
 #include <vector>
 #include <list>
 #include <regex>
+#include <memory>
+#include <utility>
+#include <algorithm>
 #include <tchar.h>
-#include <dwmapi.h>
-#include <CommDlg.h>
-#include <ShellAPI.h>
-#include <process.h>
-#include <WinCrypt.h>
 
-#pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "winmm.lib")
-#pragma comment(lib, "shlwapi.lib")
-#pragma comment(lib, "gdiplus.lib")
-#pragma comment(lib, "dwmapi.lib")
-#pragma comment(lib, "imm32.lib")
-#pragma comment(lib, "crypt32.lib")
+
+// NOMINMAXではGdiPlus.hが通らない
+#undef min
+#undef max
+using std::min;
+using std::max;
+
+typedef std::basic_string<TCHAR> tstring;

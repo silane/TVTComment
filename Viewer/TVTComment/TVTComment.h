@@ -1,7 +1,7 @@
 ﻿#pragma once
-#include "../TVTestPlugin.h"
-#include "../CommentWindow.h"
-#include "../Util.h"
+#include "../NicoJK/TVTestPlugin.h"
+#include "../NicoJK/Util.h"
+#include "../NicoJK/CommentWindow.h"
 #include "IPC/IPCTunnel.h"
 #include "ChannelInfo.h"
 #include <vector>
@@ -18,7 +18,7 @@
 
 namespace TVTComment
 {
-	enum class TVTCommentCommand
+	enum class Command
 	{
 		ShowWindow,
 	};
@@ -74,11 +74,11 @@ namespace TVTComment
 	public:
 		bool IsConnected() const;
 		TVTComment(TVTest::CTVTestApp *tvtest,CCommentWindow *commentWindow,const std::wstring &collectExePath);
-		INT_PTR DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+		INT_PTR WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 		void OnChannelListChange();
 		void OnChannelSelectionChange();
 		void OnForward(std::time_t tot);//TOT時刻の更新間隔より細かい間隔で呼ぶ
-		void OnCommandInvoked(TVTCommentCommand command);
+		void OnCommandInvoked(Command command);
 		~TVTComment() noexcept;
 	};
 }

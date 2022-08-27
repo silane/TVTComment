@@ -172,7 +172,7 @@ namespace TVTComment
 	{
 		FILETIME ft;
 		::SystemTimeToFileTime(&time, &ft);
-		return ::FileTimeToUnixTime(ft);
+		return ::FileTimeToUnixTime(::FileTimeToLongLong(ft));
 	}
 
 	bool TVTComment::IsConnected() const
@@ -185,11 +185,11 @@ namespace TVTComment
 	{
 	}
 
-	INT_PTR TVTComment::DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+	INT_PTR TVTComment::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		switch (uMsg)
 		{
-		case WM_INITDIALOG:
+		case WM_CREATE:
 			this->dialog = hwnd;
 
 			this->asyncTask = concurrency::task<void>([this]
@@ -400,11 +400,11 @@ namespace TVTComment
 		}
 	}
 
-	void TVTComment::OnCommandInvoked(TVTCommentCommand command)
+	void TVTComment::OnCommandInvoked(Command command)
 	{
 		switch (command)
 		{
-		case TVTCommentCommand::ShowWindow:
+		case Command::ShowWindow:
 			CommandIPCMessage msg;
 			msg.CommandId = "ShowWindow";
 			this->sendMessage(msg);

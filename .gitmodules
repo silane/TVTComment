@@ -1,3 +1,6 @@
 [submodule "CoreTweet"]
 	path = CoreTweet
 	url = https://github.com/CoreTweet/CoreTweet.git
+[submodule "Viewer/NicoJK"]
+	path = Viewer/NicoJK
+	url = https://github.com/xtne6f/NicoJK.git
