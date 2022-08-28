@@ -105,31 +105,40 @@ bool CViewer::Initialize()
 	if (bEnableOsdCompositor) {
 		m_pApp->AddLog(L"OsdCompositorを初期化しました。");
 	}
-	/* int dpi = m_pApp->GetDPIFromWindow(m_pApp->GetAppWindow()); */
-	/* int iconWidth = 16 * dpi / 96; */
-	/* int iconHeight = 16 * dpi / 96; */
-	/* m_pApp->GetStyleValuePixels(L"side-bar.item.icon.width", dpi, &iconWidth); */
-	/* m_pApp->GetStyleValuePixels(L"side-bar.item.icon.height", dpi, &iconHeight); */
-	/* bool bSmallIcon = iconWidth <= 16 && iconHeight <= 16; */
-	/* // アイコンを登録 */
-	/* m_pApp->RegisterPluginIconFromResource(g_hinstDLL, MAKEINTRESOURCE(IDB_ICON)); */
+	 int dpi = m_pApp->GetDPIFromWindow(m_pApp->GetAppWindow()); 
+	 int iconWidth = 16 * dpi / 96; 
+	 int iconHeight = 16 * dpi / 96; 
+	 m_pApp->GetStyleValuePixels(L"side-bar.item.icon.width", dpi, &iconWidth); 
+	 m_pApp->GetStyleValuePixels(L"side-bar.item.icon.height", dpi, &iconHeight); 
+	 bool bSmallIcon = iconWidth <= 16 && iconHeight <= 16; 
+	// TvtCommentメインアイコンを登録 
+	m_pApp->RegisterPluginIconFromResource(g_hinstDLL, MAKEINTRESOURCE(IDB_TVTCICON));
 
-	// コマンドを登録
+	// 最前面コマンドを登録
 	TVTest::PluginCommandInfo ci;
 	ci.Size = sizeof(ci);
 	ci.Flags = 0;
-	/* ci.Flags = TVTest::PLUGIN_COMMAND_FLAG_ICONIZE; */
+	ci.Flags = TVTest::PLUGIN_COMMAND_FLAG_ICONIZE; 
 	ci.State = 0;
 
 	ci.ID = static_cast<int>(TVTComment::Command::ShowWindow);
 	ci.pszText = L"ShowWindow";
-	ci.pszDescription = ci.pszName = L"ウィンドウの前面表示";
-	ci.hbmIcon = 0;
-	/* ci.hbmIcon = static_cast<HBITMAP>(LoadImage(g_hinstDLL, MAKEINTRESOURCE(bSmallIcon ? IDB_COMMENT16 : IDB_COMMENT), IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION)); */
+	ci.pszDescription = ci.pszName = L"TvtCommentウィンドウの前面表示";
+	ci.hbmIcon = static_cast<HBITMAP>(LoadImage(g_hinstDLL, MAKEINTRESOURCE(bSmallIcon ? IDB_TVTCTOPICON16 : IDB_TVTCTOPICON), IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION));
 	if (!m_pApp->RegisterPluginCommand(&ci)) {
 		m_pApp->RegisterCommand(ci.ID, ci.pszText, ci.pszName);
 	}
-	/* DeleteObject(ci.hbmIcon); */
+	DeleteObject(ci.hbmIcon);
+
+	//非表示コマンドを登録
+	ci.ID = static_cast<int>(TVTComment::Command::HideComment);
+	ci.pszText = L"HideComment";
+	ci.pszDescription = ci.pszName = L"TvtCommentコメントの非表示";
+	ci.hbmIcon = static_cast<HBITMAP>(LoadImage(g_hinstDLL, MAKEINTRESOURCE(bSmallIcon ? IDB_TVTCVIEWICON16 : IDB_TVTCVIEWICON), IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION));
+	if (!m_pApp->RegisterPluginCommand(&ci)) {
+		m_pApp->RegisterCommand(ci.ID, ci.pszText, ci.pszName);
+	}
+	DeleteObject(ci.hbmIcon);
 
 	// イベントコールバック関数を登録
 	m_pApp->SetEventCallback(EventCallback, this);

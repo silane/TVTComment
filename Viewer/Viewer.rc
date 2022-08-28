@@ -14,12 +14,9 @@
 // Bitmap resources
 //
 /* LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL */
-/* IDB_ICON           BITMAP         ".\\NicoJK\\res\\Icon.bmp" */
-
-
-/* LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL */
-/* IDB_COMMENT        BITMAP         ".\\NicoJK\\res\\Comment.bmp" */
-
-
-/* LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL */
-/* IDB_COMMENT16      BITMAP         ".\\NicoJK\\res\\Comment16.bmp" */
+IDB_TVTCICON             BITMAP         ".\\TVTComment\\Resource\\TvTComIcon.bmp"
+IDB_TVTCTOPICON          BITMAP         ".\\TVTComment\\Resource\\TopIcon.bmp"
+IDB_TVTCVIEWICON         BITMAP         ".\\TVTComment\\Resource\\ViewIcon.bmp"
+IDB_TVTCICON16           BITMAP         ".\\TVTComment\\Resource\\TvTComIcon16.bmp"
+IDB_TVTCTOPICON16        BITMAP         ".\\TVTComment\\Resource\\TopIcon16.bmp"
+IDB_TVTCVIEWICON16       BITMAP         ".\\TVTComment\\Resource\\ViewIcon16.bmp"
