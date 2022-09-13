@@ -32,7 +32,7 @@ jobs:
 
       - name: Build (RestApisGen.exe)
         shell: powershell
-        run: msbuild CoreTweet/RestApisGen/RestApisGen.csproj /p:Configuration=Debug
+        run: msbuild CoreTweet/RestApisGen/RestApisGen.csproj /p:Configuration=Release
 
       - name: Run RestApisGen.exe
         run: |
