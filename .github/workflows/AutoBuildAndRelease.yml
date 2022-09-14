@@ -25,25 +25,10 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: 5.0.x
+          dotnet-version: 6.0.x
 
-      - name: Add MSBuild to PATH
-        uses: microsoft/setup-msbuild@v1.0.2
-
-      - name: Build (RestApisGen.exe)
-        shell: powershell
-        run: msbuild CoreTweet/RestApisGen/RestApisGen.csproj /p:Configuration=Debug
-
-      - name: Run RestApisGen.exe
-        run: |
-          cd CoreTweet
-          RestApisGen/bin/RestApisGen.exe
-
-      - name: Build (CoreTweet.dll)
-        run: |
-          cd CoreTweet
-          nuget restore CoreTweet-All.sln
-          msbuild CoreTweet-All.sln /m /p:Configuration=Release
+      - name: Include CoreTweet Nuget
+        run: nuget sources add -name CoreTweetSource -source ${{ github.workspace }}\CoreTweetNuget
 
       - name: Replace id & secret
         shell: powershell
